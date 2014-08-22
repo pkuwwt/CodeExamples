@@ -1,0 +1,115 @@
+<!DOCTYPE html PUBLIC "-//IETF//DTD HTML 2.0//EN">
+<HTML>
+<HEAD>
+<TITLE>cpp/makefile</TITLE>
+</HEAD>
+<BODY BGCOLOR="#FFFFFF" TEXT="#000000" LINK="#1F00FF" ALINK="#FF0000" VLINK="#9900DD">
+<A NAME="top"> </A>
+<A NAME="file1"> </A>
+<H1><a href="makefile">makefile</a></H1>
+
+<PRE>
+<I><FONT COLOR="#B22222">##
+</FONT></I><I><FONT COLOR="#B22222"># @file      makefile
+</FONT></I><I><FONT COLOR="#B22222"># @author    Mitch Richling &lt;http://www.mitchr.me/&gt;
+</FONT></I><I><FONT COLOR="#B22222"># @Copyright Copyright 2003 by Mitch Richling.  All rights reserved.
+</FONT></I><I><FONT COLOR="#B22222"># @brief     Build a few boost examples.@EOL
+</FONT></I><I><FONT COLOR="#B22222"># @Std       GNUmake
+</FONT></I>
+<I><FONT COLOR="#B22222"># Fix for local needs
+</FONT></I>CXX        = g++
+CXX98FLAGS = -pedantic -Wall -Wextra -std=c++98
+CXX11FLAGS = -pedantic -Wall -Wextra -std=c++11
+
+<I><FONT COLOR="#B22222"># Uncomment to build all when make file changes
+</FONT></I>SPECDEP=makefile
+
+<I><FONT COLOR="#B22222"># Put targets here
+</FONT></I>TARGETS = numericStuff regexExample1 for11 vector11 stome readFileLines thread04_condition thread01_hello thread02_lambda thread03_mutex thread05_pool chrono01 sort complex list map unordered_map queue set multiset vector algorithm generic little_algorithm string
+
+all : $(<B><FONT COLOR="#5F9EA0">TARGETS</FONT></B>)
+	@echo Make Complete
+
+clean :
+	rm -rf a.out *~ *.bak $(<B><FONT COLOR="#5F9EA0">TARGETS</FONT></B>)
+	@echo Make Complete
+
+regexExample1 : regexExample1.cpp $(<B><FONT COLOR="#5F9EA0">SPECDEP</FONT></B>)
+	$(<B><FONT COLOR="#5F9EA0">CXX</FONT></B>) $(<B><FONT COLOR="#5F9EA0">CXX11FLAGS</FONT></B>) regexExample1.cpp -o regexExample1
+
+for11 : for11.cpp $(<B><FONT COLOR="#5F9EA0">SPECDEP</FONT></B>)
+	$(<B><FONT COLOR="#5F9EA0">CXX</FONT></B>) $(<B><FONT COLOR="#5F9EA0">CXX11FLAGS</FONT></B>) for11.cpp -o for11
+
+numericStuff : numericStuff.cpp $(<B><FONT COLOR="#5F9EA0">SPECDEP</FONT></B>)
+	$(<B><FONT COLOR="#5F9EA0">CXX</FONT></B>) $(<B><FONT COLOR="#5F9EA0">CXX11FLAGS</FONT></B>) numericStuff.cpp -o numericStuff
+
+vector11 : vector11.cpp $(<B><FONT COLOR="#5F9EA0">SPECDEP</FONT></B>)
+	$(<B><FONT COLOR="#5F9EA0">CXX</FONT></B>) $(<B><FONT COLOR="#5F9EA0">CXX11FLAGS</FONT></B>) vector11.cpp -o vector11
+
+<B><FONT COLOR="#A020F0">stome:</FONT></B> stome.cpp $(<B><FONT COLOR="#5F9EA0">SPECDEP</FONT></B>)
+	$(<B><FONT COLOR="#5F9EA0">CXX</FONT></B>) $(<B><FONT COLOR="#5F9EA0">CXX11FLAGS</FONT></B>) -fpermissive stome.cpp -o stome
+
+readFileLines : readFileLines.cpp $(<B><FONT COLOR="#5F9EA0">SPECDEP</FONT></B>)
+	$(<B><FONT COLOR="#5F9EA0">CXX</FONT></B>) $(<B><FONT COLOR="#5F9EA0">CXX98FLAGS</FONT></B>) readFileLines.cpp -o readFileLines
+
+thread01_hello : thread01_hello.cpp $(<B><FONT COLOR="#5F9EA0">SPECDEP</FONT></B>)
+	$(<B><FONT COLOR="#5F9EA0">CXX</FONT></B>) $(<B><FONT COLOR="#5F9EA0">CXX11FLAGS</FONT></B>) -pthread thread01_hello.cpp -o thread01_hello
+
+thread02_lambda : thread02_lambda.cpp $(<B><FONT COLOR="#5F9EA0">SPECDEP</FONT></B>)
+	$(<B><FONT COLOR="#5F9EA0">CXX</FONT></B>) $(<B><FONT COLOR="#5F9EA0">CXX11FLAGS</FONT></B>) -pthread thread02_lambda.cpp -o thread02_lambda
+
+thread03_mutex : thread03_mutex.cpp $(<B><FONT COLOR="#5F9EA0">SPECDEP</FONT></B>)
+	$(<B><FONT COLOR="#5F9EA0">CXX</FONT></B>) $(<B><FONT COLOR="#5F9EA0">CXX11FLAGS</FONT></B>) -pthread thread03_mutex.cpp -o thread03_mutex
+
+thread04_condition : thread04_condition.cpp $(<B><FONT COLOR="#5F9EA0">SPECDEP</FONT></B>)
+	$(<B><FONT COLOR="#5F9EA0">CXX</FONT></B>) $(<B><FONT COLOR="#5F9EA0">CXX11FLAGS</FONT></B>) -pthread thread04_condition.cpp -o thread04_condition
+
+thread05_pool : thread05_pool.cpp $(<B><FONT COLOR="#5F9EA0">SPECDEP</FONT></B>)
+	$(<B><FONT COLOR="#5F9EA0">CXX</FONT></B>) $(<B><FONT COLOR="#5F9EA0">CXX11FLAGS</FONT></B>) -pthread thread05_pool.cpp -o thread05_pool
+
+chrono01 : chrono01.cpp $(<B><FONT COLOR="#5F9EA0">SPECDEP</FONT></B>)
+	$(<B><FONT COLOR="#5F9EA0">CXX</FONT></B>) $(<B><FONT COLOR="#5F9EA0">CXX11FLAGS</FONT></B>) chrono01.cpp -o chrono01
+
+list : list.cpp $(<B><FONT COLOR="#5F9EA0">SPECDEP</FONT></B>)
+	$(<B><FONT COLOR="#5F9EA0">CXX</FONT></B>) $(<B><FONT COLOR="#5F9EA0">CXX98FLAGS</FONT></B>) list.cpp -o list
+
+complex : complex.cpp $(<B><FONT COLOR="#5F9EA0">SPECDEP</FONT></B>)
+	$(<B><FONT COLOR="#5F9EA0">CXX</FONT></B>) $(<B><FONT COLOR="#5F9EA0">CXX98FLAGS</FONT></B>) complex.cpp -o complex
+
+map : map.cpp $(<B><FONT COLOR="#5F9EA0">SPECDEP</FONT></B>)
+	$(<B><FONT COLOR="#5F9EA0">CXX</FONT></B>) $(<B><FONT COLOR="#5F9EA0">CXX98FLAGS</FONT></B>) map.cpp -o map
+
+unordered_map : unordered_map.cpp $(<B><FONT COLOR="#5F9EA0">SPECDEP</FONT></B>)
+	$(<B><FONT COLOR="#5F9EA0">CXX</FONT></B>) $(<B><FONT COLOR="#5F9EA0">CXX11FLAGS</FONT></B>) unordered_map.cpp -o unordered_map	
+
+queue : queue.cpp $(<B><FONT COLOR="#5F9EA0">SPECDEP</FONT></B>)
+	$(<B><FONT COLOR="#5F9EA0">CXX</FONT></B>) $(<B><FONT COLOR="#5F9EA0">CXX98FLAGS</FONT></B>) queue.cpp -o queue
+
+set : set.cpp $(<B><FONT COLOR="#5F9EA0">SPECDEP</FONT></B>)
+	$(<B><FONT COLOR="#5F9EA0">CXX</FONT></B>) $(<B><FONT COLOR="#5F9EA0">CXX98FLAGS</FONT></B>) set.cpp -o set
+
+multiset : multiset.cpp $(<B><FONT COLOR="#5F9EA0">SPECDEP</FONT></B>)
+	$(<B><FONT COLOR="#5F9EA0">CXX</FONT></B>) $(<B><FONT COLOR="#5F9EA0">CXX98FLAGS</FONT></B>) multiset.cpp -o multiset
+
+vector : vector.cpp $(<B><FONT COLOR="#5F9EA0">SPECDEP</FONT></B>)
+	$(<B><FONT COLOR="#5F9EA0">CXX</FONT></B>) $(<B><FONT COLOR="#5F9EA0">CXX98FLAGS</FONT></B>) vector.cpp -o vector
+
+sort : sort.cpp $(<B><FONT COLOR="#5F9EA0">SPECDEP</FONT></B>)
+	$(<B><FONT COLOR="#5F9EA0">CXX</FONT></B>) $(<B><FONT COLOR="#5F9EA0">CXX11FLAGS</FONT></B>) sort.cpp -o sort
+
+algorithm : algorithm.cpp $(<B><FONT COLOR="#5F9EA0">SPECDEP</FONT></B>)
+	$(<B><FONT COLOR="#5F9EA0">CXX</FONT></B>) $(<B><FONT COLOR="#5F9EA0">CXX98FLAGS</FONT></B>) algorithm.cpp -o algorithm
+
+generic : generic.cpp $(<B><FONT COLOR="#5F9EA0">SPECDEP</FONT></B>)
+	$(<B><FONT COLOR="#5F9EA0">CXX</FONT></B>) $(<B><FONT COLOR="#5F9EA0">CXX98FLAGS</FONT></B>) generic.cpp -o generic
+
+little_algorithm : little_algorithm.cpp $(<B><FONT COLOR="#5F9EA0">SPECDEP</FONT></B>)
+	$(<B><FONT COLOR="#5F9EA0">CXX</FONT></B>) $(<B><FONT COLOR="#5F9EA0">CXX98FLAGS</FONT></B>) little_algorithm.cpp -o little_algorithm
+
+string : string.cpp $(<B><FONT COLOR="#5F9EA0">SPECDEP</FONT></B>)
+	$(<B><FONT COLOR="#5F9EA0">CXX</FONT></B>) $(<B><FONT COLOR="#5F9EA0">CXX98FLAGS</FONT></B>) string.cpp -o string
+</PRE>
+<HR \/>
+<ADDRESS>Generated by <A HREF="http://www.iki.fi/~mtr/genscript/">GNU Enscript 1.6.5.90</A>.</ADDRESS>
+</BODY>
+</HTML>

@@ -1,0 +1,83 @@
+<!DOCTYPE html PUBLIC "-//IETF//DTD HTML 2.0//EN">
+<HTML>
+<HEAD>
+<TITLE>ruby/webServerWEBrickTEST.rb</TITLE>
+</HEAD>
+<BODY BGCOLOR="#FFFFFF" TEXT="#000000" LINK="#1F00FF" ALINK="#FF0000" VLINK="#9900DD">
+<A NAME="top"> </A>
+<A NAME="file1"> </A>
+<H1><a href="webServerWEBrickTEST.rb">webServerWEBrickTEST.rb</a></H1>
+
+<PRE>
+<I><FONT COLOR="#B22222">#!/usr/local/bin/ruby
+</FONT></I>
+<I><FONT COLOR="#B22222">##
+</FONT></I><I><FONT COLOR="#B22222"># @file      mpmfs.rb
+</FONT></I><I><FONT COLOR="#B22222"># @author    Mitch Richling &lt;http://www.mitchr.me/&gt;
+</FONT></I><I><FONT COLOR="#B22222"># @Copyright Copyright 2007 by Mitch Richling.  All rights reserved.
+</FONT></I><I><FONT COLOR="#B22222"># @brief     Test server for HTTP GET and HTTP POST.@EOL
+</FONT></I><I><FONT COLOR="#B22222"># @Keywords  ruby web webrick get post test server
+</FONT></I><I><FONT COLOR="#B22222"># @Std       Ruby 1.8
+</FONT></I><I><FONT COLOR="#B22222">#
+</FONT></I><I><FONT COLOR="#B22222">#            This script is intended to help test web clients by
+</FONT></I><I><FONT COLOR="#B22222">#            providing a simple HTTP GET and HTTP POST test at:
+</FONT></I><I><FONT COLOR="#B22222">#                http://127.0.0.1:8080/test
+</FONT></I><I><FONT COLOR="#B22222">#                https://127.0.0.1:8080/test
+</FONT></I>
+<B><FONT COLOR="#5F9EA0">require</FONT></B> <B><FONT COLOR="#BC8F8F">'webrick'</FONT></B>
+<B><FONT COLOR="#5F9EA0">require</FONT></B> <B><FONT COLOR="#BC8F8F">'webrick/https'</FONT></B>
+<B><FONT COLOR="#5F9EA0">require</FONT></B> <B><FONT COLOR="#BC8F8F">'cgi'</FONT></B>
+
+<B><FONT COLOR="#5F9EA0">include</FONT></B> WEBrick
+
+<B><FONT COLOR="#A020F0">class</FONT></B> ServiceTesterService &lt; WEBrick::HTTPServlet::AbstractServlet
+  <I><FONT COLOR="#B22222"># POST
+</FONT></I>  <B><FONT COLOR="#A020F0">def</FONT></B> <B><FONT COLOR="#0000FF">do_POST</FONT></B>(req, resp)
+    resp.body = do_X(req, resp, <B><FONT COLOR="#BC8F8F">'POST'</FONT></B>)
+    resp[<B><FONT COLOR="#BC8F8F">'Content-Type'</FONT></B>] = <B><FONT COLOR="#BC8F8F">'text/html'</FONT></B>
+  <B><FONT COLOR="#A020F0">end</FONT></B>
+  <I><FONT COLOR="#B22222"># GET
+</FONT></I>  <B><FONT COLOR="#A020F0">def</FONT></B> <B><FONT COLOR="#0000FF">do_GET</FONT></B>(req, resp)
+    resp.body = do_X(req, resp, <B><FONT COLOR="#BC8F8F">'GET'</FONT></B>)
+    resp[<B><FONT COLOR="#BC8F8F">'Content-Type'</FONT></B>] = <B><FONT COLOR="#BC8F8F">'text/html'</FONT></B>
+  <B><FONT COLOR="#A020F0">end</FONT></B>
+  <I><FONT COLOR="#B22222"># This really performs all the work.
+</FONT></I>  <B><FONT COLOR="#A020F0">def</FONT></B> <B><FONT COLOR="#0000FF">do_X</FONT></B>(req, resp, rtype)
+    <B><FONT COLOR="#A020F0">if</FONT></B>(req.query) <B><FONT COLOR="#A020F0">then</FONT></B>
+      thep = <B><FONT COLOR="#BC8F8F">''</FONT></B>
+      req.query.each <B><FONT COLOR="#A020F0">do</FONT></B> |key, val|
+        thep += <B><FONT COLOR="#BC8F8F">&quot;KEY: #{CGI::escapeHTML(key.inspect)} == VAL: #{CGI::escapeHTML(val.inspect)}\n&quot;</FONT></B>
+      <B><FONT COLOR="#A020F0">end</FONT></B>
+      <B><FONT COLOR="#A020F0">return</FONT></B> <B><FONT COLOR="#BC8F8F">'&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 3.2 Final//EN&quot;&gt;&lt;HTML&gt;&lt;HEAD&gt;&lt;TITLE&gt;TEST'</FONT></B> +
+             <B><FONT COLOR="#BC8F8F">&quot;&lt;/TITLE&gt;&lt;/HEAD&gt;&lt;BODY&gt;&lt;H1&gt;#{rtype} TEST&lt;/H1&gt;&lt;PRE&gt;#{thep}&lt;/PRE&gt;&lt;br&gt;&lt;br&gt;&lt;br&gt;&lt;hr&gt;&lt;/BODY&gt;&lt;/HTML&gt;&quot;</FONT></B>;
+    <B><FONT COLOR="#A020F0">else</FONT></B>
+      <B><FONT COLOR="#A020F0">return</FONT></B> <B><FONT COLOR="#BC8F8F">'&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 3.2 Final//EN&quot;&gt;&lt;HTML&gt;&lt;HEAD&gt;&lt;TITLE&gt;TEST ERROR'</FONT></B> +
+             <B><FONT COLOR="#BC8F8F">'&lt;/TITLE&gt;&lt;/HEAD&gt;&lt;BODY&gt;&lt;H1&gt;TEST ERROR&lt;/H1&gt;&lt;br&gt;&lt;br&gt;&lt;br&gt;&lt;hr&gt;&lt;/BODY&gt;&lt;/HTML&gt;'</FONT></B>;
+    <B><FONT COLOR="#A020F0">end</FONT></B>
+  <B><FONT COLOR="#A020F0">end</FONT></B>
+<B><FONT COLOR="#A020F0">end</FONT></B>
+
+aServer1 = WEBrick::HTTPServer.new(:Port            =&gt; 8181, 
+                                   :BindAddress     =&gt; <B><FONT COLOR="#BC8F8F">'127.0.0.1'</FONT></B>,
+                                   :SSLEnable       =&gt; <B><FONT COLOR="#A020F0">true</FONT></B>,
+                                   :SSLVerifyClient =&gt; ::OpenSSL::SSL::VERIFY_NONE,
+                                   :SSLCertName     =&gt; [ [<B><FONT COLOR="#BC8F8F">&quot;C&quot;</FONT></B>,<B><FONT COLOR="#BC8F8F">&quot;US&quot;</FONT></B>], [<B><FONT COLOR="#BC8F8F">&quot;O&quot;</FONT></B>,<B><FONT COLOR="#BC8F8F">&quot;127.0.0.1&quot;</FONT></B>], [<B><FONT COLOR="#BC8F8F">&quot;CN&quot;</FONT></B>, <B><FONT COLOR="#BC8F8F">&quot;127.0.0.1&quot;</FONT></B>] ]
+                                   )
+aServer2 = HTTPServer.new(:Port =&gt; 8080, :BindAddress =&gt; <B><FONT COLOR="#BC8F8F">'127.0.0.1'</FONT></B>)
+aServer2.mount(<B><FONT COLOR="#BC8F8F">&quot;/test&quot;</FONT></B>, ServiceTesterService)
+aServer1.mount(<B><FONT COLOR="#BC8F8F">&quot;/test&quot;</FONT></B>, ServiceTesterService)
+
+[<B><FONT COLOR="#BC8F8F">'HUP'</FONT></B>, <B><FONT COLOR="#BC8F8F">'QUIT'</FONT></B>, <B><FONT COLOR="#BC8F8F">'INT'</FONT></B>, <B><FONT COLOR="#BC8F8F">'TERM'</FONT></B>, <B><FONT COLOR="#BC8F8F">'USR1'</FONT></B>, <B><FONT COLOR="#BC8F8F">'USR2'</FONT></B>].each <B><FONT COLOR="#A020F0">do</FONT></B> |sig|
+  trap(sig) { aServer1.shutdown; aServer2.shutdown }
+<B><FONT COLOR="#A020F0">end</FONT></B>
+
+<I><FONT COLOR="#B22222"># Start the servers up
+</FONT></I>Thread.new() { aServer1.start }
+Thread.new() { aServer2.start }
+<I><FONT COLOR="#B22222"># And wait for them to end..
+</FONT></I>Thread.list.each {|t| puts(t); t.join() <B><FONT COLOR="#A020F0">unless</FONT></B> (t == Thread.current) }
+</PRE>
+<HR \/>
+<ADDRESS>Generated by <A HREF="http://www.iki.fi/~mtr/genscript/">GNU Enscript 1.6.5.2</A>.</ADDRESS>
+</BODY>
+</HTML>

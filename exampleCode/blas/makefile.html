@@ -1,0 +1,89 @@
+<!DOCTYPE html PUBLIC "-//IETF//DTD HTML 2.0//EN">
+<HTML>
+<HEAD>
+<TITLE>blas/makefile</TITLE>
+</HEAD>
+<BODY BGCOLOR="#FFFFFF" TEXT="#000000" LINK="#1F00FF" ALINK="#FF0000" VLINK="#9900DD">
+<A NAME="top"> </A>
+<A NAME="file1"> </A>
+<H1><a href="makefile">makefile</a></H1>
+
+<PRE>
+<I><FONT COLOR="#B22222">##
+</FONT></I><I><FONT COLOR="#B22222"># @file      makefile
+</FONT></I><I><FONT COLOR="#B22222"># @author    Mitch Richling &lt;http://www.mitchr.me/&gt;
+</FONT></I><I><FONT COLOR="#B22222"># @Copyright Copyright 1997,2014 by Mitch Richling.  All rights reserved.
+</FONT></I><I><FONT COLOR="#B22222"># @brief     Simple make file to build the examples in this directory.@EOL
+</FONT></I><I><FONT COLOR="#B22222"># @Keywords  
+</FONT></I><I><FONT COLOR="#B22222"># @Std       GenericMake
+</FONT></I><I><FONT COLOR="#B22222">#
+</FONT></I><I><FONT COLOR="#B22222">#            
+</FONT></I><I><FONT COLOR="#B22222">#            
+</FONT></I>
+TARGBF = blas1F blas2F blas3F
+TARGBC = blas1C blas2C blas3C blas2bC
+TARGLF = slvSysF symEigF triSlvF 
+TARGLC = slvSysC                 
+
+<I><FONT COLOR="#B22222"># Put your compiler and basic compile options here
+</FONT></I>FC       = gfortran
+CC       = gcc
+FFLAGS   = -Wall
+CFLAGS   = -Wall
+
+<I><FONT COLOR="#B22222"># Put your Fortran 77 LAPACK and BLAS compile and link options here!
+</FONT></I><I><FONT COLOR="#B22222"># What is below works on my stock Debian box, and works on my OS X
+</FONT></I><I><FONT COLOR="#B22222"># 10.9.2 system when I comment out the first three and uncomment
+</FONT></I><I><FONT COLOR="#B22222"># APLKRZ.
+</FONT></I>BLLIB  = -lblas
+LPLIB  = -llapack
+LPINC  = -I/usr/include/atlas
+<I><FONT COLOR="#B22222">#APLKRZ  = -framework Accelerate 
+</FONT></I>
+<I><FONT COLOR="#B22222"># You will need a Fortran compiler for the TARG*F targets.
+</FONT></I>TARGETS = $(<B><FONT COLOR="#5F9EA0">TARGBC</FONT></B>) $(<B><FONT COLOR="#5F9EA0">TARGBF</FONT></B>) $(<B><FONT COLOR="#5F9EA0">TARGLF</FONT></B>) $(<B><FONT COLOR="#5F9EA0">TARGLC</FONT></B>) 
+<I><FONT COLOR="#B22222">#TARGETS = $(TARGBC) $(TARGLC) 
+</FONT></I>
+all : $(<B><FONT COLOR="#5F9EA0">TARGETS</FONT></B>)
+	@echo Make Complete
+
+blas1C : blas1C.c blaio.c blaio.h
+	$(<B><FONT COLOR="#5F9EA0">CC</FONT></B>) $(<B><FONT COLOR="#5F9EA0">CFLAGS</FONT></B>) $(<B><FONT COLOR="#5F9EA0">APLKRZ</FONT></B>) blas1C.c blaio.c -lm $(<B><FONT COLOR="#5F9EA0">BLLIB</FONT></B>) -o blas1C
+
+blas1F : blas1F.f blaio.f
+	$(<B><FONT COLOR="#5F9EA0">FC</FONT></B>) $(<B><FONT COLOR="#5F9EA0">FFLAGS</FONT></B>) blas1F.f blaio.f $(<B><FONT COLOR="#5F9EA0">BLLIB</FONT></B>) -o blas1F
+
+blas2bC : blas2bC.c blaio.c blaio.h 
+	$(<B><FONT COLOR="#5F9EA0">CC</FONT></B>) $(<B><FONT COLOR="#5F9EA0">CFLAGS</FONT></B>) $(<B><FONT COLOR="#5F9EA0">APLKRZ</FONT></B>) blas2bC.c blaio.c -lm  $(<B><FONT COLOR="#5F9EA0">BLLIB</FONT></B>) -o blas2bC
+
+blas2C : blas2C.c blaio.c blaio.h 
+	$(<B><FONT COLOR="#5F9EA0">CC</FONT></B>) $(<B><FONT COLOR="#5F9EA0">CFLAGS</FONT></B>) $(<B><FONT COLOR="#5F9EA0">APLKRZ</FONT></B>) blas2C.c blaio.c   -lm $(<B><FONT COLOR="#5F9EA0">BLLIB</FONT></B>) -o blas2C
+
+blas2F : blas2F.f blaio.f
+	$(<B><FONT COLOR="#5F9EA0">FC</FONT></B>) $(<B><FONT COLOR="#5F9EA0">FFLAGS</FONT></B>) blas2F.f blaio.f $(<B><FONT COLOR="#5F9EA0">BLLIB</FONT></B>) -o blas2F
+
+blas3C : blas3C.c blaio.c blaio.h
+	$(<B><FONT COLOR="#5F9EA0">CC</FONT></B>) $(<B><FONT COLOR="#5F9EA0">CFLAGS</FONT></B>) $(<B><FONT COLOR="#5F9EA0">APLKRZ</FONT></B>) blas3C.c blaio.c  -lm $(<B><FONT COLOR="#5F9EA0">BLLIB</FONT></B>) -o blas3C
+
+blas3F : blas3F.f blaio.f
+	$(<B><FONT COLOR="#5F9EA0">FC</FONT></B>) $(<B><FONT COLOR="#5F9EA0">FFLAGS</FONT></B>) blas3F.f blaio.f $(<B><FONT COLOR="#5F9EA0">BLLIB</FONT></B>) -o blas3F
+
+slvSysC : slvSysC.c blaio.c blaio.h
+	$(<B><FONT COLOR="#5F9EA0">CC</FONT></B>) $(<B><FONT COLOR="#5F9EA0">CFLAGS</FONT></B>) $(<B><FONT COLOR="#5F9EA0">APLKRZ</FONT></B>) $(<B><FONT COLOR="#5F9EA0">LPINC</FONT></B>) slvSysC.c blaio.c  -lm $(<B><FONT COLOR="#5F9EA0">LPLIB</FONT></B>) $(<B><FONT COLOR="#5F9EA0">BLLIB</FONT></B>) -o slvSysC
+
+slvSysF : slvSysF.f blaio.f
+	$(<B><FONT COLOR="#5F9EA0">FC</FONT></B>) $(<B><FONT COLOR="#5F9EA0">FFLAGS</FONT></B>) slvSysF.f blaio.f $(<B><FONT COLOR="#5F9EA0">LPLIB</FONT></B>) $(<B><FONT COLOR="#5F9EA0">BLLIB</FONT></B>) -o slvSysF
+
+symEigF : symEigF.f blaio.f
+	$(<B><FONT COLOR="#5F9EA0">FC</FONT></B>) $(<B><FONT COLOR="#5F9EA0">FFLAGS</FONT></B>) symEigF.f blaio.f $(<B><FONT COLOR="#5F9EA0">LPLIB</FONT></B>) $(<B><FONT COLOR="#5F9EA0">BLLIB</FONT></B>) -o symEigF
+
+triSlvF : triSlvF.f blaio.f
+	$(<B><FONT COLOR="#5F9EA0">FC</FONT></B>) $(<B><FONT COLOR="#5F9EA0">FFLAGS</FONT></B>) triSlvF.f blaio.f $(<B><FONT COLOR="#5F9EA0">LPLIB</FONT></B>) $(<B><FONT COLOR="#5F9EA0">BLLIB</FONT></B>) -o triSlvF
+
+clean :
+	rm -rf a.out *~ *.bak $(<B><FONT COLOR="#5F9EA0">TARGBF</FONT></B>) $(<B><FONT COLOR="#5F9EA0">TARGBC</FONT></B>) $(<B><FONT COLOR="#5F9EA0">TARGLF</FONT></B>) $(<B><FONT COLOR="#5F9EA0">TARGLC</FONT></B>)
+</PRE>
+<HR \/>
+<ADDRESS>Generated by <A HREF="http://www.iki.fi/~mtr/genscript/">GNU Enscript 1.6.5.90</A>.</ADDRESS>
+</BODY>
+</HTML>

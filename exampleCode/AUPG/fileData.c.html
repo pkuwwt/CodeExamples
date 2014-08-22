@@ -1,0 +1,150 @@
+<!DOCTYPE html PUBLIC "-//IETF//DTD HTML 2.0//EN">
+<HTML>
+<HEAD>
+<TITLE>AUPG/fileData.c</TITLE>
+</HEAD>
+<BODY BGCOLOR="#FFFFFF" TEXT="#000000" LINK="#1F00FF" ALINK="#FF0000" VLINK="#9900DD">
+<A NAME="top"> </A>
+<A NAME="file1"> </A>
+<H1><a href="fileData.c">fileData.c</a></H1>
+
+<PRE>
+<I><FONT COLOR="#B22222">/* -*- Mode:C; Coding:us-ascii-unix; fill-column:132 -*- */</FONT></I>
+<I><FONT COLOR="#B22222">/**********************************************************************************************************************************/</FONT></I>
+<I><FONT COLOR="#B22222">/**
+   @file      fileData.c
+   @author    Mitch Richling &lt;http://www.mitchr.me/&gt;
+   @Copyright Copyright 1995 by Mitch Richling.  All rights reserved.
+   @brief     How to get file, and file system, infomation in UNIX.@EOL
+   @Keywords  UNIX shell environment variable
+   @Std       ISOC POSIX
+   @Tested    
+              - Solaris 2.8
+              - MacOS X.2
+              - Linux (RH 7.3)
+
+   This C program is intended to illustrate how query and manipulate file meta data like access/modify times, ownership, and
+   permissions.
+***********************************************************************************************************************************/</FONT></I>
+
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;stdio.h&gt;</FONT></B>              <I><FONT COLOR="#B22222">/* I/O lib         C89   */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;string.h&gt;</FONT></B>             <I><FONT COLOR="#B22222">/* Strings         C89   */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;sys/types.h&gt;</FONT></B>          <I><FONT COLOR="#B22222">/* UNIX types      POSIX */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;dirent.h&gt;</FONT></B>             <I><FONT COLOR="#B22222">/* UNIX dirs       POSIX */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;errno.h&gt;</FONT></B>              <I><FONT COLOR="#B22222">/* error stf       POSIX */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;utime.h&gt;</FONT></B>              <I><FONT COLOR="#B22222">/* utime           POSIX */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;sys/stat.h&gt;</FONT></B>           <I><FONT COLOR="#B22222">/* UNIX stat       POSIX */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;time.h&gt;</FONT></B>               <I><FONT COLOR="#B22222">/* time            C89   */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;unistd.h&gt;</FONT></B>             <I><FONT COLOR="#B22222">/* UNIX std stf    POSIX */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;stdlib.h&gt;</FONT></B>             <I><FONT COLOR="#B22222">/* Standard Lib    C89   */</FONT></I>
+
+<I><FONT COLOR="#B22222">/**********************************************************************************************************************************/</FONT></I>
+<B><FONT COLOR="#228B22">int</FONT></B> <B><FONT COLOR="#0000FF">main</FONT></B>(<B><FONT COLOR="#228B22">int</FONT></B> argc, <B><FONT COLOR="#228B22">char</FONT></B> *argv[]) {
+  <B><FONT COLOR="#228B22">struct</FONT></B> stat s;
+  <B><FONT COLOR="#228B22">char</FONT></B> readlinkBuf[1024];
+  <B><FONT COLOR="#228B22">int</FONT></B> readlinkChCnt;
+
+  <I><FONT COLOR="#B22222">/* Make sure we have precicely one argument. */</FONT></I>
+  <B><FONT COLOR="#A020F0">if</FONT></B>(argc != 2) {
+    printf(<B><FONT COLOR="#BC8F8F">&quot;ERROR: One argument required.\n&quot;</FONT></B>);
+    exit(1);
+  } <I><FONT COLOR="#B22222">/* end if */</FONT></I>
+
+  printf(<B><FONT COLOR="#BC8F8F">&quot;File name: %s\n&quot;</FONT></B>, argv[1]);
+
+  <I><FONT COLOR="#B22222">/* Stat the file given on the command line. */</FONT></I>
+  <B><FONT COLOR="#A020F0">if</FONT></B>(lstat(argv[1], &amp;s) &lt; 0) {
+    printf(<B><FONT COLOR="#BC8F8F">&quot;ERROR: fileData&quot;</FONT></B>);
+    exit(2);
+  } <I><FONT COLOR="#B22222">/* end if */</FONT></I>
+
+  printf(<B><FONT COLOR="#BC8F8F">&quot;File inode number: %lu\n&quot;</FONT></B>,                (<B><FONT COLOR="#228B22">unsigned</FONT></B> <B><FONT COLOR="#228B22">long</FONT></B>)s.st_ino);
+  printf(<B><FONT COLOR="#BC8F8F">&quot;Device number: %lu\n&quot;</FONT></B>,                    (<B><FONT COLOR="#228B22">unsigned</FONT></B> <B><FONT COLOR="#228B22">long</FONT></B>)s.st_dev);
+  printf(<B><FONT COLOR="#BC8F8F">&quot;Device type: %lu\n&quot;</FONT></B>,                      (<B><FONT COLOR="#228B22">unsigned</FONT></B> <B><FONT COLOR="#228B22">long</FONT></B>)s.st_rdev);
+  printf(<B><FONT COLOR="#BC8F8F">&quot;File mode: %lu\n&quot;</FONT></B>,                        (<B><FONT COLOR="#228B22">unsigned</FONT></B> <B><FONT COLOR="#228B22">long</FONT></B>)s.st_mode);
+  printf(<B><FONT COLOR="#BC8F8F">&quot;File owner(UID): %lu\n&quot;</FONT></B>,                  (<B><FONT COLOR="#228B22">unsigned</FONT></B> <B><FONT COLOR="#228B22">long</FONT></B>)s.st_uid);
+  printf(<B><FONT COLOR="#BC8F8F">&quot;File group owner(GID): %lu\n&quot;</FONT></B>,            (<B><FONT COLOR="#228B22">unsigned</FONT></B> <B><FONT COLOR="#228B22">long</FONT></B>)s.st_gid);
+  printf(<B><FONT COLOR="#BC8F8F">&quot;File size: %lu bytes\n&quot;</FONT></B>,                  (<B><FONT COLOR="#228B22">unsigned</FONT></B> <B><FONT COLOR="#228B22">long</FONT></B>)s.st_size);
+  printf(<B><FONT COLOR="#BC8F8F">&quot;File size: %lu blocks\n&quot;</FONT></B>,                 (<B><FONT COLOR="#228B22">unsigned</FONT></B> <B><FONT COLOR="#228B22">long</FONT></B>)s.st_blocks);
+  printf(<B><FONT COLOR="#BC8F8F">&quot;Block size: %lu bytes\n&quot;</FONT></B>,                 (<B><FONT COLOR="#228B22">unsigned</FONT></B> <B><FONT COLOR="#228B22">long</FONT></B>)s.st_blksize);
+  printf(<B><FONT COLOR="#BC8F8F">&quot;Block storage requirements: %lu bytes\n&quot;</FONT></B>, (<B><FONT COLOR="#228B22">unsigned</FONT></B> <B><FONT COLOR="#228B22">long</FONT></B>)(512 * s.st_blocks));
+  printf(<B><FONT COLOR="#BC8F8F">&quot;File atime: %lu\n&quot;</FONT></B>,                       (<B><FONT COLOR="#228B22">unsigned</FONT></B> <B><FONT COLOR="#228B22">long</FONT></B>)s.st_atime);
+  printf(<B><FONT COLOR="#BC8F8F">&quot;File ctime: %lu\n&quot;</FONT></B>,                       (<B><FONT COLOR="#228B22">unsigned</FONT></B> <B><FONT COLOR="#228B22">long</FONT></B>)s.st_ctime);
+  printf(<B><FONT COLOR="#BC8F8F">&quot;File mtime: %lu\n&quot;</FONT></B>,                       (<B><FONT COLOR="#228B22">unsigned</FONT></B> <B><FONT COLOR="#228B22">long</FONT></B>)s.st_mtime);
+#<B><FONT COLOR="#5F9EA0">ifdef</FONT></B> <FONT COLOR="#B8860B">BSD</FONT>
+  printf(<B><FONT COLOR="#BC8F8F">&quot;File generation number: %lu\n&quot;</FONT></B>,           (<B><FONT COLOR="#228B22">unsigned</FONT></B> <B><FONT COLOR="#228B22">long</FONT></B>)s.st_gen);
+#<B><FONT COLOR="#5F9EA0">endif</FONT></B>
+
+  <I><FONT COLOR="#B22222">/* This section is not POSIX!!!  Note the order is important here as
+     the different modes are NOT independent bits.  This order
+     requirement can be different for different OSes.  This order
+     works well for most BSD based systems.*/</FONT></I>
+  printf(<B><FONT COLOR="#BC8F8F">&quot;File Type: &quot;</FONT></B>);
+  <B><FONT COLOR="#A020F0">if</FONT></B>(s.st_mode &amp; S_IFLNK)   printf(<B><FONT COLOR="#BC8F8F">&quot; symbolic link\n&quot;</FONT></B>);
+  <B><FONT COLOR="#A020F0">else</FONT></B> <B><FONT COLOR="#A020F0">if</FONT></B>(s.st_mode &amp; S_IFSOCK)  printf(<B><FONT COLOR="#BC8F8F">&quot; socket\n&quot;</FONT></B>);
+#<B><FONT COLOR="#5F9EA0">ifdef</FONT></B> <FONT COLOR="#B8860B">BSD</FONT>
+  <B><FONT COLOR="#A020F0">else</FONT></B> <B><FONT COLOR="#A020F0">if</FONT></B>(s.st_mode &amp; S_IFWHT)   printf(<B><FONT COLOR="#BC8F8F">&quot; whiteout\n&quot;</FONT></B>);
+#<B><FONT COLOR="#5F9EA0">endif</FONT></B>
+  <B><FONT COLOR="#A020F0">else</FONT></B> <B><FONT COLOR="#A020F0">if</FONT></B>(s.st_mode &amp; S_IFIFO)   printf(<B><FONT COLOR="#BC8F8F">&quot; named pipe (fifo)\n&quot;</FONT></B>);
+  <B><FONT COLOR="#A020F0">else</FONT></B> <B><FONT COLOR="#A020F0">if</FONT></B>(s.st_mode &amp; S_IFCHR)   printf(<B><FONT COLOR="#BC8F8F">&quot; character special\n&quot;</FONT></B>);
+  <B><FONT COLOR="#A020F0">else</FONT></B> <B><FONT COLOR="#A020F0">if</FONT></B>(s.st_mode &amp; S_IFDIR)   printf(<B><FONT COLOR="#BC8F8F">&quot; directory\n&quot;</FONT></B>);
+  <B><FONT COLOR="#A020F0">else</FONT></B> <B><FONT COLOR="#A020F0">if</FONT></B>(s.st_mode &amp; S_IFBLK)   printf(<B><FONT COLOR="#BC8F8F">&quot; block special\n&quot;</FONT></B>);
+  <B><FONT COLOR="#A020F0">else</FONT></B> <B><FONT COLOR="#A020F0">if</FONT></B>(s.st_mode &amp; S_IFREG)   printf(<B><FONT COLOR="#BC8F8F">&quot; regular\n&quot;</FONT></B>);
+  <B><FONT COLOR="#A020F0">else</FONT></B>                           printf(<B><FONT COLOR="#BC8F8F">&quot; UNKNOWN\n&quot;</FONT></B>);
+
+  <I><FONT COLOR="#B22222">/* This section IS POSIX.  It is safe (note we can't tell if a file
+     is a symbolic link or not.  This is a problem. :) */</FONT></I>
+  <B><FONT COLOR="#A020F0">if</FONT></B>(S_ISDIR(s.st_mode))  printf(<B><FONT COLOR="#BC8F8F">&quot;Macro check: directory\n&quot;</FONT></B>);
+  <B><FONT COLOR="#A020F0">if</FONT></B>(S_ISCHR(s.st_mode))  printf(<B><FONT COLOR="#BC8F8F">&quot;Macro check: char special\n&quot;</FONT></B>);
+  <B><FONT COLOR="#A020F0">if</FONT></B>(S_ISBLK(s.st_mode))  printf(<B><FONT COLOR="#BC8F8F">&quot;Macro check: block special\n&quot;</FONT></B>);
+  <B><FONT COLOR="#A020F0">if</FONT></B>(S_ISREG(s.st_mode))  printf(<B><FONT COLOR="#BC8F8F">&quot;Macro check: regular file\n&quot;</FONT></B>);
+  <B><FONT COLOR="#A020F0">if</FONT></B>(S_ISFIFO(s.st_mode)) printf(<B><FONT COLOR="#BC8F8F">&quot;Macro check: fifo or socket\n&quot;</FONT></B>);
+
+  <I><FONT COLOR="#B22222">/* This one is not POSIX!! */</FONT></I>
+  <B><FONT COLOR="#A020F0">if</FONT></B>(S_ISLNK(s.st_mode))  printf(<B><FONT COLOR="#BC8F8F">&quot;Macro check: symbolic link\n&quot;</FONT></B>);
+
+  printf(<B><FONT COLOR="#BC8F8F">&quot;File Permissions: \n&quot;</FONT></B>);
+  <B><FONT COLOR="#A020F0">if</FONT></B>(s.st_mode &amp; S_ISUID)   printf(<B><FONT COLOR="#BC8F8F">&quot; set user id on execution\n&quot;</FONT></B>);
+  <B><FONT COLOR="#A020F0">if</FONT></B>(s.st_mode &amp; S_ISGID)   printf(<B><FONT COLOR="#BC8F8F">&quot; set group id on execution\n&quot;</FONT></B>);
+  <B><FONT COLOR="#A020F0">if</FONT></B>(s.st_mode &amp; S_ISVTX)   printf(<B><FONT COLOR="#BC8F8F">&quot; save swapped text even after use\n&quot;</FONT></B>);
+
+  printf(<B><FONT COLOR="#BC8F8F">&quot;owner permissions: &quot;</FONT></B>);
+  <B><FONT COLOR="#A020F0">if</FONT></B>(s.st_mode &amp; S_IRUSR)   printf(<B><FONT COLOR="#BC8F8F">&quot; read &quot;</FONT></B>);
+  <B><FONT COLOR="#A020F0">if</FONT></B>(s.st_mode &amp; S_IWUSR)   printf(<B><FONT COLOR="#BC8F8F">&quot; write&quot;</FONT></B>);
+  <B><FONT COLOR="#A020F0">if</FONT></B>(s.st_mode &amp; S_IXUSR)   printf(<B><FONT COLOR="#BC8F8F">&quot; execute/search&quot;</FONT></B>);
+  printf(<B><FONT COLOR="#BC8F8F">&quot;\n&quot;</FONT></B>);
+
+  printf(<B><FONT COLOR="#BC8F8F">&quot;group permissions: &quot;</FONT></B>);
+  <B><FONT COLOR="#A020F0">if</FONT></B>(s.st_mode &amp; S_IRGRP)   printf(<B><FONT COLOR="#BC8F8F">&quot; read &quot;</FONT></B>);
+  <B><FONT COLOR="#A020F0">if</FONT></B>(s.st_mode &amp; S_IWGRP)   printf(<B><FONT COLOR="#BC8F8F">&quot; write&quot;</FONT></B>);
+  <B><FONT COLOR="#A020F0">if</FONT></B>(s.st_mode &amp; S_IXGRP)   printf(<B><FONT COLOR="#BC8F8F">&quot; execute/search&quot;</FONT></B>);
+  printf(<B><FONT COLOR="#BC8F8F">&quot;\n&quot;</FONT></B>);
+
+  printf(<B><FONT COLOR="#BC8F8F">&quot;other permissions: &quot;</FONT></B>);
+  <B><FONT COLOR="#A020F0">if</FONT></B>(s.st_mode &amp; S_IROTH)   printf(<B><FONT COLOR="#BC8F8F">&quot; read &quot;</FONT></B>);
+  <B><FONT COLOR="#A020F0">if</FONT></B>(s.st_mode &amp; S_IWOTH)   printf(<B><FONT COLOR="#BC8F8F">&quot; write&quot;</FONT></B>);
+  <B><FONT COLOR="#A020F0">if</FONT></B>(s.st_mode &amp; S_IXOTH)   printf(<B><FONT COLOR="#BC8F8F">&quot; execute/search&quot;</FONT></B>);
+  printf(<B><FONT COLOR="#BC8F8F">&quot;\n&quot;</FONT></B>);
+
+  <I><FONT COLOR="#B22222">/* Both the macro, S_ISLNK, and the function, readlink, are not POSIX compliant. The readlink function appeared in BSD sometime
+     around 4.2. */</FONT></I>
+  <B><FONT COLOR="#A020F0">if</FONT></B>(S_ISLNK(s.st_mode)) {
+    <B><FONT COLOR="#A020F0">if</FONT></B>( (readlinkChCnt = readlink(argv[1], readlinkBuf, 1000)) &lt; 0) {
+      printf(<B><FONT COLOR="#BC8F8F">&quot;ERROR: readlink failure.\n&quot;</FONT></B>);
+      exit(1);
+    } <B><FONT COLOR="#A020F0">else</FONT></B> {
+      printf(<B><FONT COLOR="#BC8F8F">&quot;File len: %d\n&quot;</FONT></B>, readlinkChCnt);
+      <B><FONT COLOR="#A020F0">if</FONT></B>(readlinkChCnt &gt;= 0) {
+        readlinkBuf[readlinkChCnt] = <B><FONT COLOR="#BC8F8F">'\0'</FONT></B>;
+        printf(<B><FONT COLOR="#BC8F8F">&quot;Link target: %s\n&quot;</FONT></B>, readlinkBuf);
+      } <I><FONT COLOR="#B22222">/* end if */</FONT></I>
+    } <I><FONT COLOR="#B22222">/* end if/else */</FONT></I>
+  } <I><FONT COLOR="#B22222">/* end if */</FONT></I>
+
+  <B><FONT COLOR="#A020F0">return</FONT></B> 0;
+} <I><FONT COLOR="#B22222">/* end func main */</FONT></I>
+</PRE>
+<HR \/>
+<ADDRESS>Generated by <A HREF="http://www.iki.fi/~mtr/genscript/">GNU Enscript 1.6.5.90</A>.</ADDRESS>
+</BODY>
+</HTML>

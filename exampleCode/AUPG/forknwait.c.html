@@ -1,0 +1,125 @@
+<!DOCTYPE html PUBLIC "-//IETF//DTD HTML 2.0//EN">
+<HTML>
+<HEAD>
+<TITLE>AUPG/forknwait.c</TITLE>
+</HEAD>
+<BODY BGCOLOR="#FFFFFF" TEXT="#000000" LINK="#1F00FF" ALINK="#FF0000" VLINK="#9900DD">
+<A NAME="top"> </A>
+<A NAME="file1"> </A>
+<H1><a href="forknwait.c">forknwait.c</a></H1>
+
+<PRE>
+<I><FONT COLOR="#B22222">/* -*- Mode:C; Coding:us-ascii-unix; fill-column:132 -*- */</FONT></I>
+<I><FONT COLOR="#B22222">/**********************************************************************************************************************************/</FONT></I>
+<I><FONT COLOR="#B22222">/**
+   @file      forknwait.c
+   @author    Mitch Richling &lt;http://www.mitchr.me/&gt;
+   @Copyright Copyright 1995 by Mitch Richling.  All rights reserved.
+   @brief     UNIX group queries@EOL
+   @Keywords  fork wait UNIX
+   @Std       ISOC POSIX UNIX98 BSD4.3 SYSV3
+   @Tested    
+              - Solaris 2.8
+              - MacOS X.2
+              - Linux (RH 7.3)
+
+   This C program is intended to illustrate how to fork a process and how to wait for the child.  How to wait for the child is much
+   more involved than simply calling the wait system call.  This is because the wait call can return for many reasons.
+   
+   To make applications more portable it is preferable not to use our special knowledge of the high/low order 8 bit quantities in
+   the 16 bit return from wait.  Instead we can use the POSIX macros to do the same thing.  I have sprinkled comments in the code
+   discussing the do-it yourself methods and the POSIX methods.
+***********************************************************************************************************************************/</FONT></I>
+
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;stdio.h&gt;</FONT></B>              <I><FONT COLOR="#B22222">/* I/O lib         C89   */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;string.h&gt;</FONT></B>             <I><FONT COLOR="#B22222">/* Strings         C89   */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;sys/types.h&gt;</FONT></B>          <I><FONT COLOR="#B22222">/* UNIX types      POSIX */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;unistd.h&gt;</FONT></B>             <I><FONT COLOR="#B22222">/* UNIX std stf    POSIX */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;errno.h&gt;</FONT></B>              <I><FONT COLOR="#B22222">/* error stf       POSIX */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;stdlib.h&gt;</FONT></B>             <I><FONT COLOR="#B22222">/* Standard Lib    C89   */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;sys/wait.h&gt;</FONT></B>           <I><FONT COLOR="#B22222">/* UNIX wait       POSIX */</FONT></I>
+
+<I><FONT COLOR="#B22222">/**********************************************************************************************************************************/</FONT></I>
+<B><FONT COLOR="#228B22">int</FONT></B> <B><FONT COLOR="#0000FF">main</FONT></B>(<B><FONT COLOR="#228B22">int</FONT></B> argc, <B><FONT COLOR="#228B22">char</FONT></B> *argv[]) {
+  pid_t parentPID, wPID, childPID;
+  <B><FONT COLOR="#228B22">int</FONT></B> i, whyWait, mustWait, unknownFail;
+
+  <I><FONT COLOR="#B22222">/* Get the PID */</FONT></I>
+  parentPID = getpid();
+  printf(<B><FONT COLOR="#BC8F8F">&quot;PARENT: Process ID: %ld\n&quot;</FONT></B>, (<B><FONT COLOR="#228B22">long</FONT></B>)parentPID);
+
+  childPID = fork();
+  printf(<B><FONT COLOR="#BC8F8F">&quot;PARENT: fork returned: %ld\n&quot;</FONT></B>, (<B><FONT COLOR="#228B22">long</FONT></B>)childPID);
+  <B><FONT COLOR="#A020F0">if</FONT></B>(childPID) {                <I><FONT COLOR="#B22222">/* Parent */</FONT></I>
+    printf(<B><FONT COLOR="#BC8F8F">&quot;PARENT: I'm still running after the fork.\n&quot;</FONT></B>);
+    <B><FONT COLOR="#A020F0">if</FONT></B>(childPID == -1) {
+      printf(<B><FONT COLOR="#BC8F8F">&quot;ERROR: The fork was not successful.\n&quot;</FONT></B>);
+      exit(2);
+    } <I><FONT COLOR="#B22222">/* end if */</FONT></I>
+    printf(<B><FONT COLOR="#BC8F8F">&quot;PARENT: My child's PID: %ld.\n&quot;</FONT></B>, (<B><FONT COLOR="#228B22">long</FONT></B>)childPID);
+
+    <I><FONT COLOR="#B22222">/* We wait for the child to quit.  This is not as simple as just calling the wait(2) system call, because the wait call can
+       return for many reasons.  */</FONT></I>
+    unknownFail = 0;
+    mustWait = 1;
+    <B><FONT COLOR="#A020F0">do</FONT></B> {
+      wPID = wait(&amp;whyWait);
+      printf(<B><FONT COLOR="#BC8F8F">&quot;PARENT: wait has returned(%ld).\n&quot;</FONT></B>, (<B><FONT COLOR="#228B22">long</FONT></B>)wPID);
+      <B><FONT COLOR="#A020F0">if</FONT></B>(wPID == -1) {
+        <B><FONT COLOR="#A020F0">if</FONT></B>(errno == ECHILD) {   <I><FONT COLOR="#B22222">/* My babies are all dead! */</FONT></I>
+          mustWait = 0;
+        } <B><FONT COLOR="#A020F0">else</FONT></B> <B><FONT COLOR="#A020F0">if</FONT></B>(errno == EINTR) {     <I><FONT COLOR="#B22222">/* I was sent a signal. */</FONT></I>
+          printf(<B><FONT COLOR="#BC8F8F">&quot;PARENT: received a signal.  Continuing.\n&quot;</FONT></B>);
+        } <B><FONT COLOR="#A020F0">else</FONT></B> {
+          printf(<B><FONT COLOR="#BC8F8F">&quot;PARENT: WARNING: unknown wait failure.\n&quot;</FONT></B>);
+          unknownFail++;
+        } <I><FONT COLOR="#B22222">/* end if/else */</FONT></I>
+      } <B><FONT COLOR="#A020F0">else</FONT></B> {
+        <B><FONT COLOR="#A020F0">if</FONT></B>(wPID == childPID) {  <I><FONT COLOR="#B22222">/* This is my baby. */</FONT></I>
+          <B><FONT COLOR="#A020F0">if</FONT></B>(WIFSTOPPED(whyWait)) {     <I><FONT COLOR="#B22222">/* STOPed my baby. */</FONT></I>
+            printf(<B><FONT COLOR="#BC8F8F">&quot;PARENT: child was stopped with signal %d&quot;</FONT></B>, (<B><FONT COLOR="#228B22">int</FONT></B>)WSTOPSIG(whyWait));
+          } <B><FONT COLOR="#A020F0">else</FONT></B> <B><FONT COLOR="#A020F0">if</FONT></B>(WIFEXITED(whyWait)) {       <I><FONT COLOR="#B22222">/* My baby died a natural death. */</FONT></I>
+            printf(<B><FONT COLOR="#BC8F8F">&quot;PARENT: child exited with %d.\n&quot;</FONT></B>, (<B><FONT COLOR="#228B22">int</FONT></B>)WEXITSTATUS(whyWait));
+            mustWait = 0;
+          } <B><FONT COLOR="#A020F0">else</FONT></B> <B><FONT COLOR="#A020F0">if</FONT></B>(WIFSIGNALED(whyWait)) {     <I><FONT COLOR="#B22222">/* My baby was killed. */</FONT></I>
+            printf(<B><FONT COLOR="#BC8F8F">&quot;PARENT: child was killed by signal %d.\n&quot;</FONT></B>, (<B><FONT COLOR="#228B22">int</FONT></B>)WTERMSIG(whyWait));
+            <B><FONT COLOR="#A020F0">if</FONT></B>(WCOREDUMP(whyWait))
+              printf(<B><FONT COLOR="#BC8F8F">&quot;PARENT: child dumped core\n&quot;</FONT></B>);
+            <B><FONT COLOR="#A020F0">else</FONT></B>
+              printf(<B><FONT COLOR="#BC8F8F">&quot;PARENT: child did not dump core\n&quot;</FONT></B>);
+            mustWait = 0;
+          } <B><FONT COLOR="#A020F0">else</FONT></B> {              <I><FONT COLOR="#B22222">/* We don't know why wait() returned.  This should not happen. */</FONT></I>
+            printf(<B><FONT COLOR="#BC8F8F">&quot;PARENT: WARNING: wait failure(unknown status).\n&quot;</FONT></B>);
+            unknownFail++;
+          } <I><FONT COLOR="#B22222">/* end if/else */</FONT></I>
+        } <B><FONT COLOR="#A020F0">else</FONT></B> {                <I><FONT COLOR="#B22222">/* wait() reports a pid that is not my child. */</FONT></I>
+          printf(<B><FONT COLOR="#BC8F8F">&quot;PARENT: WARNING: wait failure(unknown child).\n&quot;</FONT></B>);
+          unknownFail++;
+        } <I><FONT COLOR="#B22222">/* end if/else */</FONT></I>
+      } <I><FONT COLOR="#B22222">/* end if/else */</FONT></I>
+    } <I><FONT COLOR="#B22222">/* end do */</FONT></I>
+    <B><FONT COLOR="#A020F0">while</FONT></B>(mustWait &amp;&amp; (unknownFail &lt; 10));
+    <B><FONT COLOR="#A020F0">if</FONT></B>(mustWait == 0)
+      printf(<B><FONT COLOR="#BC8F8F">&quot;PARENT: normal exit because child has gone away.\n&quot;</FONT></B>);
+    <B><FONT COLOR="#A020F0">else</FONT></B>
+      printf(<B><FONT COLOR="#BC8F8F">&quot;PARENT: exit because of repeated, unknown failures of wait(2).\n&quot;</FONT></B>);
+  } <B><FONT COLOR="#A020F0">else</FONT></B> {                      <I><FONT COLOR="#B22222">/* Child */</FONT></I>
+    printf(<B><FONT COLOR="#BC8F8F">&quot;CHILD:  I'm running.\n&quot;</FONT></B>);
+    printf(<B><FONT COLOR="#BC8F8F">&quot;CHILD:  Process ID: %ld\n&quot;</FONT></B>, (<B><FONT COLOR="#228B22">long</FONT></B>)getpid());
+    printf(<B><FONT COLOR="#BC8F8F">&quot;CHILD:  Process Group ID: %ld\n&quot;</FONT></B>, (<B><FONT COLOR="#228B22">long</FONT></B>)getpgrp());
+    printf(<B><FONT COLOR="#BC8F8F">&quot;CHILD:  I'm going to sleep for 10 seconds now.\n&quot;</FONT></B>);
+    <B><FONT COLOR="#A020F0">for</FONT></B>(i = 10; i &gt; 0; i--) {
+      printf(<B><FONT COLOR="#BC8F8F">&quot;CHILD: Count down: %d\n&quot;</FONT></B>, i);
+      sleep(1);
+    } <I><FONT COLOR="#B22222">/* end for */</FONT></I>
+    printf(<B><FONT COLOR="#BC8F8F">&quot;CHILD:  I'm done sleeping.\n&quot;</FONT></B>);
+    printf(<B><FONT COLOR="#BC8F8F">&quot;CHILD:  forknwait shutdown.\n&quot;</FONT></B>);
+  } <I><FONT COLOR="#B22222">/* end if/else */</FONT></I>
+
+  <B><FONT COLOR="#A020F0">return</FONT></B> (0);
+} <I><FONT COLOR="#B22222">/* end func main */</FONT></I>
+</PRE>
+<HR \/>
+<ADDRESS>Generated by <A HREF="http://www.iki.fi/~mtr/genscript/">GNU Enscript 1.6.5.90</A>.</ADDRESS>
+</BODY>
+</HTML>

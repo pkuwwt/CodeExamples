@@ -1,0 +1,192 @@
+<!DOCTYPE html PUBLIC "-//IETF//DTD HTML 2.0//EN">
+<HTML>
+<HEAD>
+<TITLE>AUPG/shmMakeAndUseRT.c</TITLE>
+</HEAD>
+<BODY BGCOLOR="#FFFFFF" TEXT="#000000" LINK="#1F00FF" ALINK="#FF0000" VLINK="#9900DD">
+<A NAME="top"> </A>
+<A NAME="file1"> </A>
+<H1><a href="shmMakeAndUseRT.c">shmMakeAndUseRT.c</a></H1>
+
+<PRE>
+<I><FONT COLOR="#B22222">/* -*- Mode:C; Coding:us-ascii-unix; fill-column:132 -*- */</FONT></I>
+<I><FONT COLOR="#B22222">/**********************************************************************************************************************************/</FONT></I>
+<I><FONT COLOR="#B22222">/**
+   @file      shmMakeAndUseRT.c
+   @author    Mitch Richling &lt;http://www.mitchr.me/&gt;
+   @Copyright Copyright 1998,2000,2004 by Mitch Richling.  All rights reserved.
+   @brief     How to create/use a shared memory segment@EOL
+   @Keywords  UNIX shared memory
+   @Std       ISOC
+   @Tested    
+              - MacOS X.2
+
+   This C program is intended to illustrate how one can create/access shared memory segments in UNIX using the POSIX real-time APIs.
+***********************************************************************************************************************************/</FONT></I>
+
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;stdlib.h&gt;</FONT></B>             <I><FONT COLOR="#B22222">/* Standard Lib    C89   */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;stdio.h&gt;</FONT></B>              <I><FONT COLOR="#B22222">/* I/O lib         C89   */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;string.h&gt;</FONT></B>             <I><FONT COLOR="#B22222">/* Strings         C89   */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;unistd.h&gt;</FONT></B>             <I><FONT COLOR="#B22222">/* UNIX std stf    POSIX */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;errno.h&gt;</FONT></B>              <I><FONT COLOR="#B22222">/* error stf       POSIX */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;fcntl.h&gt;</FONT></B>              <I><FONT COLOR="#B22222">/* UNIX file ctrl  UNIX  */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;sys/stat.h&gt;</FONT></B>           <I><FONT COLOR="#B22222">/* UNIX stat       POSIX */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;sys/types.h&gt;</FONT></B>          <I><FONT COLOR="#B22222">/* UNIX types      POSIX */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;sys/mman.h&gt;</FONT></B>           <I><FONT COLOR="#B22222">/* mmap()          POSIX */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;ctype.h&gt;</FONT></B>              <I><FONT COLOR="#B22222">/* Char classes    C89   */</FONT></I>
+
+<I><FONT COLOR="#B22222">/**********************************************************************************************************************************/</FONT></I>
+<B><FONT COLOR="#228B22">int</FONT></B> <B><FONT COLOR="#0000FF">main</FONT></B>(<B><FONT COLOR="#228B22">int</FONT></B> argc, <B><FONT COLOR="#228B22">char</FONT></B> *argv[]) {
+  <B><FONT COLOR="#228B22">int</FONT></B> shmFD;
+  <B><FONT COLOR="#228B22">void</FONT></B> *shmAdd;
+  <B><FONT COLOR="#228B22">int</FONT></B> i, useMode=0;   <I><FONT COLOR="#B22222">/* 1=use segment, not create it. */</FONT></I>
+
+  <I><FONT COLOR="#B22222">/* We get &quot;open&quot; a shared memory segment with the given name.  The flags work just as they do with open: O_CREAT creates the
+     segment if it doesn't exist, O_EXCL errors out if the segment already exists, and O_RDRW opens it for read and write.  The
+     perms are as with chmod.  Normally, things opened with shm_open do now appear in the filesystem; however, it is best to specify
+     a path to a file you can write to! */</FONT></I>
+  shmFD = shm_open(<B><FONT COLOR="#BC8F8F">&quot;/tmp/foobar&quot;</FONT></B>, O_RDWR | O_CREAT | O_EXCL, S_IRWXU | S_IRWXG | S_IRWXO);
+  <B><FONT COLOR="#A020F0">if</FONT></B>(shmFD &lt; 0) {
+    <I><FONT COLOR="#B22222">/* I have a case for all of the interesting cases, even the ones that can not happen in this situation... */</FONT></I>
+    <B><FONT COLOR="#A020F0">switch</FONT></B>(errno) {
+      <B><FONT COLOR="#A020F0">case</FONT></B> <B><FONT COLOR="#5F9EA0">EACCES</FONT></B>:       printf(<B><FONT COLOR="#BC8F8F">&quot;shm_open failed: The requested permissions were denied or create denied .\n&quot;</FONT></B>);
+        <B><FONT COLOR="#A020F0">break</FONT></B>;
+      <B><FONT COLOR="#A020F0">case</FONT></B> <B><FONT COLOR="#5F9EA0">EEXIST</FONT></B>:       printf(<B><FONT COLOR="#BC8F8F">&quot;shm_open failed: Object already exists and O_CREAT and O_EXCL were specified.\n&quot;</FONT></B>);
+        useMode=1;
+        <B><FONT COLOR="#A020F0">break</FONT></B>;
+      <B><FONT COLOR="#A020F0">case</FONT></B> <B><FONT COLOR="#5F9EA0">EINTR</FONT></B>:        printf(<B><FONT COLOR="#BC8F8F">&quot;shm_open failed: The operation was interrupted by a signal.\n&quot;</FONT></B>);
+        <B><FONT COLOR="#A020F0">break</FONT></B>;
+      <B><FONT COLOR="#A020F0">case</FONT></B> <B><FONT COLOR="#5F9EA0">EINVAL</FONT></B>:       printf(<B><FONT COLOR="#BC8F8F">&quot;shm_open failed: The operation is not supported.\n&quot;</FONT></B>);
+        <B><FONT COLOR="#A020F0">break</FONT></B>;
+      <B><FONT COLOR="#A020F0">case</FONT></B> <B><FONT COLOR="#5F9EA0">EMFILE</FONT></B>:       printf(<B><FONT COLOR="#BC8F8F">&quot;shm_open failed: Too many file descriptors were already open.\n&quot;</FONT></B>);
+        <B><FONT COLOR="#A020F0">break</FONT></B>;
+      <B><FONT COLOR="#A020F0">case</FONT></B> <B><FONT COLOR="#5F9EA0">ENAMETOOLONG</FONT></B>: printf(<B><FONT COLOR="#BC8F8F">&quot;shm_open failed: Name was too long (longer than SHM_NAME_MAX chars).\n&quot;</FONT></B>);
+        <B><FONT COLOR="#A020F0">break</FONT></B>;
+      <B><FONT COLOR="#A020F0">case</FONT></B> <B><FONT COLOR="#5F9EA0">ENFILE</FONT></B>:       printf(<B><FONT COLOR="#BC8F8F">&quot;shm_open failed: The system file table is full.\n&quot;</FONT></B>);
+        <B><FONT COLOR="#A020F0">break</FONT></B>;
+      <B><FONT COLOR="#A020F0">case</FONT></B> <B><FONT COLOR="#5F9EA0">ENOENT</FONT></B>:       printf(<B><FONT COLOR="#BC8F8F">&quot;shm_open failed: Object doesn't exist (O_CREAT was not specified).\n&quot;</FONT></B>);
+        <B><FONT COLOR="#A020F0">break</FONT></B>;
+      <B><FONT COLOR="#A020F0">case</FONT></B> <B><FONT COLOR="#5F9EA0">ENOSPC</FONT></B>:       printf(<B><FONT COLOR="#BC8F8F">&quot;shm_open failed: No memory to create object (O_CREAT was specified).\n&quot;</FONT></B>);
+        <B><FONT COLOR="#A020F0">break</FONT></B>;
+      <B><FONT COLOR="#5F9EA0">default</FONT></B>:           printf(<B><FONT COLOR="#BC8F8F">&quot;shm_open failed: Duno why...\n&quot;</FONT></B>);
+        <B><FONT COLOR="#A020F0">break</FONT></B>;
+    } <I><FONT COLOR="#B22222">/* end switch */</FONT></I>
+  } <I><FONT COLOR="#B22222">/* end if */</FONT></I>
+
+  <I><FONT COLOR="#B22222">/* If we failed before because the segment already existed, then we try to open it up and use it -- thus combining the &quot;make&quot; and
+     &quot;use&quot; example programs. */</FONT></I>
+  <B><FONT COLOR="#A020F0">if</FONT></B>(shmFD &lt; 0) {
+    <B><FONT COLOR="#A020F0">if</FONT></B>(useMode) {
+      printf(<B><FONT COLOR="#BC8F8F">&quot;Segment existed, attempting to open it..\n&quot;</FONT></B>);
+      shmFD = shm_open(<B><FONT COLOR="#BC8F8F">&quot;/tmp/foobar&quot;</FONT></B>, O_RDWR, S_IRWXU | S_IRWXG | S_IRWXO);
+      <B><FONT COLOR="#A020F0">if</FONT></B>(shmFD &lt; 0) {
+        printf(<B><FONT COLOR="#BC8F8F">&quot;shm_open failed: Open (without O_CREAT failed too!), errno: %d\n&quot;</FONT></B>, errno);
+        exit(1);
+      } <I><FONT COLOR="#B22222">/* end if */</FONT></I>
+    } <B><FONT COLOR="#A020F0">else</FONT></B> {
+      exit(1);
+    } <I><FONT COLOR="#B22222">/* end if/else */</FONT></I>
+  } <I><FONT COLOR="#B22222">/* end if */</FONT></I>
+
+#<B><FONT COLOR="#5F9EA0">define</FONT></B> <FONT COLOR="#B8860B">SEGSIZE</FONT> ((size_t)1024)
+
+  <B><FONT COLOR="#A020F0">if</FONT></B>( ! useMode) {
+    <I><FONT COLOR="#B22222">/* Use ftruncate() to size the region -- IMO an only semi-intuitive choice on the part of the POSIX committee. */</FONT></I>
+    <B><FONT COLOR="#A020F0">if</FONT></B>(ftruncate(shmFD, SEGSIZE) &lt; 0) {
+      <I><FONT COLOR="#B22222">/* I have included all typically supported error cases below, even if they don't apply here. */</FONT></I>
+      <B><FONT COLOR="#A020F0">switch</FONT></B>(errno) {
+        <B><FONT COLOR="#A020F0">case</FONT></B> <B><FONT COLOR="#5F9EA0">EBADF</FONT></B>:  printf(<B><FONT COLOR="#BC8F8F">&quot;ftruncate failed: The fd is not a valid descriptor.\n&quot;</FONT></B>);
+          <B><FONT COLOR="#A020F0">break</FONT></B>;
+        <B><FONT COLOR="#A020F0">case</FONT></B> <B><FONT COLOR="#5F9EA0">EINVAL</FONT></B>: printf(<B><FONT COLOR="#BC8F8F">&quot;ftruncate failed: Not open for writing, or references a socket, not a file.\n&quot;</FONT></B>);
+          <B><FONT COLOR="#A020F0">break</FONT></B>;
+        <B><FONT COLOR="#5F9EA0">default</FONT></B>:     printf(<B><FONT COLOR="#BC8F8F">&quot;ftruncate failed: Duno why...\n&quot;</FONT></B>);
+          <B><FONT COLOR="#A020F0">break</FONT></B>;
+      } <I><FONT COLOR="#B22222">/* end switch */</FONT></I>
+      exit(1);
+    } <I><FONT COLOR="#B22222">/* end if */</FONT></I>
+  } <I><FONT COLOR="#B22222">/* end if */</FONT></I>
+
+  shmAdd = (<B><FONT COLOR="#228B22">char</FONT></B> *)mmap(NULL,                    <I><FONT COLOR="#B22222">// Almost always not used
+</FONT></I>                        SEGSIZE,                 <I><FONT COLOR="#B22222">// Length of the mapped space
+</FONT></I>                        PROT_READ | PROT_WRITE,  <I><FONT COLOR="#B22222">// Access type 
+</FONT></I>                        MAP_SHARED,              <I><FONT COLOR="#B22222">// Write changes to device (see: MAP_PRIVATE)
+</FONT></I>                        shmFD,                   <I><FONT COLOR="#B22222">// FD of the shared memory segment
+</FONT></I>                        0);                      <I><FONT COLOR="#B22222">// Offset into segment.
+</FONT></I>
+  <I><FONT COLOR="#B22222">/* For more info on the strange return and possible error conditions of mmap(), see the mmap.c example program. */</FONT></I>
+  <B><FONT COLOR="#A020F0">if</FONT></B>(shmAdd == MAP_FAILED) {
+    <B><FONT COLOR="#A020F0">switch</FONT></B>(errno) {
+      <B><FONT COLOR="#A020F0">case</FONT></B> <B><FONT COLOR="#5F9EA0">EACCES</FONT></B>:    printf(<B><FONT COLOR="#BC8F8F">&quot;mmap failed: The FD was not open for read, or for write with (PROT_WRITE or MAP_SHARED)\n&quot;</FONT></B>);
+        <B><FONT COLOR="#A020F0">break</FONT></B>;
+      <B><FONT COLOR="#A020F0">case</FONT></B> <B><FONT COLOR="#5F9EA0">EAGAIN</FONT></B>:    printf(<B><FONT COLOR="#BC8F8F">&quot;mmap failed: The mapping could not be locked in memory\n&quot;</FONT></B>);
+        <B><FONT COLOR="#A020F0">break</FONT></B>;
+      <B><FONT COLOR="#A020F0">case</FONT></B> <B><FONT COLOR="#5F9EA0">EBADF</FONT></B>:     printf(<B><FONT COLOR="#BC8F8F">&quot;mmap failed: The FD not a valid open file descriptor.\n&quot;</FONT></B>);
+        <B><FONT COLOR="#A020F0">break</FONT></B>;
+      <B><FONT COLOR="#A020F0">case</FONT></B> <B><FONT COLOR="#5F9EA0">EINVAL</FONT></B>:    printf(<B><FONT COLOR="#BC8F8F">&quot;mmap failed: The value of len is zero, addr is not valid, bad combination of args\n&quot;</FONT></B>);
+        <B><FONT COLOR="#A020F0">break</FONT></B>;
+      <B><FONT COLOR="#A020F0">case</FONT></B> <B><FONT COLOR="#5F9EA0">EMFILE</FONT></B>:    printf(<B><FONT COLOR="#BC8F8F">&quot;mmap failed: The too many regions mapped already\n&quot;</FONT></B>);
+        <B><FONT COLOR="#A020F0">break</FONT></B>;
+      <B><FONT COLOR="#A020F0">case</FONT></B> <B><FONT COLOR="#5F9EA0">ENODEV</FONT></B>:    printf(<B><FONT COLOR="#BC8F8F">&quot;mmap failed: The FD file type is not supported by mmap().\n&quot;</FONT></B>);
+        <B><FONT COLOR="#A020F0">break</FONT></B>;
+      <B><FONT COLOR="#A020F0">case</FONT></B> <B><FONT COLOR="#5F9EA0">ENOMEM</FONT></B>:    printf(<B><FONT COLOR="#BC8F8F">&quot;mmap failed: Not enough memory\n&quot;</FONT></B>);
+        <B><FONT COLOR="#A020F0">break</FONT></B>;
+      <B><FONT COLOR="#A020F0">case</FONT></B> <B><FONT COLOR="#5F9EA0">ENOTSUP</FONT></B>:   printf(<B><FONT COLOR="#BC8F8F">&quot;mmap failed: Options not supported on this platform\n&quot;</FONT></B>);
+        <B><FONT COLOR="#A020F0">break</FONT></B>;
+      <B><FONT COLOR="#A020F0">case</FONT></B> <B><FONT COLOR="#5F9EA0">ENXIO</FONT></B>:     printf(<B><FONT COLOR="#BC8F8F">&quot;mmap failed: Range [off,off+len) are invalid for the FD, MAP_FIXED &amp; invalid addresses, or FD not accessible\n&quot;</FONT></B>);
+        <B><FONT COLOR="#A020F0">break</FONT></B>;
+      <B><FONT COLOR="#A020F0">case</FONT></B> <B><FONT COLOR="#5F9EA0">EOVERFLOW</FONT></B>: printf(<B><FONT COLOR="#BC8F8F">&quot;mmap failed: File is too big!\n&quot;</FONT></B>);
+        <B><FONT COLOR="#A020F0">break</FONT></B>;
+      <B><FONT COLOR="#5F9EA0">default</FONT></B>:        printf(<B><FONT COLOR="#BC8F8F">&quot;mmap failed: Duno why! (errno: %d)\n&quot;</FONT></B>, errno);
+        <B><FONT COLOR="#A020F0">break</FONT></B>;
+    } <I><FONT COLOR="#B22222">/* end switch */</FONT></I>
+    exit(1);
+  } <I><FONT COLOR="#B22222">/* end if */</FONT></I>
+
+  <B><FONT COLOR="#A020F0">if</FONT></B>(useMode) {  
+    <I><FONT COLOR="#B22222">/* The segment already existed, so we print out it's contents and change them.  Just print the printable chars in case the
+       segment has binary junk in it... */</FONT></I>
+    printf(<B><FONT COLOR="#BC8F8F">&quot;The segment content: \n&quot;</FONT></B>);
+    <B><FONT COLOR="#A020F0">for</FONT></B>(i=0;(i&lt;SEGSIZE)&amp;&amp;(((<B><FONT COLOR="#228B22">char</FONT></B> *)shmAdd)[i]!=0);i++)
+      <B><FONT COLOR="#A020F0">if</FONT></B>(isalpha(((<B><FONT COLOR="#228B22">char</FONT></B> *)shmAdd)[i]) || isdigit(((<B><FONT COLOR="#228B22">char</FONT></B> *)shmAdd)[i]))
+        printf(<B><FONT COLOR="#BC8F8F">&quot;%c&quot;</FONT></B>, ((<B><FONT COLOR="#228B22">char</FONT></B> *)shmAdd)[i]);
+    printf(<B><FONT COLOR="#BC8F8F">&quot;\n&quot;</FONT></B>);
+
+    <I><FONT COLOR="#B22222">/* Now we change the data to &quot;Goodbye&quot; */</FONT></I>
+    printf(<B><FONT COLOR="#BC8F8F">&quot;Change the contents to: 'Goodbye'..\n&quot;</FONT></B>);
+    strcpy(shmAdd, <B><FONT COLOR="#BC8F8F">&quot;Goodbye&quot;</FONT></B>);
+  } <B><FONT COLOR="#A020F0">else</FONT></B> {
+    <I><FONT COLOR="#B22222">/* We copy some stuff into the segment so that we can read it out later... */</FONT></I>
+    printf(<B><FONT COLOR="#BC8F8F">&quot;Write 'Hello' into the segment.\n&quot;</FONT></B>);
+    strcpy(shmAdd, <B><FONT COLOR="#BC8F8F">&quot;Hello&quot;</FONT></B>);
+  } <I><FONT COLOR="#B22222">/* end if/else */</FONT></I>
+
+  <I><FONT COLOR="#B22222">/* While not required, one should unmap from segments when done with them. */</FONT></I>
+  <B><FONT COLOR="#A020F0">if</FONT></B>(munmap(shmAdd, SEGSIZE) &lt; 0) {
+    <B><FONT COLOR="#A020F0">switch</FONT></B>(errno) {
+      <B><FONT COLOR="#A020F0">case</FONT></B> <B><FONT COLOR="#5F9EA0">EINVAL</FONT></B>:  printf(<B><FONT COLOR="#BC8F8F">&quot;munmap failed: The address range [addr,addr+len) is invalid.\n&quot;</FONT></B>
+                           <B><FONT COLOR="#BC8F8F">&quot;               munmap failed: The len argument is 0.\n&quot;</FONT></B>
+                           <B><FONT COLOR="#BC8F8F">&quot;               munmap failed: The addr argument is not a multiple of page size.\n&quot;</FONT></B>);
+        <B><FONT COLOR="#A020F0">break</FONT></B>;
+      <B><FONT COLOR="#5F9EA0">default</FONT></B>:      printf(<B><FONT COLOR="#BC8F8F">&quot;munmap failed: Duno why!  (errno %d).\n&quot;</FONT></B>, errno);
+        <B><FONT COLOR="#A020F0">break</FONT></B>;
+    } <I><FONT COLOR="#B22222">/* end switch */</FONT></I>
+    exit(1);
+  } <I><FONT COLOR="#B22222">/* end if */</FONT></I>
+
+  <I><FONT COLOR="#B22222">/* One should also close FDs opened with shm_open (again, not necessarily required, but good practice). */</FONT></I>
+  <B><FONT COLOR="#A020F0">if</FONT></B>(close(shmFD) &lt; 0) {
+    <B><FONT COLOR="#A020F0">switch</FONT></B>(errno) {
+      <B><FONT COLOR="#A020F0">case</FONT></B> <B><FONT COLOR="#5F9EA0">EBADF</FONT></B>:   printf(<B><FONT COLOR="#BC8F8F">&quot;close failed: The FD is not an active descriptor.\n&quot;</FONT></B>);
+        <B><FONT COLOR="#A020F0">break</FONT></B>;
+      <B><FONT COLOR="#A020F0">case</FONT></B> <B><FONT COLOR="#5F9EA0">EINTR</FONT></B>:   printf(<B><FONT COLOR="#BC8F8F">&quot;close failed: An interrupt was received.\n&quot;</FONT></B>); <I><FONT COLOR="#B22222">// Should try again... :)
+</FONT></I>        <B><FONT COLOR="#A020F0">break</FONT></B>;
+    } <I><FONT COLOR="#B22222">/* end switch */</FONT></I>
+  } <I><FONT COLOR="#B22222">/* end if */</FONT></I>
+
+  <B><FONT COLOR="#A020F0">return</FONT></B> 0;
+} <I><FONT COLOR="#B22222">/* end func main() */</FONT></I>
+</PRE>
+<HR \/>
+<ADDRESS>Generated by <A HREF="http://www.iki.fi/~mtr/genscript/">GNU Enscript 1.6.5.90</A>.</ADDRESS>
+</BODY>
+</HTML>

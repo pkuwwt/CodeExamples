@@ -1,0 +1,106 @@
+<!DOCTYPE html PUBLIC "-//IETF//DTD HTML 2.0//EN">
+<HTML>
+<HEAD>
+<TITLE>AUPG/curDraw.c</TITLE>
+</HEAD>
+<BODY BGCOLOR="#FFFFFF" TEXT="#000000" LINK="#1F00FF" ALINK="#FF0000" VLINK="#9900DD">
+<A NAME="top"> </A>
+<A NAME="file1"> </A>
+<H1><a href="curDraw.c">curDraw.c</a></H1>
+
+<PRE>
+<I><FONT COLOR="#B22222">/* -*- Mode:C; Coding:us-ascii-unix; fill-column:132 -*- */</FONT></I>
+<I><FONT COLOR="#B22222">/**********************************************************************************************************************************/</FONT></I>
+<I><FONT COLOR="#B22222">/**
+   @file      curDraw.c
+   @author    Mitch Richling &lt;http://www.mitchr.me&gt;
+   @Copyright Copyright 1999 by Mitch Richling.  All rights reserved.
+   @Revision  $Revision$ 
+   @SCMdate   $Date$
+   @brief     Interactively draw in a terminal window.@EOL
+   @Keywords  ncurses
+   @Std       C89
+
+   Demonstrates how to draw single characters with various attributes, how to get window max and min coordinates, how to clear the
+   screen, and move the cursor around.  In addition, various ncurses concepts are illustrated.
+***********************************************************************************************************************************/</FONT></I>
+
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;ncurses.h&gt;</FONT></B>            <I><FONT COLOR="#B22222">/* Popular Curses  ????  */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;stdlib.h&gt;</FONT></B>             <I><FONT COLOR="#B22222">/* Standard Lib    C89   */</FONT></I>
+
+<I><FONT COLOR="#B22222">/**********************************************************************************************************************************/</FONT></I>
+<B><FONT COLOR="#228B22">int</FONT></B> <B><FONT COLOR="#0000FF">main</FONT></B>(<B><FONT COLOR="#228B22">int</FONT></B> argc, <B><FONT COLOR="#228B22">char</FONT></B> *argv[]) {
+  <B><FONT COLOR="#228B22">int</FONT></B> ch, drCh;
+  <B><FONT COLOR="#228B22">int</FONT></B> x, y, maxX, maxY, minX, minY;
+  <B><FONT COLOR="#228B22">int</FONT></B> underline, reverse, bold;
+
+  initscr();
+  cbreak();
+  noecho();
+  keypad(stdscr, TRUE);
+
+  <I><FONT COLOR="#B22222">/* We make the cursor very visible.. */</FONT></I>
+  curs_set(2);
+
+  <I><FONT COLOR="#B22222">/* Print the instructions. */</FONT></I>
+  printw(<B><FONT COLOR="#BC8F8F">&quot;To Move:    arrow keys\n&quot;</FONT></B>);
+  printw(<B><FONT COLOR="#BC8F8F">&quot;To Clear:   'c'\n&quot;</FONT></B>);
+  printw(<B><FONT COLOR="#BC8F8F">&quot;Underline:  'u'\n&quot;</FONT></B>);
+  printw(<B><FONT COLOR="#BC8F8F">&quot;Reverse:    'r'\n&quot;</FONT></B>);
+  printw(<B><FONT COLOR="#BC8F8F">&quot;Bold:       'b'\n&quot;</FONT></B>);
+  printw(<B><FONT COLOR="#BC8F8F">&quot;Normal:     'n'\n&quot;</FONT></B>);
+  printw(<B><FONT COLOR="#BC8F8F">&quot;Change Char: Any printable char\n&quot;</FONT></B>);
+  printw(<B><FONT COLOR="#BC8F8F">&quot;To Quit:    'q'\n&quot;</FONT></B>);
+  refresh();
+
+  <I><FONT COLOR="#B22222">/* Macro to get minX and minY */</FONT></I>
+  getbegyx(stdscr, minY, minX);
+
+  <I><FONT COLOR="#B22222">/* Macro to get maxX and maxY */</FONT></I>
+  getmaxyx(stdscr, maxY, maxX);
+
+  <I><FONT COLOR="#B22222">/* Set x and y to the center of the screen */</FONT></I>
+  x = (minX+maxX)/2;
+  y = (minY+maxY)/2;
+
+  <I><FONT COLOR="#B22222">/* Print our initial character. */</FONT></I>
+  drCh = <B><FONT COLOR="#BC8F8F">'*'</FONT></B>;
+  mvaddch(y, x, drCh);
+
+  <I><FONT COLOR="#B22222">/* Move the cursor to x,y */</FONT></I>
+  move(y, x);
+
+  <I><FONT COLOR="#B22222">/* Loop for input */</FONT></I>
+  underline = reverse = bold = 0;
+  <B><FONT COLOR="#A020F0">while</FONT></B>(1) {
+    ch = getch();
+    <B><FONT COLOR="#A020F0">switch</FONT></B>(ch) {
+      <B><FONT COLOR="#A020F0">case</FONT></B> <B><FONT COLOR="#5F9EA0">KEY_DOWN</FONT></B>      : y=y+1;                                    <B><FONT COLOR="#A020F0">break</FONT></B>;
+      <B><FONT COLOR="#A020F0">case</FONT></B> <B><FONT COLOR="#5F9EA0">KEY_UP</FONT></B>        : y=y-1;                                    <B><FONT COLOR="#A020F0">break</FONT></B>;
+      <B><FONT COLOR="#A020F0">case</FONT></B> <B><FONT COLOR="#5F9EA0">KEY_LEFT</FONT></B>      : x=x-1;                                    <B><FONT COLOR="#A020F0">break</FONT></B>;
+      <B><FONT COLOR="#A020F0">case</FONT></B> <B><FONT COLOR="#5F9EA0">KEY_RIGHT</FONT></B>     : x=x+1;                                    <B><FONT COLOR="#A020F0">break</FONT></B>;
+      <B><FONT COLOR="#A020F0">case</FONT></B> <B><FONT COLOR="#BC8F8F">'c'</FONT></B>           : clear();                                  <B><FONT COLOR="#A020F0">break</FONT></B>;
+      <B><FONT COLOR="#A020F0">case</FONT></B> <B><FONT COLOR="#BC8F8F">'u'</FONT></B>           : underline = abs(underline - A_UNDERLINE); <B><FONT COLOR="#A020F0">break</FONT></B>;
+      <B><FONT COLOR="#A020F0">case</FONT></B> <B><FONT COLOR="#BC8F8F">'r'</FONT></B>           : reverse   = abs(reverse   - A_REVERSE);   <B><FONT COLOR="#A020F0">break</FONT></B>;
+      <B><FONT COLOR="#A020F0">case</FONT></B> <B><FONT COLOR="#BC8F8F">'b'</FONT></B>           : bold      = abs(bold      - A_BOLD);      <B><FONT COLOR="#A020F0">break</FONT></B>;
+      <B><FONT COLOR="#A020F0">case</FONT></B> <B><FONT COLOR="#BC8F8F">'n'</FONT></B>           : underline = reverse = bold = 0;           <B><FONT COLOR="#A020F0">break</FONT></B>;
+      <B><FONT COLOR="#A020F0">case</FONT></B> <B><FONT COLOR="#BC8F8F">'q'</FONT></B>           : endwin(); exit(1);                        <B><FONT COLOR="#A020F0">break</FONT></B>;
+      <B><FONT COLOR="#A020F0">default</FONT></B>            : drCh = ch;                                <B><FONT COLOR="#A020F0">break</FONT></B>;
+    } <I><FONT COLOR="#B22222">/* end switch */</FONT></I>
+    <I><FONT COLOR="#B22222">/* Clip x and y to fit the window. */</FONT></I>
+    x=(x&lt;minX?minX:x); x=(x&gt;maxX?maxX:x);
+    y=(y&lt;minY?minY:y); y=(y&gt;maxY?maxY:y);
+    <I><FONT COLOR="#B22222">/* Draw things */</FONT></I>
+    mvaddch(y, x, drCh | underline | reverse | bold);
+    move(y, x);
+    refresh();
+  } <I><FONT COLOR="#B22222">/* end while */</FONT></I>
+
+  <I><FONT COLOR="#B22222">/* We never get here, but we still &quot;return&quot; to quiet the compiler */</FONT></I>
+  <B><FONT COLOR="#A020F0">return</FONT></B> 0;
+} <I><FONT COLOR="#B22222">/* end func main */</FONT></I>
+</PRE>
+<HR \/>
+<ADDRESS>Generated by <A HREF="http://www.iki.fi/~mtr/genscript/">GNU Enscript 1.6.5.90</A>.</ADDRESS>
+</BODY>
+</HTML>

@@ -1,0 +1,72 @@
+<!DOCTYPE html PUBLIC "-//IETF//DTD HTML 2.0//EN">
+<HTML>
+<HEAD>
+<TITLE>HDF5/mjrHDF5.h</TITLE>
+</HEAD>
+<BODY BGCOLOR="#FFFFFF" TEXT="#000000" LINK="#1F00FF" ALINK="#FF0000" VLINK="#9900DD">
+<A NAME="top"> </A>
+<A NAME="file1"> </A>
+<H1><a href="mjrHDF5.h">mjrHDF5.h</a></H1>
+
+<PRE>
+<I><FONT COLOR="#B22222">/* -*- Mode:C; Coding:us-ascii-unix; fill-column:132 -*- */</FONT></I>
+<I><FONT COLOR="#B22222">/* ****************************************************************************************************************************** */</FONT></I>
+<I><FONT COLOR="#B22222">/**
+   @file      mjrHDF5.h
+   @author    Mitch Richling &lt;http://www.mitchr.me/&gt;
+   @Copyright Copyright 1997 by Mitch Richling.  All rights reserved.
+   @brief     hello   @EOL
+   @Keywords  none
+   @Std       C89
+
+   Some simple helper functions to make life with HDF5 a little bit less tedious.  For more details, see the mjrHDF5.h file.
+              
+*/</FONT></I>
+<I><FONT COLOR="#B22222">/* ------------------------------------------------------------------------------------------------------------------------------ */</FONT></I>
+
+<I><FONT COLOR="#B22222">/* ****************************************************************************************************************************** */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">ifndef</FONT></B> <FONT COLOR="#B8860B">INC_MJRHDF5</FONT>
+#<B><FONT COLOR="#5F9EA0">define</FONT></B> <FONT COLOR="#B8860B">INC_MJRHDF5</FONT> 1
+
+<I><FONT COLOR="#B22222">/* ****************************************************************************************************************************** */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;hdf5.h&gt;</FONT></B>               <I><FONT COLOR="#B22222">/* HDF5 files            */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;stdio.h&gt;</FONT></B>              <I><FONT COLOR="#B22222">/* I/O lib         ISOC  */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;stdlib.h&gt;</FONT></B>             <I><FONT COLOR="#B22222">/* Standard Lib    ISOC  */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;string.h&gt;</FONT></B>             <I><FONT COLOR="#B22222">/* Strings         ISOC  */</FONT></I>
+
+<I><FONT COLOR="#B22222">/* ****************************************************************************************************************************** */</FONT></I>
+<I><FONT COLOR="#B22222">/* Put attributes:  
+    mjrHDF5_put_att_arry --------- array of fixed or variable sized data
+    mjrHDF5_put_att_sclr --------- Single, scalar value
+*/</FONT></I>
+herr_t <B><FONT COLOR="#0000FF">mjrHDF5_put_att_arry</FONT></B>(hid_t objectID, hid_t attr_type, <B><FONT COLOR="#228B22">char</FONT></B> *name, <B><FONT COLOR="#228B22">void</FONT></B> *values, hid_t value_type, hsize_t rank);
+herr_t <B><FONT COLOR="#0000FF">mjrHDF5_put_att_sclr</FONT></B>(hid_t objectID, hid_t attr_type, <B><FONT COLOR="#228B22">char</FONT></B> *name, <B><FONT COLOR="#228B22">void</FONT></B> *value,  hid_t value_type);
+
+<I><FONT COLOR="#B22222">/* ****************************************************************************************************************************** */</FONT></I>
+<I><FONT COLOR="#B22222">/* String Attribute Tools:
+    mjrHDF5_put_att_oneFCstr ----- Single, fixed length String (null terminated)
+    mjrHDF5_put_att_arrVCstr ----- List (1D array) of variable length Strings (each null terminated)
+*/</FONT></I>
+herr_t <B><FONT COLOR="#0000FF">mjrHDF5_put_att_oneFCstr</FONT></B>(hid_t objectID, <B><FONT COLOR="#228B22">char</FONT></B> *name, <B><FONT COLOR="#228B22">char</FONT></B>  *value);
+herr_t <B><FONT COLOR="#0000FF">mjrHDF5_put_att_arrVCstr</FONT></B>(hid_t objectID, <B><FONT COLOR="#228B22">char</FONT></B> *name, <B><FONT COLOR="#228B22">char</FONT></B> **values, hsize_t rank);
+
+<I><FONT COLOR="#B22222">/* ****************************************************************************************************************************** */</FONT></I>
+<I><FONT COLOR="#B22222">/* Global String Attribute Tools:
+    mjrHDF5_put_gblAtt_oneFCstr -- Global, Single, Fixed length String (null terminated)
+*/</FONT></I>
+herr_t <B><FONT COLOR="#0000FF">mjrHDF5_put_gblAtt_oneFCstr</FONT></B>(hid_t fileID, <B><FONT COLOR="#228B22">char</FONT></B> *name, <B><FONT COLOR="#228B22">char</FONT></B> *value);
+
+<I><FONT COLOR="#B22222">/* ****************************************************************************************************************************** */</FONT></I>
+<I><FONT COLOR="#B22222">/* Misc Stuff
+    mjrHDF5_chkError ------------- Check error status, print an error message, and exit.
+    mjrHDF5_Tclass2str ----------- Convert a H5T_class_t to a string
+*/</FONT></I>
+<B><FONT COLOR="#228B22">void</FONT></B> <B><FONT COLOR="#0000FF">mjrHDF5_chkError</FONT></B>(<B><FONT COLOR="#228B22">int</FONT></B> status);
+<B><FONT COLOR="#228B22">void</FONT></B> <B><FONT COLOR="#0000FF">mjrHDF5_Tclass2str</FONT></B>(H5T_class_t class, <B><FONT COLOR="#228B22">char</FONT></B> *classStr);
+
+#<B><FONT COLOR="#5F9EA0">endif</FONT></B>
+</PRE>
+<HR \/>
+<ADDRESS>Generated by <A HREF="http://www.iki.fi/~mtr/genscript/">GNU Enscript 1.6.5.90</A>.</ADDRESS>
+</BODY>
+</HTML>

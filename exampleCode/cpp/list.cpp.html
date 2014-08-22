@@ -1,0 +1,101 @@
+<!DOCTYPE html PUBLIC "-//IETF//DTD HTML 2.0//EN">
+<HTML>
+<HEAD>
+<TITLE>cpp/list.cpp</TITLE>
+</HEAD>
+<BODY BGCOLOR="#FFFFFF" TEXT="#000000" LINK="#1F00FF" ALINK="#FF0000" VLINK="#9900DD">
+<A NAME="top"> </A>
+<A NAME="file1"> </A>
+<H1><a href="list.cpp">list.cpp</a></H1>
+
+<PRE>
+<I><FONT COLOR="#B22222">// -*- Mode:C++; Coding:us-ascii-unix; fill-column:132 -*-
+</FONT></I><I><FONT COLOR="#B22222">/**********************************************************************************************************************************/</FONT></I>
+<I><FONT COLOR="#B22222">/**
+   @file      list.cpp
+   @author    Mitch Richling &lt;http://www.mitchr.me&gt;
+   @Copyright Copyright 2000 by Mitch Richling.  All rights reserved.
+   @brief     Example of how to use lists in the STL specified by C++ 98 .@EOL
+   @Keywords  Standard C++ I/O iostream list STL template
+   @Std       C++98
+***********************************************************************************************************************************/</FONT></I>
+
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;list&gt;</FONT></B>                    <I><FONT COLOR="#B22222">/* STL list                C++98/11 */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;iostream&gt;</FONT></B>                <I><FONT COLOR="#B22222">/* C++ iostream            C++98/11 */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;algorithm&gt;</FONT></B>               <I><FONT COLOR="#B22222">/* STL algorithm           C++98/11 */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;ostream&gt;</FONT></B>                 <I><FONT COLOR="#B22222">/* C++ ostream             C++98/11 */</FONT></I>
+
+<I><FONT COLOR="#B22222">////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+</FONT></I><B><FONT COLOR="#228B22">void</FONT></B> <B><FONT COLOR="#0000FF">printList</FONT></B>(<B><FONT COLOR="#228B22">char</FONT></B> <B><FONT COLOR="#228B22">const</FONT></B>* mesg, std::list&lt;<B><FONT COLOR="#228B22">int</FONT></B>&gt; &amp;L);
+
+<I><FONT COLOR="#B22222">////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+</FONT></I><B><FONT COLOR="#228B22">int</FONT></B> <B><FONT COLOR="#0000FF">main</FONT></B>() {
+
+  <B><FONT COLOR="#5F9EA0">std</FONT></B>::list&lt;<B><FONT COLOR="#228B22">int</FONT></B>&gt; demoList01;
+  <B><FONT COLOR="#5F9EA0">std</FONT></B>::list&lt;<B><FONT COLOR="#228B22">int</FONT></B>&gt; demoList02;
+  <B><FONT COLOR="#5F9EA0">std</FONT></B>::list&lt;<B><FONT COLOR="#228B22">int</FONT></B>&gt;::iterator demoList01Iter;
+
+  <I><FONT COLOR="#B22222">// You can push onto the front and back of a list in constant time:
+</FONT></I>  demoList01.push_front(1);
+  demoList01.push_front(2);
+  demoList01.push_back(4);
+  demoList01.push_back(5);
+
+  demoList01.insert(++demoList01.begin(), 10);
+
+  <I><FONT COLOR="#B22222">// Note that we use the STL &lt;algorithm&gt; *find*, and not some fast version designed for the list type as it dosen't have one!
+</FONT></I>  demoList01Iter = find(demoList01.begin(), demoList01.end(), 5);
+  <B><FONT COLOR="#A020F0">if</FONT></B>(demoList01Iter != demoList01.end()) {
+    <B><FONT COLOR="#5F9EA0">std</FONT></B>::cout &lt;&lt; <B><FONT COLOR="#BC8F8F">&quot;Found 5 in the list&quot;</FONT></B> &lt;&lt; std::endl;
+    demoList01.insert(demoList01Iter, 20);
+  }
+
+  <B><FONT COLOR="#5F9EA0">std</FONT></B>::cout &lt;&lt; <B><FONT COLOR="#BC8F8F">&quot;The list has &quot;</FONT></B>   &lt;&lt; demoList01.size( ) &lt;&lt; <B><FONT COLOR="#BC8F8F">&quot; elements&quot;</FONT></B> &lt;&lt; std::endl;
+  <B><FONT COLOR="#5F9EA0">std</FONT></B>::cout &lt;&lt; <B><FONT COLOR="#BC8F8F">&quot;First Element: &quot;</FONT></B> &lt;&lt; demoList01.front() &lt;&lt; std::endl;
+  <B><FONT COLOR="#5F9EA0">std</FONT></B>::cout &lt;&lt; <B><FONT COLOR="#BC8F8F">&quot;Last Element:  &quot;</FONT></B> &lt;&lt; demoList01.back()  &lt;&lt; std::endl;
+  printList(<B><FONT COLOR="#BC8F8F">&quot;The elements of the list:     &quot;</FONT></B>, demoList01);
+
+  <I><FONT COLOR="#B22222">// This is how to remove items...
+</FONT></I>  demoList01.erase(demoList01.begin());
+  demoList01Iter = demoList01.end();
+  demoList01Iter--;
+  demoList01Iter--;
+  demoList01.erase(demoList01Iter, demoList01.end());
+  printList(<B><FONT COLOR="#BC8F8F">&quot;The elements after erase():   &quot;</FONT></B>, demoList01);
+
+  <I><FONT COLOR="#B22222">// The koolest feature of lists is the way you can splice them together.
+</FONT></I>  <B><FONT COLOR="#A020F0">for</FONT></B>(<B><FONT COLOR="#228B22">int</FONT></B> i=10;i&lt;15;i++)
+    demoList02.push_front(i);
+  demoList01Iter = demoList01.begin();
+  ++demoList01Iter;
+  ++demoList01Iter;
+  demoList01.splice(demoList01Iter, demoList02, demoList02.begin(), demoList02.end());
+  printList(<B><FONT COLOR="#BC8F8F">&quot;The elements after splice():  &quot;</FONT></B>, demoList01);
+
+  <I><FONT COLOR="#B22222">// unique() removes consecutive elements that are equal:
+</FONT></I>  demoList01.reverse();
+  printList(<B><FONT COLOR="#BC8F8F">&quot;The elements after reverse(): &quot;</FONT></B>, demoList01);
+
+  <I><FONT COLOR="#B22222">// list has a fast sort, so don't use the one in &lt;algorithm&gt;
+</FONT></I>  demoList01.sort();
+  printList(<B><FONT COLOR="#BC8F8F">&quot;The elements after sort():    &quot;</FONT></B>, demoList01);
+
+  demoList01.unique();
+  printList(<B><FONT COLOR="#BC8F8F">&quot;The elements after unique():  &quot;</FONT></B>, demoList01);
+} <I><FONT COLOR="#B22222">// end func main
+</FONT></I>
+<I><FONT COLOR="#B22222">////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+</FONT></I><I><FONT COLOR="#B22222">// This little function demonstrates one way to traverse, and print, a list.
+</FONT></I><B><FONT COLOR="#228B22">void</FONT></B> <B><FONT COLOR="#0000FF">printList</FONT></B>(<B><FONT COLOR="#228B22">char</FONT></B> <B><FONT COLOR="#228B22">const</FONT></B> *mesg, std::list&lt;<B><FONT COLOR="#228B22">int</FONT></B>&gt; &amp;L) {
+  <B><FONT COLOR="#5F9EA0">std</FONT></B>::list&lt;<B><FONT COLOR="#228B22">int</FONT></B>&gt;::iterator Li;
+  <B><FONT COLOR="#5F9EA0">std</FONT></B>::cout &lt;&lt; mesg;
+  <B><FONT COLOR="#A020F0">for</FONT></B>(Li = L.begin(); Li != L.end(); ++Li)
+    <B><FONT COLOR="#5F9EA0">std</FONT></B>::cout &lt;&lt; *Li &lt;&lt; <B><FONT COLOR="#BC8F8F">&quot; &quot;</FONT></B>;
+  <B><FONT COLOR="#5F9EA0">std</FONT></B>::cout &lt;&lt; std::endl;
+
+}
+</PRE>
+<HR \/>
+<ADDRESS>Generated by <A HREF="http://www.iki.fi/~mtr/genscript/">GNU Enscript 1.6.5.90</A>.</ADDRESS>
+</BODY>
+</HTML>

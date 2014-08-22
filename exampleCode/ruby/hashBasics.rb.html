@@ -1,0 +1,92 @@
+<!DOCTYPE html PUBLIC "-//IETF//DTD HTML 2.0//EN">
+<HTML>
+<HEAD>
+<TITLE>ruby/hashBasics.rb</TITLE>
+</HEAD>
+<BODY BGCOLOR="#FFFFFF" TEXT="#000000" LINK="#1F00FF" ALINK="#FF0000" VLINK="#9900DD">
+<A NAME="top"> </A>
+<A NAME="file1"> </A>
+<H1><a href="hashBasics.rb">hashBasics.rb</a></H1>
+
+<PRE>
+<I><FONT COLOR="#B22222">#!/usr/local/bin/ruby
+</FONT></I>
+<I><FONT COLOR="#B22222">##
+</FONT></I><I><FONT COLOR="#B22222"># @file      hashBasics.rb
+</FONT></I><I><FONT COLOR="#B22222"># @author    Mitch Richling &lt;http://www.mitchr.me/&gt;
+</FONT></I><I><FONT COLOR="#B22222"># @Copyright Copyright 2006 by Mitch Richling.  All rights reserved.
+</FONT></I><I><FONT COLOR="#B22222"># @brief     Simple hash examples in Ruby.@EOL
+</FONT></I><I><FONT COLOR="#B22222"># @Keywords  ruby example hash
+</FONT></I><I><FONT COLOR="#B22222"># @Std       Ruby 1.8
+</FONT></I><I><FONT COLOR="#B22222">#
+</FONT></I><I><FONT COLOR="#B22222">#            Also see hashTraverse.rb, arrayAssoc.rb, &amp; enumBasics.rb
+</FONT></I><I><FONT COLOR="#B22222">#            for more examples.  Also note that sort is covered in
+</FONT></I><I><FONT COLOR="#B22222">#            hashTraverse.rb and arrayAssoc.
+</FONT></I>
+<I><FONT COLOR="#B22222"># Note any object type can be used for keys or values.
+</FONT></I>aHash = { <B><FONT COLOR="#BC8F8F">'a'</FONT></B>   =&gt; <B><FONT COLOR="#BC8F8F">'1'</FONT></B>,
+          2     =&gt; <B><FONT COLOR="#BC8F8F">'z'</FONT></B>,
+          <B><FONT COLOR="#BC8F8F">'r'</FONT></B>   =&gt; <B><FONT COLOR="#A020F0">nil</FONT></B>,      <I><FONT COLOR="#B22222"># String as key
+</FONT></I>          3     =&gt; 1,        <I><FONT COLOR="#B22222"># Fixnum as key
+</FONT></I>          <B><FONT COLOR="#A020F0">nil</FONT></B>   =&gt; <B><FONT COLOR="#BC8F8F">'K'</FONT></B>,      <I><FONT COLOR="#B22222"># nil as key
+</FONT></I>          :sym  =&gt; 3   }     <I><FONT COLOR="#B22222"># Symbol as key
+</FONT></I>
+puts(<B><FONT COLOR="#BC8F8F">&quot;HASH DEFAULT VALUES&quot;</FONT></B>)
+bHash = Hash.new(0);
+puts(<B><FONT COLOR="#BC8F8F">&quot;   dflt: #{bHash['1'].inspect          }&quot;</FONT></B>)
+puts(<B><FONT COLOR="#BC8F8F">&quot;   dflt: #{bHash.default.inspect       }&quot;</FONT></B>)
+bHash.default = 1
+puts(<B><FONT COLOR="#BC8F8F">&quot;   dflt: #{bHash.default.inspect  }&quot;</FONT></B>)
+
+puts(<B><FONT COLOR="#BC8F8F">&quot;HASH DEFAULT UBER-VALUES&quot;</FONT></B>)
+bHash = Hash.new { |hash, key| <B><FONT COLOR="#BC8F8F">&quot;Dude!  #{key} not here!&quot;</FONT></B> }
+puts(<B><FONT COLOR="#BC8F8F">&quot;   dflt: #{bHash['1'].inspect          }&quot;</FONT></B>)
+puts(<B><FONT COLOR="#BC8F8F">&quot;   dflt: #{bHash.default.inspect       }&quot;</FONT></B>)
+puts(<B><FONT COLOR="#BC8F8F">&quot;   dflt: #{bHash.default_proc.inspect  }&quot;</FONT></B>)
+
+puts(<B><FONT COLOR="#BC8F8F">&quot;GETTING VALUES VIA KEYS&quot;</FONT></B>)
+puts(<B><FONT COLOR="#BC8F8F">&quot;  aHash['a']                            = #{aHash['a'].inspect                               }&quot;</FONT></B>)
+puts(<B><FONT COLOR="#BC8F8F">&quot;  aHash[nil]                            = #{aHash[nil].inspect                               }&quot;</FONT></B>)
+puts(<B><FONT COLOR="#BC8F8F">&quot;  aHash['r']                            = #{aHash['r'].inspect                               }&quot;</FONT></B>)
+puts(<B><FONT COLOR="#BC8F8F">&quot;  aHash['j']                            = #{aHash['j'].inspect                               }&quot;</FONT></B>)
+puts(<B><FONT COLOR="#BC8F8F">&quot;  aHash.values_at('a', nil)             = #{aHash.values_at('a', nil).inspect                }&quot;</FONT></B>)
+puts(<B><FONT COLOR="#BC8F8F">&quot;  aHash.fetch('a',   'sorry')           = #{aHash.fetch('a',   'sorry').inspect              }&quot;</FONT></B>)
+puts(<B><FONT COLOR="#BC8F8F">&quot;  aHash.fetch('nil', 'sorry')           = #{aHash.fetch('nil', 'sorry').inspect              }&quot;</FONT></B>)
+puts(<B><FONT COLOR="#BC8F8F">&quot;  aHash.fetch('nil') {|k,v| '-'+k.to_s} = #{(aHash.fetch('nil') {|k,v| '-'+k.to_s}).inspect  }&quot;</FONT></B>)
+
+puts(<B><FONT COLOR="#BC8F8F">&quot;GETTING KEYS VIA VALUES&quot;</FONT></B>)
+puts(<B><FONT COLOR="#BC8F8F">&quot;  aHash.index('1') = #{aHash.index('1').inspect}&quot;</FONT></B>)
+
+puts(<B><FONT COLOR="#BC8F8F">&quot;HASH META DATA&quot;</FONT></B>)
+puts(<B><FONT COLOR="#BC8F8F">&quot;  aHash.empty? = #{aHash.empty?.inspect    }&quot;</FONT></B>)
+puts(<B><FONT COLOR="#BC8F8F">&quot;  aHash.empty? = #{aHash.length.inspect    }&quot;</FONT></B>)  <I><FONT COLOR="#B22222"># Also see: size
+</FONT></I>
+<I><FONT COLOR="#B22222"># In ruby both keys and values can be nil, false, or true.  This means
+</FONT></I><I><FONT COLOR="#B22222"># we can't simply test existence of a key by evaluating aHash[foo]!
+</FONT></I>puts(<B><FONT COLOR="#BC8F8F">&quot;TESTING FOR KEYS/VALUES&quot;</FONT></B>)
+puts(<B><FONT COLOR="#BC8F8F">&quot;  aHash.has_key?('a')   = #{aHash.has_key?('a').inspect   }&quot;</FONT></B>) <I><FONT COLOR="#B22222"># Also see: key? &amp; include? &amp; member?
+</FONT></I>puts(<B><FONT COLOR="#BC8F8F">&quot;  aHash.has_key?('z')   = #{aHash.has_key?('z').inspect   }&quot;</FONT></B>)
+puts(<B><FONT COLOR="#BC8F8F">&quot;  aHash.has_value?(1)   = #{aHash.has_value?(1).inspect   }&quot;</FONT></B>) <I><FONT COLOR="#B22222"># Also see: value?
+</FONT></I>puts(<B><FONT COLOR="#BC8F8F">&quot;  aHash.has_value?('r') = #{aHash.has_value?('r').inspect }&quot;</FONT></B>)
+
+puts(<B><FONT COLOR="#BC8F8F">&quot;ARRAYS FROM HASHES&quot;</FONT></B>)
+puts(<B><FONT COLOR="#BC8F8F">&quot;  aHash.to_a   = #{aHash.to_a.inspect   }&quot;</FONT></B>)
+puts(<B><FONT COLOR="#BC8F8F">&quot;  aHash.keys   = #{aHash.keys.inspect   }&quot;</FONT></B>)
+puts(<B><FONT COLOR="#BC8F8F">&quot;  aHash.values = #{aHash.values.inspect }&quot;</FONT></B>)
+
+puts(<B><FONT COLOR="#BC8F8F">&quot;DELETING STUFF&quot;</FONT></B>)
+anEle = aHash.delete(<B><FONT COLOR="#BC8F8F">'a'</FONT></B>) <I><FONT COLOR="#B22222"># Also see: reject! &amp; select
+</FONT></I>puts(<B><FONT COLOR="#BC8F8F">&quot;  After Delete:    aHash=#{aHash.inspect}&quot;</FONT></B>)
+puts(<B><FONT COLOR="#BC8F8F">&quot;  Thing Deleted:  #{anEle.inspect}&quot;</FONT></B>)
+aHash.delete_if { |k,v| k.<B><FONT COLOR="#A020F0">nil</FONT></B>? }
+puts(<B><FONT COLOR="#BC8F8F">&quot;  After Delete_if: aHash=#{aHash.inspect}&quot;</FONT></B>)
+anEle = aHash.shift
+puts(<B><FONT COLOR="#BC8F8F">&quot;  After shift:     aHash=#{aHash.inspect}&quot;</FONT></B>)
+puts(<B><FONT COLOR="#BC8F8F">&quot;  Thing shifted:   #{anEle.inspect}&quot;</FONT></B>)
+aHash.clear
+puts(<B><FONT COLOR="#BC8F8F">&quot;  After clear:     aHash=#{aHash.inspect}&quot;</FONT></B>)
+</PRE>
+<HR \/>
+<ADDRESS>Generated by <A HREF="http://www.iki.fi/~mtr/genscript/">GNU Enscript 1.6.5.2</A>.</ADDRESS>
+</BODY>
+</HTML>

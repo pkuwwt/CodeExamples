@@ -1,0 +1,76 @@
+<!DOCTYPE html PUBLIC "-//IETF//DTD HTML 2.0//EN">
+<HTML>
+<HEAD>
+<TITLE>ruby/fileUtils.rb</TITLE>
+</HEAD>
+<BODY BGCOLOR="#FFFFFF" TEXT="#000000" LINK="#1F00FF" ALINK="#FF0000" VLINK="#9900DD">
+<A NAME="top"> </A>
+<A NAME="file1"> </A>
+<H1><a href="fileUtils.rb">fileUtils.rb</a></H1>
+
+<PRE>
+<I><FONT COLOR="#B22222">#!/usr/local/bin/ruby
+</FONT></I>
+<I><FONT COLOR="#B22222">##
+</FONT></I><I><FONT COLOR="#B22222"># @file      fileUtils.rb
+</FONT></I><I><FONT COLOR="#B22222"># @author    Mitch Richling &lt;http://www.mitchr.me/&gt;
+</FONT></I><I><FONT COLOR="#B22222"># @Copyright Copyright 2007 by Mitch Richling.  All rights reserved.
+</FONT></I><I><FONT COLOR="#B22222"># @brief     Demonstrate the fileUtils module.@EOL
+</FONT></I><I><FONT COLOR="#B22222"># @Keywords  ruby example
+</FONT></I><I><FONT COLOR="#B22222"># @Std       Ruby 1.8
+</FONT></I><I><FONT COLOR="#B22222">#
+</FONT></I><I><FONT COLOR="#B22222">#            fileutils is an awesome module providing one stop
+</FONT></I><I><FONT COLOR="#B22222">#            shopping for a broad range of shell-like file and
+</FONT></I><I><FONT COLOR="#B22222">#            filesystem manipulations methods -- most methods even
+</FONT></I><I><FONT COLOR="#B22222">#            take option strings that mimic the command line tools the
+</FONT></I><I><FONT COLOR="#B22222">#            methods reproduce.  Some of the methods provided:
+</FONT></I><I><FONT COLOR="#B22222">#
+</FONT></I><I><FONT COLOR="#B22222">#                        cd(dir, options)
+</FONT></I><I><FONT COLOR="#B22222">#                        cd(dir, options) {|dir| .... }
+</FONT></I><I><FONT COLOR="#B22222">#                        pwd()
+</FONT></I><I><FONT COLOR="#B22222">#                        mkdir(dir, options)
+</FONT></I><I><FONT COLOR="#B22222">#                        mkdir(list, options)
+</FONT></I><I><FONT COLOR="#B22222">#                        mkdir_p(dir, options)
+</FONT></I><I><FONT COLOR="#B22222">#                        mkdir_p(list, options)
+</FONT></I><I><FONT COLOR="#B22222">#                        rmdir(dir, options)
+</FONT></I><I><FONT COLOR="#B22222">#                        rmdir(list, options)
+</FONT></I><I><FONT COLOR="#B22222">#                        ln(old, new, options)
+</FONT></I><I><FONT COLOR="#B22222">#                        ln(list, destdir, options)
+</FONT></I><I><FONT COLOR="#B22222">#                        ln_s(old, new, options)
+</FONT></I><I><FONT COLOR="#B22222">#                        ln_s(list, destdir, options)
+</FONT></I><I><FONT COLOR="#B22222">#                        ln_sf(src, dest, options)
+</FONT></I><I><FONT COLOR="#B22222">#                        cp(src, dest, options)
+</FONT></I><I><FONT COLOR="#B22222">#                        cp(list, dir, options)
+</FONT></I><I><FONT COLOR="#B22222">#                        cp_r(src, dest, options)
+</FONT></I><I><FONT COLOR="#B22222">#                        cp_r(list, dir, options)
+</FONT></I><I><FONT COLOR="#B22222">#                        mv(src, dest, options)
+</FONT></I><I><FONT COLOR="#B22222">#                        mv(list, dir, options)
+</FONT></I><I><FONT COLOR="#B22222">#                        rm(list, options)
+</FONT></I><I><FONT COLOR="#B22222">#                        rm_r(list, options)
+</FONT></I><I><FONT COLOR="#B22222">#                        rm_rf(list, options)
+</FONT></I><I><FONT COLOR="#B22222">#                        install(src, dest, mode = &lt;src's&gt;, options)
+</FONT></I><I><FONT COLOR="#B22222">#                        chmod(mode, list, options)
+</FONT></I><I><FONT COLOR="#B22222">#                        chmod_R(mode, list, options)
+</FONT></I><I><FONT COLOR="#B22222">#                        chown(user, group, list, options)
+</FONT></I><I><FONT COLOR="#B22222">#                        chown_R(user, group, list, options)
+</FONT></I><I><FONT COLOR="#B22222">#                        touch(list, options)
+</FONT></I><I><FONT COLOR="#B22222">#                        copy_entry(src, dest, preserve = false, dereference = false)
+</FONT></I><I><FONT COLOR="#B22222">#                        copy_file(src, dest, preserve = false, dereference = true)
+</FONT></I><I><FONT COLOR="#B22222">#                        copy_stream(srcstream, deststream)
+</FONT></I><I><FONT COLOR="#B22222">#                        remove_entry(path, force = false)
+</FONT></I><I><FONT COLOR="#B22222">#                        remove_entry_secure(path, force = false)
+</FONT></I><I><FONT COLOR="#B22222">#                        remove_file(path, force = false)
+</FONT></I><I><FONT COLOR="#B22222">#                        compare_file(path_a, path_b)
+</FONT></I><I><FONT COLOR="#B22222">#                        compare_stream(stream_a, stream_b)
+</FONT></I><I><FONT COLOR="#B22222">#                        uptodate?(file, cmp_list)
+</FONT></I>
+<B><FONT COLOR="#5F9EA0">require</FONT></B> <B><FONT COLOR="#BC8F8F">'fileutils'</FONT></B> 
+
+FileUtils.cd(<B><FONT COLOR="#BC8F8F">'.'</FONT></B>)
+
+puts(<B><FONT COLOR="#BC8F8F">&quot;CWD: #{FileUtils.pwd}&quot;</FONT></B>)
+</PRE>
+<HR \/>
+<ADDRESS>Generated by <A HREF="http://www.iki.fi/~mtr/genscript/">GNU Enscript 1.6.5.2</A>.</ADDRESS>
+</BODY>
+</HTML>

@@ -1,0 +1,111 @@
+<!DOCTYPE html PUBLIC "-//IETF//DTD HTML 2.0//EN">
+<HTML>
+<HEAD>
+<TITLE>F77/chars.f</TITLE>
+</HEAD>
+<BODY BGCOLOR="#FFFFFF" TEXT="#000000" LINK="#1F00FF" ALINK="#FF0000" VLINK="#9900DD">
+<A NAME="top"> </A>
+<A NAME="file1"> </A>
+<H1><a href="chars.f">chars.f</a></H1>
+
+<PRE>
+<I><FONT COLOR="#B22222">CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
+</FONT></I><I><FONT COLOR="#B22222">C  @file      chars.f
+</FONT></I><I><FONT COLOR="#B22222">C  @Author    Mitch Richling&lt;http://www.mitchr.me&gt;
+</FONT></I><I><FONT COLOR="#B22222">C  @Copyright Copyright 1993 by Mitch Richling.  All rights reserved.
+</FONT></I><I><FONT COLOR="#B22222">C  @Revision  $Revision$ 
+</FONT></I><I><FONT COLOR="#B22222">C  @SCMdate   $Date$
+</FONT></I><I><FONT COLOR="#B22222">C  @brief     Character (string) handeling facilities of Fortran 77.@EOL
+</FONT></I><I><FONT COLOR="#B22222">C  @Keywords  formated i/o screen stdin stdout FORTRAN 77
+</FONT></I><I><FONT COLOR="#B22222">C  @Std       F77
+</FONT></I><I><FONT COLOR="#B22222">C
+</FONT></I>
+       <B><FONT COLOR="#A020F0">program</FONT></B> chars
+
+<I><FONT COLOR="#B22222">C      Character types should have a specified width (10 in this case).       
+</FONT></I><I><FONT COLOR="#B22222">C      The length may be determined automatically for constants.
+</FONT></I>       <B><FONT COLOR="#228B22">character</FONT></B> chs1*10
+       <B><FONT COLOR="#228B22">character</FONT></B> chs2*10
+
+<I><FONT COLOR="#B22222">C      An ARRAY of characters (2 elements, each 12 chars long) may be
+</FONT></I><I><FONT COLOR="#B22222">C      declared like so:
+</FONT></I>       <B><FONT COLOR="#228B22">character</FONT></B> charr(10)*22
+
+<I><FONT COLOR="#B22222">C      Strings may be assigned.
+</FONT></I>       chs1     = <B><FONT COLOR="#BC8F8F">'0123456789'</FONT></B>
+       charr(1) = <B><FONT COLOR="#BC8F8F">'firstOne'</FONT></B>
+       charr(2) = <B><FONT COLOR="#BC8F8F">'secondOne'</FONT></B>
+
+<I><FONT COLOR="#B22222">C      A substring may be assigned too (right padded if needed)
+</FONT></I>       chs1(2:4) = <B><FONT COLOR="#BC8F8F">'BCD'</FONT></B>
+
+<I><FONT COLOR="#B22222">C      If the value is shorter than the character variable, then
+</FONT></I><I><FONT COLOR="#B22222">C      the value is padded with spaces on the right to the correct size.
+</FONT></I>       chs2 = <B><FONT COLOR="#BC8F8F">'123456789'</FONT></B>
+
+       <B><FONT COLOR="#A020F0">write</FONT></B> (*,*) <B><FONT COLOR="#BC8F8F">'x'</FONT></B>, chs1, <B><FONT COLOR="#BC8F8F">'x'</FONT></B>
+       <B><FONT COLOR="#A020F0">write</FONT></B> (*,*) <B><FONT COLOR="#BC8F8F">'x'</FONT></B>, chs2, <B><FONT COLOR="#BC8F8F">'x'</FONT></B>
+
+<I><FONT COLOR="#B22222">C      FORTRAN has a handy substring notation:
+</FONT></I>       <B><FONT COLOR="#A020F0">write</FONT></B> (*,*) <B><FONT COLOR="#BC8F8F">'x'</FONT></B>, chs1(2:4), <B><FONT COLOR="#BC8F8F">'x'</FONT></B>
+       <B><FONT COLOR="#A020F0">write</FONT></B> (*,*) <B><FONT COLOR="#BC8F8F">'x'</FONT></B>, chs1(:4),  <B><FONT COLOR="#BC8F8F">'x'</FONT></B>
+       <B><FONT COLOR="#A020F0">write</FONT></B> (*,*) <B><FONT COLOR="#BC8F8F">'x'</FONT></B>, chs1(2:),  <B><FONT COLOR="#BC8F8F">'x'</FONT></B>
+
+<I><FONT COLOR="#B22222">C      The order of the subscripts is important!  This is the 2nd to the
+</FONT></I><I><FONT COLOR="#B22222">C      4th chars of array element 1:
+</FONT></I>       <B><FONT COLOR="#A020F0">write</FONT></B> (*,*) <B><FONT COLOR="#BC8F8F">'x'</FONT></B>, charr(1)(2:4), <B><FONT COLOR="#BC8F8F">'x'</FONT></B>
+
+<I><FONT COLOR="#B22222">C      The // operator is the only operator FORTRAN 77 has for strings.
+</FONT></I><I><FONT COLOR="#B22222">C      Note the space is because chs2 ENDS with a space. :)
+</FONT></I>       <B><FONT COLOR="#A020F0">write</FONT></B> (*,*) <B><FONT COLOR="#BC8F8F">'x'</FONT></B>, (chs2 // chs1), <B><FONT COLOR="#BC8F8F">'x'</FONT></B>
+
+<I><FONT COLOR="#B22222">C      Characters may be compared.
+</FONT></I>       <B><FONT COLOR="#A020F0">if</FONT></B> ( <B><FONT COLOR="#DA70D6">.not.</FONT></B> (<B><FONT COLOR="#BC8F8F">'abc'</FONT></B> <B><FONT COLOR="#DA70D6">.eq.</FONT></B> <B><FONT COLOR="#BC8F8F">'ABC'</FONT></B>)) <B><FONT COLOR="#A020F0">then</FONT></B>
+          <B><FONT COLOR="#A020F0">write</FONT></B> (*,*) <B><FONT COLOR="#BC8F8F">'abc .eq. ABC is FALSE'</FONT></B>
+       <B><FONT COLOR="#A020F0">end</FONT></B> <B><FONT COLOR="#A020F0">if</FONT></B>
+
+<I><FONT COLOR="#B22222">C      FORTRAN only specifies that A&lt;B&lt;..., 0&lt;1&lt;2..., all letters are
+</FONT></I><I><FONT COLOR="#B22222">C      before (or after) all numbers, and the space is before
+</FONT></I><I><FONT COLOR="#B22222">C      everything.  For example case may be folded.
+</FONT></I>       <B><FONT COLOR="#A020F0">if</FONT></B> (<B><FONT COLOR="#BC8F8F">'DEF'</FONT></B> <B><FONT COLOR="#DA70D6">.gt.</FONT></B> <B><FONT COLOR="#BC8F8F">'ABC'</FONT></B>) <B><FONT COLOR="#A020F0">then</FONT></B>
+          <B><FONT COLOR="#A020F0">write</FONT></B> (*,*) <B><FONT COLOR="#BC8F8F">'DEF .gt. ABC is TRUE'</FONT></B>
+       <B><FONT COLOR="#A020F0">end</FONT></B> <B><FONT COLOR="#A020F0">if</FONT></B>
+
+<I><FONT COLOR="#B22222">C      FORTRAN 77 has four functions that use the ASCII collating sequence
+</FONT></I><I><FONT COLOR="#B22222">C      to determine order of strings.  They are LGE, LGT, LLE, LLT.
+</FONT></I>       <B><FONT COLOR="#A020F0">if</FONT></B> (LGE(<B><FONT COLOR="#BC8F8F">'abc'</FONT></B>, <B><FONT COLOR="#BC8F8F">'ABC'</FONT></B>)) <B><FONT COLOR="#A020F0">then</FONT></B>
+          <B><FONT COLOR="#A020F0">write</FONT></B> (*,*) <B><FONT COLOR="#BC8F8F">'LGE(abc, ABC) is TRUE'</FONT></B>
+       <B><FONT COLOR="#A020F0">end</FONT></B> <B><FONT COLOR="#A020F0">if</FONT></B>
+
+<I><FONT COLOR="#B22222">C      ICHAR converts the first char of a string into a number
+</FONT></I>       <B><FONT COLOR="#A020F0">write</FONT></B> (*,*) <B><FONT COLOR="#BC8F8F">'ichar(a)='</FONT></B>, ichar(<B><FONT COLOR="#BC8F8F">'a'</FONT></B>), <B><FONT COLOR="#BC8F8F">' ichar(A)='</FONT></B>, ichar(<B><FONT COLOR="#BC8F8F">'B'</FONT></B>)
+
+<I><FONT COLOR="#B22222">C      CHAR converts an integer into a char
+</FONT></I>       <B><FONT COLOR="#A020F0">write</FONT></B> (*,*) <B><FONT COLOR="#BC8F8F">'char(97)='</FONT></B>, char(97), <B><FONT COLOR="#BC8F8F">' char(66)='</FONT></B>, char(66)
+
+<I><FONT COLOR="#B22222">C      You can search with index:
+</FONT></I>       <B><FONT COLOR="#A020F0">write</FONT></B> (*,*) <B><FONT COLOR="#BC8F8F">'bar is at '</FONT></B>, index(<B><FONT COLOR="#BC8F8F">'foobar'</FONT></B>, <B><FONT COLOR="#BC8F8F">'bar'</FONT></B>), <B><FONT COLOR="#BC8F8F">' in foobar'</FONT></B>
+
+<I><FONT COLOR="#B22222">C      The length of a string can be found with LEN.  Note, that this is
+</FONT></I><I><FONT COLOR="#B22222">C      the allocated space, not just the non-white space.
+</FONT></I>       <B><FONT COLOR="#A020F0">write</FONT></B> (*,*) <B><FONT COLOR="#BC8F8F">'The length of chs1='</FONT></B>, len(chs1)
+       <B><FONT COLOR="#A020F0">write</FONT></B> (*,*) <B><FONT COLOR="#BC8F8F">'The length of chs2='</FONT></B>, len(chs2)
+
+<I><FONT COLOR="#B22222">C      Now we pass a string to a subroutine
+</FONT></I>       <B><FONT COLOR="#A020F0">call</FONT></B> excsub(chs1)
+
+       <B><FONT COLOR="#A020F0">end</FONT></B>
+
+      <B><FONT COLOR="#A020F0">subroutine</FONT></B> excsub(c)
+<I><FONT COLOR="#B22222">C     This is how you declare a string without specifying the size
+</FONT></I><I><FONT COLOR="#B22222">C     explicitly -- the length is passed with the string!  This is 
+</FONT></I><I><FONT COLOR="#B22222">C     natural because the *X notation changes the size of a TYPE.
+</FONT></I>        character*(*) c
+        <B><FONT COLOR="#A020F0">write</FONT></B> (*,*) <B><FONT COLOR="#BC8F8F">'In excsub(): x'</FONT></B>, c, <B><FONT COLOR="#BC8F8F">'x'</FONT></B>
+        <B><FONT COLOR="#A020F0">return</FONT></B>
+      <B><FONT COLOR="#A020F0">end</FONT></B>
+</PRE>
+<HR \/>
+<ADDRESS>Generated by <A HREF="http://www.iki.fi/~mtr/genscript/">GNU Enscript 1.6.5.2</A>.</ADDRESS>
+</BODY>
+</HTML>

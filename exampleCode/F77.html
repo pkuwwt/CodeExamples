@@ -1,0 +1,110 @@
+<?xml version="1.0"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head id="tmplKeepHead">
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <meta id="tmplMetaContent" name="Description" content="Mitch Richling: Example FORTRAN 77 Programs" />
+    
+    <link href="../CSS/main4.css" rel="stylesheet" type="text/css" />
+    
+    <title id="tmplPageTitle">Mitch Richling: Example FORTRAN 77 Programs</title>
+  </head>
+  <body id="tmplKeepBody">
+    <div class="snippet" id="topLink"><body><div class="snippet" id="topLink">
+     <a id="topHomeLink" href="http://www.mitchr.me/" title="Jump to my homepage"><img alt="Link: Mitch Richling's Home Page" src="../pics/mr_blue.gif" /></a>
+</div></body></div>
+    <div class="snippet" id="topCopy"><body><div class="snippet" id="topCopy">
+  <p id="topCopyRight">&#xA9;&#xA0;2009&#xA0;Mitch&#xA0;Richling</p>
+</div></body></div>
+    <h1 id="tmplDocTitle">Example FORTRAN 77 Programs</h1>
+    <div class="snippet" id="BrowserGrump"><body><div class="snippet" id="BrowserGrump">
+      <!--[if lt IE 7]><br><br><br><br>
+      <p>WARNING: Your copy of Internet  Explorer is very old - from before
+      2001!!!  It is by far too old to properly work with this site, and
+      many others all across the internet.  For a dramatically better
+      browsing experience you should
+      <a href="../browser.html">upgrade to a more modern browser</a>.
+      </p><br><br><![endif]-->
+      
+      <!--[if IE 7]><br /><br /><br /><br />
+      <p>WARNING: Your copy of Internet Explorer (version 7 from 2006)
+      is not compatible with the many web standards in common
+      use today. While you will be able to read much of the content on 
+      this site, it may be very strangely formatted.  For a better
+      browsing experience you should
+      <a href="../browser.html">upgrade to a more modern browser</a>.
+      </p><br /><br /><![endif]-->
+    </div></body></div>
+    <div class="minMar">
+      <div class="threeBearWidthAndCenter">
+        <div id="tmplDocContent">
+      <div class="exCodeList">
+        <p>Here you will find several small, but complete, FORTRAN 77 programs illustrating many common language concepts and
+          constructs. The intent is to give programmers with no FORTRAN 77 experience a core set of fundamental
+          examples to help them get up to speed quickly on this venerable language.  My advice for the fist time FORTRAN
+          programmer is to give this language a chance and have so me fun with it!  If you really want to become an expert
+          FORTRAN programmer, then the best way is to look at quality code -- check out the
+          <a href="../softwareDevelopment/index.html#linAlgLib">BLAS</a> and 
+          <a href="../softwareDevelopment/index.html#linAlgLib">LAPACK</a> 
+          for a start. Good luck. The makefile is 
+          <a href="F77/makefile.html">here</a>.
+        </p>
+        <h2>Variable Declarations &amp; Types</h2>
+        <dl>
+          <dt><a href="F77/types.f.html">types.f</a></dt>     <dd>How to explicitly declare variable types</dd>
+          <dt><a href="F77/impl.f.html">implv.f</a></dt>      <dd>How to use the rather dubious implicit variable type features of FORTRAN</dd>
+          <dt><a href="F77/implml.f.html">implml.f</a></dt>   <dd>Demonstrates the "IMPLICIT NONE" statement specified in MIL-STD-1753</dd>      
+        </dl>
+        <h2>Various "Variable" Topics</h2>
+        <dl>
+          <dt><a href="F77/array.f.html">array.f</a></dt>     <dd>How to declare and use arrays</dd>
+          <dt><a href="F77/arrsub.f.html">arrsub.f</a></dt>   <dd>Arrays and subroutines</dd>
+          <dt><a href="F77/param.f.html">parm.f</a></dt>      <dd>Parameter "variables"</dd>
+          <dt><a href="F77/datas.f.html">datas.f</a></dt>     <dd>The "data" statement used to initialize variables.</dd>
+          <dt><a href="F77/coms.f.html">coms.f</a></dt>       <dd>Common blocks</dd>
+          <dt><a href="F77/chars.f.html">chars.f</a></dt>     <dd>Character "strings"</dd>
+        </dl>
+        <h2>I/O</h2>
+        <dl>
+          <dt><a href="F77/io.f.html">io.f</a></dt>           <dd>Simple console I/O</dd>
+          <dt><a href="F77/fileio.f.html">fileio.f</a></dt>   <dd>Simple file I/O</dd>
+          <dt><a href="F77/fmtio.f.html">fmtio.f</a></dt>     <dd>Formatted I/O</dd>
+          <dt><a href="F77/intfil.f.html">intFil.f</a></dt>   <dd>How to use "Internal Files"</dd>
+        </dl>
+        <h2>Subroutines &amp; Functions</h2>
+        <dl>
+          <dt><a href="F77/statf.f.html">statf.f</a></dt>     <dd>One line functions</dd>
+          <dt><a href="F77/func.f.html">func.f</a></dt>       <dd>Regular functions</dd>
+          <dt><a href="F77/subs.f.html">subs.f</a></dt>       <dd>Subroutines</dd>
+          <dt><a href="F77/savey.f.html">savey.f</a></dt>     <dd>Demonstrates the SAVE statement</dd>
+        </dl>
+        <h2>Arithmetic</h2>
+        <dl>
+          <dt><a href="F77/arith.f.html">arith.f</a></dt>     <dd>Illustrates some arithmetic concepts in FORTRAN</dd>
+        </dl>
+        <h2>Loops</h2>
+        <dl>
+          <dt><a href="F77/do.f.html">do.f</a></dt>           <dd>The FORTRAN 77 do loop</dd>
+          <dt><a href="F77/loopsg.f.html">loopsg.f</a></dt>   <dd>FORTRAN 77 looping constructs</dd>
+          <dt><a href="F77/goto.f.html">goto.f</a></dt>       <dd>Simple GOTO -- infinite loop</dd>
+          <dt><a href="F77/loopml.f.html">loopml.f</a></dt>   <dd>Nonstandard, but common, loop construct specified in MIL-STD-1753</dd>
+        </dl>
+        <h2>Control Structures</h2>
+        <dl>
+          <dt><a href="F77/ifth.f.html">ifth.f</a></dt>       <dd>If-Then and all of its little buddies!</dd>
+        </dl>
+        <h2>Hello World!</h2>
+        <dl>
+          <dt><a href="F77/hello.f.html">hello.f</a></dt>     <dd>A simple hello world program!</dd>
+        </dl>
+      </div>
+    </div>
+      </div>
+    </div>
+    <div class="snippet" id="botCopy"><body><div class="snippet" id="botCopy">
+    <div id="botPadAndCopyRight">
+      &#xA9;&#xA0;2009&#xA0;Mitch&#xA0;Richling
+    </div>
+</div></body></div>
+  </body>
+</html>

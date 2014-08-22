@@ -1,0 +1,89 @@
+<!DOCTYPE html PUBLIC "-//IETF//DTD HTML 2.0//EN">
+<HTML>
+<HEAD>
+<TITLE>AUPG/select_poll.c</TITLE>
+</HEAD>
+<BODY BGCOLOR="#FFFFFF" TEXT="#000000" LINK="#1F00FF" ALINK="#FF0000" VLINK="#9900DD">
+<A NAME="top"> </A>
+<A NAME="file1"> </A>
+<H1><a href="select_poll.c">select_poll.c</a></H1>
+
+<PRE>
+<I><FONT COLOR="#B22222">/* -*- Mode:C; Coding:us-ascii-unix; fill-column:132 -*- */</FONT></I>
+<I><FONT COLOR="#B22222">/**********************************************************************************************************************************/</FONT></I>
+<I><FONT COLOR="#B22222">/**
+   @file      select_poll.c
+   @author    Mitch Richling &lt;http://www.mitchr.me/&gt;
+   @Copyright Copyright 1993 by Mitch Richling.  All rights reserved.
+   @brief     The UNIX select and poll functions.@EOL
+   @Keywords  UNIX I/O file select timeout poll
+   @Std       ISOC 
+   @Tested    
+              - Solaris 2.8
+              - MacOS X.2
+              - Linux (RH 7.3)
+   
+   This C program is intended to illustrate how one can use the select(2) function to determine if a particular file descriptor has
+   data to read or has an error condition without using a read(2) system call.  This is a very useful technique for network
+   programming as well.  We use the select because it is a bit more portable.
+
+   Note that select on some platforms is limited to 1024 FDs.  64-bit Solaris has a much higher limit.  MacOS X allows this limit to
+   be increased via a define.
+***********************************************************************************************************************************/</FONT></I>
+
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;stdio.h&gt;</FONT></B>              <I><FONT COLOR="#B22222">/* I/O lib         C89   */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;stdlib.h&gt;</FONT></B>             <I><FONT COLOR="#B22222">/* Standard Lib    C89   */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;sys/types.h&gt;</FONT></B>          <I><FONT COLOR="#B22222">/* UNIX types      POSIX */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;sys/time.h&gt;</FONT></B>           <I><FONT COLOR="#B22222">/* UNIX time       ????  */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;unistd.h&gt;</FONT></B>             <I><FONT COLOR="#B22222">/* UNIX std stf    POSIX */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;errno.h&gt;</FONT></B>              <I><FONT COLOR="#B22222">/* error stf       POSIX */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;string.h&gt;</FONT></B>             <I><FONT COLOR="#B22222">/* Strings         C89   */</FONT></I>
+
+<I><FONT COLOR="#B22222">/**********************************************************************************************************************************/</FONT></I>
+<B><FONT COLOR="#228B22">int</FONT></B> <B><FONT COLOR="#0000FF">main</FONT></B>(<B><FONT COLOR="#228B22">int</FONT></B> argc, <B><FONT COLOR="#228B22">char</FONT></B> *argv[]) {
+
+  fd_set readFds, exceptFds;
+  <B><FONT COLOR="#228B22">struct</FONT></B> timeval theTimeOut;
+
+  <B><FONT COLOR="#A020F0">while</FONT></B>(1) {
+    <I><FONT COLOR="#B22222">/* First we must empty(zero out) the file descriptor sets. */</FONT></I>
+    FD_ZERO(&amp;readFds);
+    FD_ZERO(&amp;exceptFds);
+
+    <I><FONT COLOR="#B22222">/* Next we populate the file descriptors sets with the file descriptors we are interested in. */</FONT></I>
+    FD_SET(STDIN_FILENO, &amp;readFds);
+    FD_SET(STDIN_FILENO, &amp;exceptFds);
+
+    <I><FONT COLOR="#B22222">/* select will not modify the timeout argument, but it is good form to reset it before each call to select(2).  The zero values
+       makes select act like poll. */</FONT></I>
+    theTimeOut.tv_sec = 0;
+    theTimeOut.tv_usec = 0;
+
+    <I><FONT COLOR="#B22222">/* Finally, we can call the select function!  Note that the third argument is NULL.  This tells select we don't care if the
+       descriptor is ready to receive data (it is standard in after all). */</FONT></I>
+    <B><FONT COLOR="#A020F0">if</FONT></B>(select(1, &amp;readFds, NULL, &amp;exceptFds, &amp;theTimeOut) &lt; 0) {
+      perror(<B><FONT COLOR="#BC8F8F">&quot;ERROR: Select&quot;</FONT></B>);
+      exit(1);
+    } <I><FONT COLOR="#B22222">/* end if */</FONT></I>
+
+    <I><FONT COLOR="#B22222">/* Check to see if data is available for read. */</FONT></I>
+    <B><FONT COLOR="#A020F0">if</FONT></B>(FD_ISSET(STDIN_FILENO, &amp;readFds))
+      printf(<B><FONT COLOR="#BC8F8F">&quot;STDIN has data to read...\n&quot;</FONT></B>);
+    <B><FONT COLOR="#A020F0">else</FONT></B>
+      printf(<B><FONT COLOR="#BC8F8F">&quot;STDIN has NO data to read...\n&quot;</FONT></B>);
+
+    <I><FONT COLOR="#B22222">/* Now check to see if the file descriptor has an error. */</FONT></I>
+    <B><FONT COLOR="#A020F0">if</FONT></B>(FD_ISSET(STDIN_FILENO, &amp;exceptFds))
+      printf(<B><FONT COLOR="#BC8F8F">&quot;STDIN has some sort of error...\n&quot;</FONT></B>);
+
+    <I><FONT COLOR="#B22222">/* We sleep for a second.  This is dumb, because we could have simply set a timeout of 1 on the select call.  We don't do that
+       because this program is demonstrateing how to use select(2) instead of poll(2) */</FONT></I>
+    sleep(1);
+
+  } <I><FONT COLOR="#B22222">/* end while */</FONT></I>
+} <I><FONT COLOR="#B22222">/* end func main */</FONT></I>
+</PRE>
+<HR \/>
+<ADDRESS>Generated by <A HREF="http://www.iki.fi/~mtr/genscript/">GNU Enscript 1.6.5.90</A>.</ADDRESS>
+</BODY>
+</HTML>

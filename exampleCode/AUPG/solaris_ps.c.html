@@ -1,0 +1,106 @@
+<!DOCTYPE html PUBLIC "-//IETF//DTD HTML 2.0//EN">
+<HTML>
+<HEAD>
+<TITLE>AUPG/solaris_ps.c</TITLE>
+</HEAD>
+<BODY BGCOLOR="#FFFFFF" TEXT="#000000" LINK="#1F00FF" ALINK="#FF0000" VLINK="#9900DD">
+<A NAME="top"> </A>
+<A NAME="file1"> </A>
+<H1><a href="solaris_ps.c">solaris_ps.c</a></H1>
+
+<PRE>
+<I><FONT COLOR="#B22222">/* -*- Mode:C; Coding:us-ascii-unix; fill-column:132 -*- */</FONT></I>
+<I><FONT COLOR="#B22222">/**********************************************************************************************************************************/</FONT></I>
+<I><FONT COLOR="#B22222">/**
+   @file      solaris_ps.c
+   @author    Mitch Richling &lt;http://www.mitchr.me/&gt;
+   @Copyright Copyright 1999 by Mitch Richling.  All rights reserved.
+   @brief     How to access process info in Solairs (like /bin/ps)@EOL
+   @Keywords  UNIX Solaris proc procfs ps psinfo
+   @Std       ISOC Solaris
+   @Tested    
+              - Solaris 2.7
+              - Solaris 2.8
+              - Solaris 2.9
+              - BROKEN: Linux   -- incompatable /proc
+              - BROKEN: MacOS X -- no /proc
+              - BROKEN: Solaris 2.5.x
+
+   This C program is intended to illustrate how one can query process information available through the procfs file-system available
+   in Solaris.
+   
+   /proc contains directories with numeric names corresponding to the PIDs of processes currently active on the system.  Each
+   directory contains several files that have various bits of information about each process.  In older versions of Solaris, pre
+   2.6, the content of /proc was simply regular files providing the same information through the use of ioctl() calls.  This program
+   only works with newer versions of Solaris that use directories.  In particular, this program accesses the psinfo file contained
+   in each directory.  The UID running this program must have access to the directories(root for example).  The exit method is not
+   very clean and the read call is also not very clean...
+***********************************************************************************************************************************/</FONT></I>
+
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;dirent.h&gt;</FONT></B>             <I><FONT COLOR="#B22222">/* UNIX dirs       POSIX */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;errno.h&gt;</FONT></B>              <I><FONT COLOR="#B22222">/* error stf       POSIX */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;fcntl.h&gt;</FONT></B>              <I><FONT COLOR="#B22222">/* UNIX file ctrl  UNIX  */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;procfs.h&gt;</FONT></B>             <I><FONT COLOR="#B22222">/* Solaris proc    SUN   */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;stdio.h&gt;</FONT></B>              <I><FONT COLOR="#B22222">/* I/O lib         C89   */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;stdlib.h&gt;</FONT></B>             <I><FONT COLOR="#B22222">/* Standard Lib    C89   */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;string.h&gt;</FONT></B>             <I><FONT COLOR="#B22222">/* Strings         C89   */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;sys/stat.h&gt;</FONT></B>           <I><FONT COLOR="#B22222">/* UNIX stat       POSIX */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;sys/types.h&gt;</FONT></B>          <I><FONT COLOR="#B22222">/* UNIX types      POSIX */</FONT></I>
+
+<I><FONT COLOR="#B22222">/**********************************************************************************************************************************/</FONT></I>
+<B><FONT COLOR="#228B22">int</FONT></B> <B><FONT COLOR="#0000FF">main</FONT></B>(<B><FONT COLOR="#228B22">int</FONT></B> argc, <B><FONT COLOR="#228B22">char</FONT></B> *argv[]) {
+  <B><FONT COLOR="#228B22">int</FONT></B> fd;
+  <B><FONT COLOR="#228B22">char</FONT></B> dat[512];
+  <B><FONT COLOR="#228B22">struct</FONT></B> psinfo *thePsInfo;
+  <B><FONT COLOR="#228B22">char</FONT></B> dirToRead[] = <B><FONT COLOR="#BC8F8F">&quot;/proc&quot;</FONT></B>;
+  DIR *dp;
+  <B><FONT COLOR="#228B22">struct</FONT></B> dirent *dep;
+  <B><FONT COLOR="#228B22">int</FONT></B> errorCount, haveMore;
+  <B><FONT COLOR="#228B22">char</FONT></B> fileToOpen[1024];
+
+  dp = opendir(dirToRead);
+  <B><FONT COLOR="#A020F0">if</FONT></B>(dp == NULL) {
+    printf(<B><FONT COLOR="#BC8F8F">&quot;ERROR: Could not open directory(%s).\n&quot;</FONT></B>, dirToRead);
+    exit(10);
+  } <I><FONT COLOR="#B22222">/* end if */</FONT></I>
+
+  errorCount = 0;
+  haveMore = 1;
+  <B><FONT COLOR="#A020F0">do</FONT></B> {
+    errno = 0;
+    dep = readdir(dp);
+    <B><FONT COLOR="#A020F0">if</FONT></B>(dep == NULL) {
+      <B><FONT COLOR="#A020F0">if</FONT></B>(errno) {
+        errorCount++;
+        perror(NULL);
+      } <B><FONT COLOR="#A020F0">else</FONT></B>
+        haveMore = 0;
+    } <B><FONT COLOR="#A020F0">else</FONT></B> {
+      sprintf(fileToOpen, <B><FONT COLOR="#BC8F8F">&quot;/proc/%s/psinfo&quot;</FONT></B>, dep-&gt;d_name);
+
+      fd = open(fileToOpen, O_RDONLY);
+      <B><FONT COLOR="#A020F0">if</FONT></B>(fd &gt;= 0) {
+        read(fd, dat, 416);
+        thePsInfo = (<B><FONT COLOR="#228B22">struct</FONT></B> psinfo *)dat;
+        printf(<B><FONT COLOR="#BC8F8F">&quot;PID: %-10s  CMD: %s \n&quot;</FONT></B>, dep-&gt;d_name, thePsInfo-&gt;pr_fname);
+        close(fd);
+      } <I><FONT COLOR="#B22222">/* end if */</FONT></I>
+    } <I><FONT COLOR="#B22222">/* end if/else */</FONT></I>
+  } <B><FONT COLOR="#A020F0">while</FONT></B>((errorCount &lt; 10000) &amp;&amp; (haveMore));
+
+  <B><FONT COLOR="#A020F0">if</FONT></B>(haveMore) {
+    printf(<B><FONT COLOR="#BC8F8F">&quot;Exit due to repeated errors.\n&quot;</FONT></B>);
+  } <I><FONT COLOR="#B22222">/* end if */</FONT></I>
+
+  <B><FONT COLOR="#A020F0">if</FONT></B>(closedir(dp) &lt; 0) {
+    printf(<B><FONT COLOR="#BC8F8F">&quot;ERROR: Could not close directory(%s).\n&quot;</FONT></B>, dirToRead);
+    exit(10);
+  } <I><FONT COLOR="#B22222">/* end if */</FONT></I>
+
+  exit(0);
+} <I><FONT COLOR="#B22222">/* end func main */</FONT></I>
+</PRE>
+<HR \/>
+<ADDRESS>Generated by <A HREF="http://www.iki.fi/~mtr/genscript/">GNU Enscript 1.6.5.90</A>.</ADDRESS>
+</BODY>
+</HTML>

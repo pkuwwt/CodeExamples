@@ -1,0 +1,142 @@
+<!DOCTYPE html PUBLIC "-//IETF//DTD HTML 2.0//EN">
+<HTML>
+<HEAD>
+<TITLE>NetCDF/ncReadFile.c</TITLE>
+</HEAD>
+<BODY BGCOLOR="#FFFFFF" TEXT="#000000" LINK="#1F00FF" ALINK="#FF0000" VLINK="#9900DD">
+<A NAME="top"> </A>
+<A NAME="file1"> </A>
+<H1><a href="ncReadFile.c">ncReadFile.c</a></H1>
+
+<PRE>
+<I><FONT COLOR="#B22222">/**
+   @file      ncReadFile.c
+   @author    Mitch Richling &lt;http://www.mitchr.me/&gt;
+   @Copyright Copyright 1998 by Mitch Richling.  All rights reserved.
+   @brief     How to read data from a NetCDF file.@EOL
+   @Keywords  NetCDF I/O read
+   @Std       C89
+
+              This simple example illustrates a very typical use of
+              the NetCDF libraries to read an existing file with known
+              variable names.              
+*/</FONT></I>
+
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;netcdf.h&gt;</FONT></B>             <I><FONT COLOR="#B22222">/* NetCDF Files          */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;stdio.h&gt;</FONT></B>              <I><FONT COLOR="#B22222">/* I/O lib         ISOC  */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;string.h&gt;</FONT></B>             <I><FONT COLOR="#B22222">/* Strings         ISOC  */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;stdlib.h&gt;</FONT></B>             <I><FONT COLOR="#B22222">/* Standard Lib    ISOC  */</FONT></I>
+
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&quot;mjrNetCDF.h&quot;</FONT></B>
+
+#<B><FONT COLOR="#5F9EA0">define</FONT></B> <FONT COLOR="#B8860B">TST_FILE_NAME</FONT> <B><FONT COLOR="#BC8F8F">&quot;a3DtestFile.nc&quot;</FONT></B>
+
+<B><FONT COLOR="#228B22">int</FONT></B> <B><FONT COLOR="#0000FF">main</FONT></B>(<B><FONT COLOR="#228B22">int</FONT></B> argc, <B><FONT COLOR="#228B22">char</FONT></B> *argv[]);
+
+<B><FONT COLOR="#228B22">int</FONT></B> <B><FONT COLOR="#0000FF">main</FONT></B>(<B><FONT COLOR="#228B22">int</FONT></B> argc, <B><FONT COLOR="#228B22">char</FONT></B> *argv[]) {
+  <B><FONT COLOR="#228B22">int</FONT></B> status, ncFileID;
+  nc_type ncXType, varAttType;
+  <B><FONT COLOR="#228B22">int</FONT></B> numVarAttrs, varAttID;
+  size_t varAttLen;
+  <B><FONT COLOR="#228B22">char</FONT></B> varAttValue[8];
+  <B><FONT COLOR="#228B22">int</FONT></B> numVarDims, varDimIDs[3];
+
+  <B><FONT COLOR="#228B22">int</FONT></B> presID;
+  <B><FONT COLOR="#228B22">int</FONT></B> i, j, k, id;
+  size_t dimI, dimJ, dimK;
+  <B><FONT COLOR="#228B22">float</FONT></B> *pres;
+
+
+  <I><FONT COLOR="#B22222">/*  Open the NetCDF file */</FONT></I>
+  status = nc_open(TST_FILE_NAME, NC_NOWRITE, &amp;ncFileID); 
+  mjrNC_chkError(status);
+
+  <I><FONT COLOR="#B22222">/*  Get the IDs of variables from known variable names (we only care about 'pres'). */</FONT></I>
+  status = nc_inq_varid(ncFileID, <B><FONT COLOR="#BC8F8F">&quot;pres&quot;</FONT></B>, &amp;presID);
+  mjrNC_chkError(status);
+
+  <I><FONT COLOR="#B22222">/*  From the variable IDs, get variable info (we only care about 'pres'). */</FONT></I>
+  <I><FONT COLOR="#B22222">/*  See Also: nc_inq_var, nc_inq_varname, nc_inq_vartype, nc_inq_varndims, nc_inq_vardimid, nc_inq_varnatts */</FONT></I>
+
+  <I><FONT COLOR="#B22222">/*  We expect pres to be &quot;float&quot;, check that.. */</FONT></I>
+  status =  nc_inq_vartype(ncFileID, presID, &amp;ncXType);
+  mjrNC_chkError(status);
+  <B><FONT COLOR="#A020F0">if</FONT></B>(ncXType != NC_FLOAT) {
+    printf(<B><FONT COLOR="#BC8F8F">&quot;ERROR: The 'pres' variable was not of type 'float'!\n&quot;</FONT></B>);
+    exit(1);
+  } <I><FONT COLOR="#B22222">/* end if */</FONT></I>
+
+  <I><FONT COLOR="#B22222">/*  We also expect it to have units of 'inHG' */</FONT></I>
+  status =  nc_inq_varndims(ncFileID, presID, &amp;numVarDims);
+  mjrNC_chkError(status);
+  <B><FONT COLOR="#A020F0">if</FONT></B>(numVarDims != 3) {
+    printf(<B><FONT COLOR="#BC8F8F">&quot;ERROR: The 'pres' variable was not 3D!\n&quot;</FONT></B>);
+    exit(1);
+  } <I><FONT COLOR="#B22222">/* end if */</FONT></I>
+
+  <I><FONT COLOR="#B22222">/*  Make sure we have at least ONE attribute.. */</FONT></I>
+  status = nc_inq_varnatts(ncFileID, presID, &amp;numVarAttrs);
+  mjrNC_chkError(status);
+  <B><FONT COLOR="#A020F0">if</FONT></B>(numVarAttrs &lt;= 0) {
+    printf(<B><FONT COLOR="#BC8F8F">&quot;ERROR: The 'pres' variable has no attributes.  Need at lesat 'units'!\n&quot;</FONT></B>);
+    exit(1);
+  } <I><FONT COLOR="#B22222">/* end if */</FONT></I>
+
+  <I><FONT COLOR="#B22222">/*  Get the ID of the 'units' attribute of the 'pres' variable */</FONT></I>
+  status = nc_inq_attid(ncFileID, presID, <B><FONT COLOR="#BC8F8F">&quot;units&quot;</FONT></B>, &amp;varAttID);
+  <I><FONT COLOR="#B22222">/*  The mjrNC_chkError will fail if the attr doesn't exist */</FONT></I>
+  mjrNC_chkError(status);
+
+  status = nc_inq_atttype(ncFileID, presID, <B><FONT COLOR="#BC8F8F">&quot;units&quot;</FONT></B>, &amp;varAttType);
+  mjrNC_chkError(status);
+  <B><FONT COLOR="#A020F0">if</FONT></B>(varAttType != NC_CHAR) {
+    printf(<B><FONT COLOR="#BC8F8F">&quot;ERROR: The 'pres' variable has a non-char 'units' attribute!\n&quot;</FONT></B>);
+    exit(1);
+  } <I><FONT COLOR="#B22222">/* end if */</FONT></I>
+
+  status = nc_inq_attlen(ncFileID, presID, <B><FONT COLOR="#BC8F8F">&quot;units&quot;</FONT></B>, &amp;varAttLen);
+  mjrNC_chkError(status);
+  <B><FONT COLOR="#A020F0">if</FONT></B>(varAttLen != 5) {
+    printf(<B><FONT COLOR="#BC8F8F">&quot;ERROR: The 'pres' variable 'units' are not 'inHG'!\n&quot;</FONT></B>);
+    exit(1);
+  } <I><FONT COLOR="#B22222">/* end if */</FONT></I>
+
+  <I><FONT COLOR="#B22222">/*  It is the correct size.  Get it, and make sure it is 'inHG'. */</FONT></I>
+  status = nc_get_att_text(ncFileID, presID, <B><FONT COLOR="#BC8F8F">&quot;units&quot;</FONT></B>, varAttValue);
+  <B><FONT COLOR="#A020F0">if</FONT></B>(strncmp(<B><FONT COLOR="#BC8F8F">&quot;inHG&quot;</FONT></B>, varAttValue, 5) != 0) {
+    printf(<B><FONT COLOR="#BC8F8F">&quot;ERROR: The 'pres' variable 'units' are not 'inHG'!\n&quot;</FONT></B>);
+    exit(1);
+  } <I><FONT COLOR="#B22222">/* end if */</FONT></I>
+
+  <I><FONT COLOR="#B22222">/*  We do this AFTER we check that the number of dims will fit in our array. */</FONT></I>
+  status =  nc_inq_vardimid(ncFileID, presID, varDimIDs);
+  mjrNC_chkError(status);
+
+  <I><FONT COLOR="#B22222">/*  We have three dims, so we call the lengths dimI, dimJ, dimK */</FONT></I>
+  status = nc_inq_dimlen(ncFileID, varDimIDs[0], &amp;dimI);
+  mjrNC_chkError(status);
+  status = nc_inq_dimlen(ncFileID, varDimIDs[1], &amp;dimJ);
+  mjrNC_chkError(status);
+  status = nc_inq_dimlen(ncFileID, varDimIDs[2], &amp;dimK);
+  mjrNC_chkError(status);
+
+  <I><FONT COLOR="#B22222">/*  Allocate enough space.. */</FONT></I>
+  pres = (<B><FONT COLOR="#228B22">float</FONT></B> *)malloc(<B><FONT COLOR="#A020F0">sizeof</FONT></B>(<B><FONT COLOR="#228B22">float</FONT></B>)*dimI*dimJ*dimK);
+
+  status = nc_get_var_float(ncFileID, presID, pres);
+  mjrNC_chkError(status);
+
+  <B><FONT COLOR="#A020F0">for</FONT></B>(id=0,i=0,id=0;i&lt;dimI;i++)
+    <B><FONT COLOR="#A020F0">for</FONT></B>(j=0;j&lt;dimJ;j++)
+      <B><FONT COLOR="#A020F0">for</FONT></B>(k=0;k&lt;dimK;k++,id++)
+          printf(<B><FONT COLOR="#BC8F8F">&quot;[%02d,%02d,%02d] = %f\n&quot;</FONT></B>, i, j, k, pres[id]);
+
+  free(pres);
+
+  <B><FONT COLOR="#A020F0">return</FONT></B> 0;
+} <I><FONT COLOR="#B22222">/* end func main */</FONT></I>
+</PRE>
+<HR \/>
+<ADDRESS>Generated by <A HREF="http://www.iki.fi/~mtr/genscript/">GNU Enscript 1.6.5.2</A>.</ADDRESS>
+</BODY>
+</HTML>

@@ -1,0 +1,85 @@
+<!DOCTYPE html PUBLIC "-//IETF//DTD HTML 2.0//EN">
+<HTML>
+<HEAD>
+<TITLE>F77/fileio.f</TITLE>
+</HEAD>
+<BODY BGCOLOR="#FFFFFF" TEXT="#000000" LINK="#1F00FF" ALINK="#FF0000" VLINK="#9900DD">
+<A NAME="top"> </A>
+<A NAME="file1"> </A>
+<H1><a href="fileio.f">fileio.f</a></H1>
+
+<PRE>
+<I><FONT COLOR="#B22222">CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
+</FONT></I><I><FONT COLOR="#B22222">C  @file      /home/richmit/world/my_prog/learn/F77/fileio.f
+</FONT></I><I><FONT COLOR="#B22222">C  @Author    Mitch Richling&lt;http://www.mitchr.me&gt;
+</FONT></I><I><FONT COLOR="#B22222">C  @Copyright Copyright 1993 by Mitch Richling.  All rights reserved.
+</FONT></I><I><FONT COLOR="#B22222">C  @brief     Illustrates simple file I/O in Fortran 77.@EOL
+</FONT></I><I><FONT COLOR="#B22222">C  @Keywords  file i/o fortran f77
+</FONT></I><I><FONT COLOR="#B22222">C  @Std       F77
+</FONT></I><I><FONT COLOR="#B22222">C
+</FONT></I>
+        <B><FONT COLOR="#A020F0">program</FONT></B> fileio
+
+       <B><FONT COLOR="#228B22">integer</FONT></B> i
+
+<I><FONT COLOR="#B22222">C      The first * in 'write (*,*)' or 'read (*,*)' is
+</FONT></I><I><FONT COLOR="#B22222">C      a 'unit' number (like a file descriptor in UNIX lingo)
+</FONT></I>
+
+<I><FONT COLOR="#B22222">C      You get to pick the unit number of the file that is
+</FONT></I><I><FONT COLOR="#B22222">C      opened (one of FORTAN's oddities).  Note that old
+</FONT></I><I><FONT COLOR="#B22222">C      programmers use 5 for input and 6 for output -- Fortran
+</FONT></I><I><FONT COLOR="#B22222">C      IV requires 5/6 (not *'s).  Several tags exist for the open
+</FONT></I><I><FONT COLOR="#B22222">C      call:
+</FONT></I><I><FONT COLOR="#B22222">C         UNIT=u       -- unit number
+</FONT></I><I><FONT COLOR="#B22222">C         FILE=name    -- 'INPUT'   - STDIN
+</FONT></I><I><FONT COLOR="#B22222">C                         'OUTPUT'  - STDOUT
+</FONT></I><I><FONT COLOR="#B22222">C                                   - A file name
+</FONT></I><I><FONT COLOR="#B22222">C         STATUS=stat  -- 'OLD'     - The file must already exist
+</FONT></I><I><FONT COLOR="#B22222">C                         'NEW'     - File must not exist already
+</FONT></I><I><FONT COLOR="#B22222">C                         'SCRATCH' - Nuke it at program end
+</FONT></I><I><FONT COLOR="#B22222">C                         'UNKNOWN' - Platform dependent
+</FONT></I><I><FONT COLOR="#B22222">C         ACCESS=acc   -- 'SEQUENTIAL - 
+</FONT></I><I><FONT COLOR="#B22222">C                         'DIRECT'     
+</FONT></I><I><FONT COLOR="#B22222">C         FORM=fm      -- 'FORMATTED'   The Default for 'SEQUENTIAL'
+</FONT></I><I><FONT COLOR="#B22222">C                         'UNFORMATTED' The Default for 'DIRECT'
+</FONT></I><I><FONT COLOR="#B22222">C         RECL=rl      -- positive int representing record length
+</FONT></I><I><FONT COLOR="#B22222">C         BLANK=blnk   -- 'NULL' - blanks in numeric fields ignored (default)
+</FONT></I><I><FONT COLOR="#B22222">C                         'ZERO' - blanks are treated as zeros.
+</FONT></I><I><FONT COLOR="#B22222">C         ERR=s
+</FONT></I><I><FONT COLOR="#B22222">C         IOSTAT=ios
+</FONT></I>       <B><FONT COLOR="#A020F0">open</FONT></B>(<B><FONT COLOR="#DA70D6">UNIT</FONT></B>=2, <B><FONT COLOR="#DA70D6">FILE</FONT></B>=<B><FONT COLOR="#BC8F8F">'outf'</FONT></B>)
+
+<I><FONT COLOR="#B22222">C      I always rewind files before i do anything with them.
+</FONT></I><I><FONT COLOR="#B22222">C      The 'UNIT=' part is optional
+</FONT></I>       <B><FONT COLOR="#A020F0">rewind</FONT></B>(<B><FONT COLOR="#DA70D6">UNIT</FONT></B>=2)
+
+<I><FONT COLOR="#B22222">C      Use the unit number as the first *-thingy.
+</FONT></I>       <B><FONT COLOR="#A020F0">do</FONT></B> 100 i=1,10
+          <B><FONT COLOR="#A020F0">write</FONT></B> (2,*) i
+ 100   <B><FONT COLOR="#A020F0">continue</FONT></B>
+
+<I><FONT COLOR="#B22222">C      Close the file with CLOSE. The STATUS can be one of
+</FONT></I><I><FONT COLOR="#B22222">C        UNIT=u      -- File unit.  The 'UNIT=' part can be omitted
+</FONT></I><I><FONT COLOR="#B22222">C        STATUS=stat -- 'DELETE' - Delete the file upon program end
+</FONT></I><I><FONT COLOR="#B22222">C                       'KEEP'   - Keep the file after program end (default)
+</FONT></I><I><FONT COLOR="#B22222">C        IOSTST=ios  
+</FONT></I><I><FONT COLOR="#B22222">C        ERR=s
+</FONT></I>       <B><FONT COLOR="#A020F0">CLOSE</FONT></B>(<B><FONT COLOR="#DA70D6">UNIT</FONT></B>=2, <B><FONT COLOR="#DA70D6">STATUS</FONT></B>=<B><FONT COLOR="#BC8F8F">'KEEP'</FONT></B>)
+
+<I><FONT COLOR="#B22222">C      We can read in the file in a similar way.  Note that we
+</FONT></I><I><FONT COLOR="#B22222">C      use the END=250 construct to jump to line 250 when we
+</FONT></I><I><FONT COLOR="#B22222">C      hit EOF -- otherwise we would STOP.
+</FONT></I>       <B><FONT COLOR="#A020F0">open</FONT></B>(<B><FONT COLOR="#DA70D6">UNIT</FONT></B>=2, <B><FONT COLOR="#DA70D6">FILE</FONT></B>=<B><FONT COLOR="#BC8F8F">'outf'</FONT></B>)
+ 200   <B><FONT COLOR="#A020F0">read</FONT></B> (2,*,<B><FONT COLOR="#A020F0">END</FONT></B>=250) i
+       <B><FONT COLOR="#A020F0">write</FONT></B> (*,*) <B><FONT COLOR="#BC8F8F">'Got a value='</FONT></B>, i
+       goto 200
+ 250   <B><FONT COLOR="#A020F0">continue</FONT></B>
+       <B><FONT COLOR="#A020F0">write</FONT></B> (*,*) <B><FONT COLOR="#BC8F8F">'Done..'</FONT></B>
+
+       <B><FONT COLOR="#A020F0">end</FONT></B>
+</PRE>
+<HR \/>
+<ADDRESS>Generated by <A HREF="http://www.iki.fi/~mtr/genscript/">GNU Enscript 1.6.5.2</A>.</ADDRESS>
+</BODY>
+</HTML>

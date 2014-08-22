@@ -1,0 +1,247 @@
+<!DOCTYPE html PUBLIC "-//IETF//DTD HTML 2.0//EN">
+<HTML>
+<HEAD>
+<TITLE>AUPG/makefile</TITLE>
+</HEAD>
+<BODY BGCOLOR="#FFFFFF" TEXT="#000000" LINK="#1F00FF" ALINK="#FF0000" VLINK="#9900DD">
+<A NAME="top"> </A>
+<A NAME="file1"> </A>
+<H1><a href="makefile">makefile</a></H1>
+
+<PRE>
+
+
+CC       = gcc
+CXX      = g++
+CFLAGS   = -Wall
+CXXFLAGS = -Wall
+
+<I><FONT COLOR="#B22222">#CC       = icc
+</FONT></I><I><FONT COLOR="#B22222">#CXX      = icpc
+</FONT></I><I><FONT COLOR="#B22222">#CFLAGS   = -Wall
+</FONT></I><I><FONT COLOR="#B22222">#CXXFLAGS = -Wall -std=c++0x 
+</FONT></I>
+
+TARGETS =  arguments getoptP IOerrors dirDepth
+TARGETS += dirThreadCPP98 dirThreadCPP11
+TARGETS += dirDepthC dirRec dirFastC readdir
+TARGETS += env environ fileData fileIO mmap sparse
+TARGETS += forkbunny forknwait suid0tmp rssu
+TARGETS += uname passwd uideuid getgrXXX getgroups getpwXXX gidegid group hosts fqdns 
+TARGETS += inetSocC inetSocS kill paths param sysconf popenDemo
+TARGETS += ptCond ptJoin ptMutex
+TARGETS += regex_example select_poll sigaction signal sleep
+TARGETS += unixSocC unixSocS fileStuff 
+TARGETS += shmMakeAndUseRT shmRemoveRT shmMake semMakeRT shmUse shmRemove
+TARGETS += curDraw curHello curHelloMV curHelloMVW curHelloW curInput curColor 
+TARGETS += termSizeWatch posixLimits
+TARGETS += isocLimits rlimit xdrFilter isocTokEx pcre_example
+TARGETS += rlEX rlEXC rlEXH
+
+SOLARISS = passwdshadow solaris_ps 
+
+all : ${<B><FONT COLOR="#5F9EA0">TARGETS</FONT></B>}
+	@echo Make Complete
+
+alls : ${<B><FONT COLOR="#5F9EA0">SOLARISS</FONT></B>}
+	@echo Make Complete
+
+clean :
+	rm -f ${<B><FONT COLOR="#5F9EA0">TARGETS</FONT></B>} ${<B><FONT COLOR="#5F9EA0">SOLARISS</FONT></B>} *~ *.bak* a.out ndbmTest.db
+	@echo Make Complete
+
+uname : uname.c
+
+rlimit : rlimit.c
+
+posixLimits : posixLimits.c
+
+xdrFilter : xdrFilter.c
+
+isocLimits : isocLimits.c
+
+getoptP : getoptP.c
+
+dirDepth : dirDepth.c
+
+dirDepthC : dirDepthC.cpp
+	$(<B><FONT COLOR="#5F9EA0">CXX</FONT></B>) $(<B><FONT COLOR="#5F9EA0">CXXFLAGS</FONT></B>) -std=c++98 dirDepthC.cpp -o dirDepthC
+
+dirFastC : dirFastC.cpp
+	$(<B><FONT COLOR="#5F9EA0">CXX</FONT></B>) $(<B><FONT COLOR="#5F9EA0">CXXFLAGS</FONT></B>) -std=c++98 dirFastC.cpp -o dirFastC
+
+dirRec : dirRec.c
+
+dirThreadCPP98 : dirThreadCPP98.cpp mtUtils/mtUtils.c
+	$(<B><FONT COLOR="#5F9EA0">CXX</FONT></B>) $(<B><FONT COLOR="#5F9EA0">CXXFLAGS</FONT></B>) -std=c++98 -lpthread -I./mtUtils dirThreadCPP98.cpp mtUtils/mtUtils.c -o dirThreadCPP98
+
+dirThreadCPP11 : dirThreadCPP11.cpp
+	$(<B><FONT COLOR="#5F9EA0">CXX</FONT></B>) $(<B><FONT COLOR="#5F9EA0">CXXFLAGS</FONT></B>) -std=c++11 dirThreadCPP11.cpp -D_GLIBCXX_USE_NANOSLEEP -lpthread -o dirThreadCPP11
+
+IOerrors : IOerrors.c
+
+arguments : arguments.c
+
+env : env.c
+
+environ : environ.c
+
+fileData : fileData.c
+
+fileIO : fileIO.c
+
+forkbunny : forkbunny.c
+
+forknwait : forknwait.c
+
+fqdns : fqdns.c
+
+getgrXXX : getgrXXX.c
+
+getgroups : getgroups.c
+
+getpwXXX : getpwXXX.c
+
+gidegid : gidegid.c
+
+group : group.c
+
+hosts : hosts.c
+
+inetSocC : inetSocC.c
+
+inetSocS : inetSocS.c
+
+kill : kill.c
+
+passwd : passwd.c
+
+passwdshadow : passwdshadow.c
+
+paths : paths.c
+
+param : param.c
+
+sysconf : sysconf.c
+
+popenDemo : popenDemo.c
+
+ptCond : ptCond.c mtUtils/mtUtils.c
+	$(<B><FONT COLOR="#5F9EA0">CC</FONT></B>) $(<B><FONT COLOR="#5F9EA0">CFLAGS</FONT></B>) -lpthread -I./mtUtils ptCond.c mtUtils/mtUtils.c -o ptCond
+
+ptJoin : ptJoin.c mtUtils/mtUtils.c
+	$(<B><FONT COLOR="#5F9EA0">CC</FONT></B>) $(<B><FONT COLOR="#5F9EA0">CFLAGS</FONT></B>) -lpthread -I./mtUtils ptJoin.c mtUtils/mtUtils.c -o ptJoin
+
+ptMutex : ptMutex.c  mtUtils/mtUtils.c
+	$(<B><FONT COLOR="#5F9EA0">CC</FONT></B>) $(<B><FONT COLOR="#5F9EA0">CFLAGS</FONT></B>) -lpthread -I./mtUtils ptMutex.c mtUtils/mtUtils.c -o ptMutex
+
+readdir : readdir.c
+
+regex_example : regex_example.c
+
+isocTokEx : isocTokEx.c
+
+rssu : rssu.c
+
+select_poll : select_poll.c
+
+sigaction : sigaction.c
+
+signal : signal.c
+
+sleep : sleep.c
+
+solaris_ps : solaris_ps.c
+
+sparse : sparse.c
+
+suid0tmp : suid0tmp.c
+
+uideuid : uideuid.c
+
+unixSocC : unixSocC.c
+
+unixSocS : unixSocS.c
+
+unixSocS : unixSocS.c
+
+fileStuff : fileStuff.c
+
+semMakeRT : semMakeRT.c
+
+shmMake : shmMake.c
+
+shmMakeAndUseRT : shmMakeAndUseRT.c
+	$(<B><FONT COLOR="#5F9EA0">CC</FONT></B>) $(<B><FONT COLOR="#5F9EA0">CFLAGS</FONT></B>) -lrt shmMakeAndUseRT.c -o shmMakeAndUseRT
+
+shmRemoveRT : shmRemoveRT.c
+	$(<B><FONT COLOR="#5F9EA0">CC</FONT></B>) $(<B><FONT COLOR="#5F9EA0">CFLAGS</FONT></B>) -lrt shmRemoveRT.c -o shmRemoveRT
+
+shmUse : shmUse.c
+
+shmRemove : shmRemove.c
+
+utime : utime.c
+
+mmap : mmap.c
+
+termSizeWatch : termSizeWatch.c
+
+CURHOME = /usr/local
+<I><FONT COLOR="#B22222">#CURHOME = /apps/free/ncurses/5.4/include
+</FONT></I><I><FONT COLOR="#B22222">#CURINCP = -I$(CURHOME)/include
+</FONT></I><I><FONT COLOR="#B22222">#CURLIBP = -L$(CURHOME)/lib
+</FONT></I>CURLIB  = -lncurses
+
+curHelloW : curHelloW.c
+	$(<B><FONT COLOR="#5F9EA0">CC</FONT></B>) $(<B><FONT COLOR="#5F9EA0">CFLAGS</FONT></B>) $(<B><FONT COLOR="#5F9EA0">CURINCP</FONT></B>) $(<B><FONT COLOR="#5F9EA0">CURLIBP</FONT></B>) curHelloW.c $(<B><FONT COLOR="#5F9EA0">CURLIB</FONT></B>) -o curHelloW
+
+curHelloMV : curHelloMV.c
+	$(<B><FONT COLOR="#5F9EA0">CC</FONT></B>) $(<B><FONT COLOR="#5F9EA0">CFLAGS</FONT></B>) $(<B><FONT COLOR="#5F9EA0">CURINCP</FONT></B>) $(<B><FONT COLOR="#5F9EA0">CURLIBP</FONT></B>) curHelloMV.c $(<B><FONT COLOR="#5F9EA0">CURLIB</FONT></B>) -o curHelloMV
+
+curHelloMVW : curHelloMVW.c
+	$(<B><FONT COLOR="#5F9EA0">CC</FONT></B>) $(<B><FONT COLOR="#5F9EA0">CFLAGS</FONT></B>) $(<B><FONT COLOR="#5F9EA0">CURINCP</FONT></B>) $(<B><FONT COLOR="#5F9EA0">CURLIBP</FONT></B>) curHelloMVW.c $(<B><FONT COLOR="#5F9EA0">CURLIB</FONT></B>) -o curHelloMVW
+
+curHello : curHello.c
+	$(<B><FONT COLOR="#5F9EA0">CC</FONT></B>) $(<B><FONT COLOR="#5F9EA0">CFLAGS</FONT></B>) $(<B><FONT COLOR="#5F9EA0">CURINCP</FONT></B>) $(<B><FONT COLOR="#5F9EA0">CURLIBP</FONT></B>) curHello.c $(<B><FONT COLOR="#5F9EA0">CURLIB</FONT></B>) -o curHello
+
+curInput : curInput.c
+	$(<B><FONT COLOR="#5F9EA0">CC</FONT></B>) $(<B><FONT COLOR="#5F9EA0">CFLAGS</FONT></B>) $(<B><FONT COLOR="#5F9EA0">CURINCP</FONT></B>) $(<B><FONT COLOR="#5F9EA0">CURLIBP</FONT></B>) curInput.c $(<B><FONT COLOR="#5F9EA0">CURLIB</FONT></B>) -o curInput
+
+curDraw : curDraw.c
+	$(<B><FONT COLOR="#5F9EA0">CC</FONT></B>) $(<B><FONT COLOR="#5F9EA0">CFLAGS</FONT></B>) $(<B><FONT COLOR="#5F9EA0">CURINCP</FONT></B>) $(<B><FONT COLOR="#5F9EA0">CURLIBP</FONT></B>) curDraw.c $(<B><FONT COLOR="#5F9EA0">CURLIB</FONT></B>) -o curDraw
+
+curColor : curColor.c
+	$(<B><FONT COLOR="#5F9EA0">CC</FONT></B>) $(<B><FONT COLOR="#5F9EA0">CFLAGS</FONT></B>) $(<B><FONT COLOR="#5F9EA0">CURINCP</FONT></B>) $(<B><FONT COLOR="#5F9EA0">CURLIB</FONT></B>) curColor.c $(<B><FONT COLOR="#5F9EA0">CURLIB</FONT></B>) -o curColor
+
+<I><FONT COLOR="#B22222">## MacOS X readline
+</FONT></I><I><FONT COLOR="#B22222">#RLLIB   = -lreadline
+</FONT></I><I><FONT COLOR="#B22222">#RLLIBP  = -L/usr/lib
+</FONT></I><I><FONT COLOR="#B22222">#RLINCP  = -I/usr/include
+</FONT></I>
+<I><FONT COLOR="#B22222">## Typical GNU readline installed via DarwinPorts
+</FONT></I>RLLIB   = -lreadline
+RLLIBP  = -L/opt/local/lib
+RLINCP  = -I/opt/local/include
+
+rlEX : rlEX.c
+	$(<B><FONT COLOR="#5F9EA0">CC</FONT></B>) $(<B><FONT COLOR="#5F9EA0">CFLAGS</FONT></B>) $(<B><FONT COLOR="#5F9EA0">RLINCP</FONT></B>) rlEX.c $(<B><FONT COLOR="#5F9EA0">RLLIBP</FONT></B>) $(<B><FONT COLOR="#5F9EA0">RLLIB</FONT></B>) -o rlEX
+
+rlEXH : rlEXH.c
+	$(<B><FONT COLOR="#5F9EA0">CC</FONT></B>) $(<B><FONT COLOR="#5F9EA0">CFLAGS</FONT></B>) $(<B><FONT COLOR="#5F9EA0">RLINCP</FONT></B>) rlEXH.c $(<B><FONT COLOR="#5F9EA0">RLLIBP</FONT></B>) $(<B><FONT COLOR="#5F9EA0">RLLIB</FONT></B>) -o rlEXH
+
+rlEXC : rlEXC.c
+	$(<B><FONT COLOR="#5F9EA0">CC</FONT></B>) $(<B><FONT COLOR="#5F9EA0">CFLAGS</FONT></B>) $(<B><FONT COLOR="#5F9EA0">RLINCP</FONT></B>) rlEXC.c $(<B><FONT COLOR="#5F9EA0">RLLIBP</FONT></B>) $(<B><FONT COLOR="#5F9EA0">RLLIB</FONT></B>) -o rlEXC
+
+<I><FONT COLOR="#B22222"># Typical GNU readline installed via DarwinPorts
+</FONT></I>PCRELIB   = -lpcre
+PCRELIBP  = -L/opt/local/lib
+PCREINCP  = -I/opt/local/include
+
+pcre_example : pcre_example.c
+	$(<B><FONT COLOR="#5F9EA0">CC</FONT></B>) $(<B><FONT COLOR="#5F9EA0">CFLAGS</FONT></B>) $(<B><FONT COLOR="#5F9EA0">PCREINCP</FONT></B>) pcre_example.c $(<B><FONT COLOR="#5F9EA0">PCRELIBP</FONT></B>) $(<B><FONT COLOR="#5F9EA0">PCRELIB</FONT></B>) -o pcre_example
+</PRE>
+<HR \/>
+<ADDRESS>Generated by <A HREF="http://www.iki.fi/~mtr/genscript/">GNU Enscript 1.6.5.90</A>.</ADDRESS>
+</BODY>
+</HTML>

@@ -1,0 +1,122 @@
+<!DOCTYPE html PUBLIC "-//IETF//DTD HTML 2.0//EN">
+<HTML>
+<HEAD>
+<TITLE>DB/rdBerkeleyDB.c</TITLE>
+</HEAD>
+<BODY BGCOLOR="#FFFFFF" TEXT="#000000" LINK="#1F00FF" ALINK="#FF0000" VLINK="#9900DD">
+<A NAME="top"> </A>
+<A NAME="file1"> </A>
+<H1><a href="rdBerkeleyDB.c">rdBerkeleyDB.c</a></H1>
+
+<PRE>
+<I><FONT COLOR="#B22222">/**
+   @file      rdBerkeleyDB.c
+   @author    Mitch Richling &lt;http://www.mitchr.me/&gt;
+   @Copyright Copyright 1998 by Mitch Richling.  All rights reserved.
+   @brief     How to read a Berkely DB.@EOL
+   @Keywords  berkely DB dbm ndbm gdbm
+   @Std       C99              
+
+   @Tested    
+              - Solaris 2.8
+              - MacOS X.2
+              - Linux (RHEL)
+*/</FONT></I>
+
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;sys/types.h&gt;</FONT></B>          <I><FONT COLOR="#B22222">/* UNIX types      POSIX */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;stdio.h&gt;</FONT></B>              <I><FONT COLOR="#B22222">/* I/O lib         ISOC  */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;stdlib.h&gt;</FONT></B>             <I><FONT COLOR="#B22222">/* Standard Lib    ISOC  */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;string.h&gt;</FONT></B>             <I><FONT COLOR="#B22222">/* Strings         ISOC  */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;db.h&gt;</FONT></B>                 <I><FONT COLOR="#B22222">/* dbm header      ????  */</FONT></I>
+
+#<B><FONT COLOR="#5F9EA0">define</FONT></B> <FONT COLOR="#B8860B">DATABASE</FONT> <B><FONT COLOR="#BC8F8F">&quot;access.db&quot;</FONT></B>
+
+<B><FONT COLOR="#228B22">void</FONT></B> <B><FONT COLOR="#0000FF">zeroDBT</FONT></B>(DBT *dbt);
+<B><FONT COLOR="#228B22">void</FONT></B> <B><FONT COLOR="#0000FF">closeDB</FONT></B>(DB *dbp);
+
+<B><FONT COLOR="#228B22">int</FONT></B> <B><FONT COLOR="#0000FF">main</FONT></B>(<B><FONT COLOR="#228B22">int</FONT></B> argc, <B><FONT COLOR="#228B22">char</FONT></B> *argv[]) {
+  DB *myDB; 
+  <B><FONT COLOR="#228B22">int</FONT></B> dbRet, i, maxErr;
+  DBT key, value;
+  DBC *myDBcursor;
+
+  <I><FONT COLOR="#B22222">/* Create the DB */</FONT></I>
+  <B><FONT COLOR="#A020F0">if</FONT></B> ((dbRet = db_create(&amp;myDB, NULL, 0)) != 0) { <I><FONT COLOR="#B22222">// Open failure
+</FONT></I>    fprintf(stderr, <B><FONT COLOR="#BC8F8F">&quot;db_create: %s\n&quot;</FONT></B>, db_strerror(dbRet)); 
+    exit (1); 
+  } <B><FONT COLOR="#A020F0">else</FONT></B> {
+    printf(<B><FONT COLOR="#BC8F8F">&quot;DB handle created.\n&quot;</FONT></B>);
+  }
+
+  <I><FONT COLOR="#B22222">/* Associate DB with a file (create a btree) -- don't create it!*/</FONT></I>
+  <B><FONT COLOR="#A020F0">if</FONT></B> ((dbRet = myDB-&gt;open(myDB, NULL, <B><FONT COLOR="#BC8F8F">&quot;berkeleydbTest.db&quot;</FONT></B>, NULL, DB_BTREE, 0, 0)) != 0) { 
+    myDB-&gt;err(myDB, dbRet, <B><FONT COLOR="#BC8F8F">&quot;berkeleydbTest.db&quot;</FONT></B>); 
+    exit(1); <I><FONT COLOR="#B22222">// Should close DB now, but we don't cause we are just gonna exit
+</FONT></I>  } <B><FONT COLOR="#A020F0">else</FONT></B> {
+    printf(<B><FONT COLOR="#BC8F8F">&quot;DB file opened.\n&quot;</FONT></B>);
+  } 
+
+  <I><FONT COLOR="#B22222">/* Get a cursor into the DB */</FONT></I>
+  dbRet = myDB-&gt;cursor(myDB, NULL, &amp;myDBcursor, 0);
+  <B><FONT COLOR="#A020F0">switch</FONT></B>(dbRet) {
+  <B><FONT COLOR="#A020F0">case</FONT></B> <B><FONT COLOR="#5F9EA0">0</FONT></B>: 
+    printf(<B><FONT COLOR="#BC8F8F">&quot;DB cursor initialized.\n&quot;</FONT></B>);
+    <B><FONT COLOR="#A020F0">break</FONT></B>;
+  <B><FONT COLOR="#5F9EA0">default</FONT></B>:
+    myDB-&gt;err(myDB, dbRet, <B><FONT COLOR="#BC8F8F">&quot;DB-&gt;cursor&quot;</FONT></B>);
+    exit(1); <I><FONT COLOR="#B22222">// Should close DB now, but we don't cause we are just gonna exit
+</FONT></I>  }
+
+  <I><FONT COLOR="#B22222">/* Traverse DB and print what we find.. */</FONT></I>
+  printf(<B><FONT COLOR="#BC8F8F">&quot;All the records in the DB:\n&quot;</FONT></B>);
+  i=0;
+  maxErr=100;
+  zeroDBT(&amp;key);
+  zeroDBT(&amp;value);
+  <B><FONT COLOR="#A020F0">while</FONT></B>((dbRet = myDBcursor-&gt;c_get(myDBcursor, &amp;key, &amp;value, DB_NEXT)) == 0) {
+    i++;
+    <B><FONT COLOR="#A020F0">switch</FONT></B>(dbRet) {
+    <B><FONT COLOR="#A020F0">case</FONT></B> <B><FONT COLOR="#5F9EA0">0</FONT></B>:
+      printf(<B><FONT COLOR="#BC8F8F">&quot;  Record(%d): '%s' ==&gt; '%s'\n&quot;</FONT></B>, i, (<B><FONT COLOR="#228B22">char</FONT></B> *)key.data, (<B><FONT COLOR="#228B22">char</FONT></B> *)value.data);
+      <B><FONT COLOR="#A020F0">break</FONT></B>;
+    <B><FONT COLOR="#A020F0">case</FONT></B> <B><FONT COLOR="#5F9EA0">DB_NOTFOUND</FONT></B>:
+      printf(<B><FONT COLOR="#BC8F8F">&quot;  Hmmm.. Record not found..\n&quot;</FONT></B>);
+      maxErr--;
+      <B><FONT COLOR="#A020F0">if</FONT></B>(maxErr &lt;= 0) {
+        printf(<B><FONT COLOR="#BC8F8F">&quot;  Too many errors.  I'm gonna give up now!\n&quot;</FONT></B>);
+        exit(1);
+      }
+      <B><FONT COLOR="#A020F0">break</FONT></B>;
+    <B><FONT COLOR="#5F9EA0">default</FONT></B>:
+      myDB-&gt;err(myDB, dbRet, <B><FONT COLOR="#BC8F8F">&quot;  DBcursor-&gt;get&quot;</FONT></B>);
+      exit(1);
+    }
+  }
+  printf(<B><FONT COLOR="#BC8F8F">&quot;Found %d records\n&quot;</FONT></B>, i);
+
+  <I><FONT COLOR="#B22222">/* We should always close our DB -- even before we exit.. */</FONT></I>
+  closeDB(myDB);
+  printf(<B><FONT COLOR="#BC8F8F">&quot;DB closed... Bye!\n&quot;</FONT></B>);
+
+  exit(1);
+}
+
+<B><FONT COLOR="#228B22">void</FONT></B> <B><FONT COLOR="#0000FF">closeDB</FONT></B>(DB *dbp) {
+  <B><FONT COLOR="#228B22">int</FONT></B> dbRet;
+  dbRet = dbp-&gt;close(dbp, 0);
+  <B><FONT COLOR="#A020F0">switch</FONT></B>(dbRet) {
+  <B><FONT COLOR="#A020F0">case</FONT></B> <B><FONT COLOR="#5F9EA0">0</FONT></B>:
+    <B><FONT COLOR="#A020F0">break</FONT></B>;
+  <B><FONT COLOR="#5F9EA0">default</FONT></B>:
+    printf(<B><FONT COLOR="#BC8F8F">&quot;Fail: Could not close the db...\n&quot;</FONT></B>);
+  }
+}
+
+<B><FONT COLOR="#228B22">void</FONT></B> <B><FONT COLOR="#0000FF">zeroDBT</FONT></B>(DBT *dbt) {
+  memset(dbt, 0, <B><FONT COLOR="#A020F0">sizeof</FONT></B>(DBT));  
+}
+</PRE>
+<HR \/>
+<ADDRESS>Generated by <A HREF="http://www.iki.fi/~mtr/genscript/">GNU Enscript 1.6.5.2</A>.</ADDRESS>
+</BODY>
+</HTML>

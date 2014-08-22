@@ -1,0 +1,62 @@
+<!DOCTYPE html PUBLIC "-//IETF//DTD HTML 2.0//EN">
+<HTML>
+<HEAD>
+<TITLE>postscript/mandelbrot.ps</TITLE>
+</HEAD>
+<BODY BGCOLOR="#FFFFFF" TEXT="#000000" LINK="#1F00FF" ALINK="#FF0000" VLINK="#9900DD">
+<A NAME="top"> </A>
+<A NAME="file1"> </A>
+<H1><a href="mandelbrot.ps">mandelbrot.ps</a></H1>
+
+<PRE>
+<I><FONT COLOR="#B22222">%!PS
+</FONT></I><I><FONT COLOR="#B22222">%
+</FONT></I><I><FONT COLOR="#B22222">% @file      mandelbrot.ps
+</FONT></I><I><FONT COLOR="#B22222">% @author    Mitch Richling &lt;http://www.mitchr.me&gt;
+</FONT></I><I><FONT COLOR="#B22222">% @Copyright Copyright 2002 by Mitch Richling.  All rights reserved.
+</FONT></I><I><FONT COLOR="#B22222">% @brief     This is a PostScript program to compute the Mandelbrot set.@EOL
+</FONT></I><I><FONT COLOR="#B22222">% @Keywords  mandelbrot postscript
+</FONT></I><I><FONT COLOR="#B22222">% @Std       ps
+</FONT></I>
+/XMAX 504 <B><FONT COLOR="#A020F0">def</FONT></B>                             <I><FONT COLOR="#B22222">% Width of image
+</FONT></I>/YMAX 504 <B><FONT COLOR="#A020F0">def</FONT></B>                             <I><FONT COLOR="#B22222">% Height of image
+</FONT></I>/PSIZE 0.48 <B><FONT COLOR="#A020F0">def</FONT></B>                           <I><FONT COLOR="#B22222">% Size in pt of sample spot 
+</FONT></I>
+/XMINR -2.0 <B><FONT COLOR="#A020F0">def</FONT></B>                           <I><FONT COLOR="#B22222">% Min re(z)
+</FONT></I>/XMAXR 2.0 <B><FONT COLOR="#A020F0">def</FONT></B>                            <I><FONT COLOR="#B22222">% Max re(z)
+</FONT></I>/YMINR -2.0 <B><FONT COLOR="#A020F0">def</FONT></B>                           <I><FONT COLOR="#B22222">% Min im(z)
+</FONT></I>/YMAXR 2.0 <B><FONT COLOR="#A020F0">def</FONT></B>                            <I><FONT COLOR="#B22222">% Max im(z)
+</FONT></I>
+<B><FONT COLOR="#A020F0">true</FONT></B> <B><FONT COLOR="#A020F0">setstrokeadjust</FONT></B>
+
+/XWIDE XMAXR XMINR <B><FONT COLOR="#A020F0">sub</FONT></B> XMAX <B><FONT COLOR="#A020F0">div</FONT></B> <B><FONT COLOR="#A020F0">def</FONT></B>       <I><FONT COLOR="#B22222">% Width of &quot;pixel&quot;
+</FONT></I>/YWIDE YMAXR YMINR <B><FONT COLOR="#A020F0">sub</FONT></B> YMAX <B><FONT COLOR="#A020F0">div</FONT></B> <B><FONT COLOR="#A020F0">def</FONT></B>       <I><FONT COLOR="#B22222">% Width of &quot;pixel&quot;
+</FONT></I>
+/MAXC 200 <B><FONT COLOR="#A020F0">def</FONT></B>                             <I><FONT COLOR="#B22222">% Max iterations before bailout
+</FONT></I>
+1 PSIZE XMAX {
+  1 PSIZE YMAX { 
+     1 <B><FONT COLOR="#A020F0">index</FONT></B> 2 <B><FONT COLOR="#A020F0">copy</FONT></B>                                            <I><FONT COLOR="#B22222">% STK: x y x
+</FONT></I>     XWIDE <B><FONT COLOR="#A020F0">mul</FONT></B> XMINR <B><FONT COLOR="#A020F0">add</FONT></B>                                       <I><FONT COLOR="#B22222">% STK: x y x cx
+</FONT></I>     <B><FONT COLOR="#A020F0">exch</FONT></B> YWIDE <B><FONT COLOR="#A020F0">mul</FONT></B> YMINR <B><FONT COLOR="#A020F0">add</FONT></B>                                  <I><FONT COLOR="#B22222">% STK: x y x cx cy
+</FONT></I>     0.0 0.0 0                                                 <I><FONT COLOR="#B22222">% STK: x y x cx cy zx zy c
+</FONT></I>     { 2 <B><FONT COLOR="#A020F0">index</FONT></B> <B><FONT COLOR="#A020F0">dup</FONT></B> <B><FONT COLOR="#A020F0">mul</FONT></B> 2 <B><FONT COLOR="#A020F0">index</FONT></B> <B><FONT COLOR="#A020F0">dup</FONT></B> <B><FONT COLOR="#A020F0">mul</FONT></B> <B><FONT COLOR="#A020F0">sub</FONT></B> 5 <B><FONT COLOR="#A020F0">index</FONT></B> <B><FONT COLOR="#A020F0">add</FONT></B>         <I><FONT COLOR="#B22222">% STK: x y x cx cy zx zy c 'zx*zx-zy*zy+cx'&lt;=&gt;newZX
+</FONT></I>       4 2 <B><FONT COLOR="#A020F0">roll</FONT></B> <B><FONT COLOR="#A020F0">mul</FONT></B> 2 <B><FONT COLOR="#A020F0">mul</FONT></B> 3 <B><FONT COLOR="#A020F0">index</FONT></B> <B><FONT COLOR="#A020F0">add</FONT></B>                          <I><FONT COLOR="#B22222">% STK: x y x cx cy c newZX 'zx*zy*2+cy'&lt;=&gt;newZY
+</FONT></I>       3 2 <B><FONT COLOR="#A020F0">roll</FONT></B> 1 <B><FONT COLOR="#A020F0">add</FONT></B>                                          <I><FONT COLOR="#B22222">% STK: x y x cx cy newZX newZY 'c+1'&lt;=&gt;newC
+</FONT></I>       3 <B><FONT COLOR="#A020F0">copy</FONT></B>                                                  <I><FONT COLOR="#B22222">% STK: x y x cx cy newZX newZY newC newZX newZY newC
+</FONT></I>       MAXC <B><FONT COLOR="#A020F0">gt</FONT></B>                                                 <I><FONT COLOR="#B22222">% STK: x y x cx cy newZX newZY newC newZX newZY 'newC&gt;MAXC'
+</FONT></I>       3 1 <B><FONT COLOR="#A020F0">roll</FONT></B> <B><FONT COLOR="#A020F0">dup</FONT></B> <B><FONT COLOR="#A020F0">mul</FONT></B> <B><FONT COLOR="#A020F0">exch</FONT></B> <B><FONT COLOR="#A020F0">dup</FONT></B> <B><FONT COLOR="#A020F0">mul</FONT></B> <B><FONT COLOR="#A020F0">add</FONT></B> 4 <B><FONT COLOR="#A020F0">gt</FONT></B>                  <I><FONT COLOR="#B22222">% STK: x y x cx cy newZX newZY newC 'newC&gt;MAXC' 'newZX*newZX+newZY*newZY&gt;4'
+</FONT></I>       <B><FONT COLOR="#A020F0">or</FONT></B>                                                      <I><FONT COLOR="#B22222">% STK: x y x cx cy newZX newZY newC 'newC&gt;MAXC or newZX*newZX+newZY*newZY&gt;4'
+</FONT></I>       { <B><FONT COLOR="#A020F0">exit</FONT></B> } <B><FONT COLOR="#A020F0">if</FONT></B>                                             <I><FONT COLOR="#B22222">% STK: x y x cx cy newZX newZY newC
+</FONT></I>     } <B><FONT COLOR="#A020F0">loop</FONT></B>                                             
+     <B><FONT COLOR="#A020F0">dup</FONT></B> MAXC <B><FONT COLOR="#A020F0">gt</FONT></B> { <B><FONT COLOR="#A020F0">pop</FONT></B> 0 } <B><FONT COLOR="#A020F0">if</FONT></B>
+     5 <B><FONT COLOR="#A020F0">mul</FONT></B> MAXC <B><FONT COLOR="#A020F0">mod</FONT></B> MAXC <B><FONT COLOR="#A020F0">div</FONT></B> 0 0 <B><FONT COLOR="#A020F0">setrgbcolor</FONT></B>                   <I><FONT COLOR="#B22222">% STK: x y x cx cy newZX newZY
+</FONT></I>     <B><FONT COLOR="#A020F0">pop</FONT></B> <B><FONT COLOR="#A020F0">pop</FONT></B> <B><FONT COLOR="#A020F0">pop</FONT></B> <B><FONT COLOR="#A020F0">pop</FONT></B> 54 <B><FONT COLOR="#A020F0">add</FONT></B> <B><FONT COLOR="#A020F0">exch</FONT></B> 144 <B><FONT COLOR="#A020F0">add</FONT></B> PSIZE PSIZE <B><FONT COLOR="#A020F0">rectfill</FONT></B>  <I><FONT COLOR="#B22222">% STK: x
+</FONT></I>     } <B><FONT COLOR="#A020F0">for</FONT></B> <B><FONT COLOR="#A020F0">pop</FONT></B>                                                 <I><FONT COLOR="#B22222">% STK:
+</FONT></I>} <B><FONT COLOR="#A020F0">for</FONT></B>
+<B><FONT COLOR="#A020F0">showpage</FONT></B>
+</PRE>
+<HR \/>
+<ADDRESS>Generated by <A HREF="http://www.iki.fi/~mtr/genscript/">GNU Enscript 1.6.5.2</A>.</ADDRESS>
+</BODY>
+</HTML>

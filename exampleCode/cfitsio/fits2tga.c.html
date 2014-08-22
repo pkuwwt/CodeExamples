@@ -1,0 +1,187 @@
+<!DOCTYPE html PUBLIC "-//IETF//DTD HTML 2.0//EN">
+<HTML>
+<HEAD>
+<TITLE>cfitsio/fits2tga.c</TITLE>
+</HEAD>
+<BODY BGCOLOR="#FFFFFF" TEXT="#000000" LINK="#1F00FF" ALINK="#FF0000" VLINK="#9900DD">
+<A NAME="top"> </A>
+<A NAME="file1"> </A>
+<H1><a href="fits2tga.c">fits2tga.c</a></H1>
+
+<PRE>
+<I><FONT COLOR="#B22222">/**
+   @file      fits2tga.c
+   @author    Mitch Richling &lt;http://www.mitchr.me/&gt;
+   @Copyright Copyright 1998 by Mitch Richling.  All rights reserved.
+   @brief     Convert FITS image to TGA@EOL
+   @Keywords  convert fits image tga
+   @Std       C89
+
+              This little example uses cfitsio to read in a fits file,
+              and write out a 24-bit TGA file.  It understands the two
+              most widely used ways to embed color images inside of
+              FITS.
+
+              It converts image data to a double, and thus works with
+              just about any image data type.  I have included
+              commented out code illustrating how to read a SHORT_IMG.
+*/</FONT></I>
+
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;string.h&gt;</FONT></B>             <I><FONT COLOR="#B22222">/* Strings         ISOC  */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;stdio.h&gt;</FONT></B>              <I><FONT COLOR="#B22222">/* I/O lib         ISOC  */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&quot;fitsio.h&quot;</FONT></B>
+
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&quot;fitsUtil.h&quot;</FONT></B>
+
+#<B><FONT COLOR="#5F9EA0">define</FONT></B> <FONT COLOR="#B8860B">FITS_READ_T</FONT> double
+<I><FONT COLOR="#B22222">//#define FITS_READ_T unsigned short
+</FONT></I>
+<B><FONT COLOR="#228B22">int</FONT></B> <B><FONT COLOR="#0000FF">main</FONT></B>(<B><FONT COLOR="#228B22">int</FONT></B> argc, <B><FONT COLOR="#228B22">char</FONT></B> *argv[]) {
+  <B><FONT COLOR="#228B22">int</FONT></B> lengthThreeAxis, xLen, yLen;
+  <B><FONT COLOR="#228B22">int</FONT></B> i;
+  <B><FONT COLOR="#228B22">int</FONT></B> numAxis;
+  <B><FONT COLOR="#228B22">long</FONT></B> axLengths[3];
+  <B><FONT COLOR="#228B22">long</FONT></B> fpixel[3], numPixels;
+  fitsfile *fitsFilePtr;         
+  <B><FONT COLOR="#228B22">int</FONT></B> status;
+  <B><FONT COLOR="#228B22">int</FONT></B> kwvBITPIX;
+  <B><FONT COLOR="#228B22">int</FONT></B> x, y;
+  FITS_READ_T *imageArray;
+
+  status = 0; <I><FONT COLOR="#B22222">/* Must initialize status before use */</FONT></I>
+
+  <I><FONT COLOR="#B22222">/* Open the fits file */</FONT></I>
+  fits_open_file(&amp;fitsFilePtr, argv[1], READONLY, &amp;status);
+  reportAndExitOnFITSerror(status);
+
+  <I><FONT COLOR="#B22222">/* Display the data type in the image. */</FONT></I>
+  fits_get_img_type(fitsFilePtr, &amp;kwvBITPIX, &amp;status);
+  reportAndExitOnFITSerror(status);
+  <B><FONT COLOR="#A020F0">switch</FONT></B>(kwvBITPIX) {
+    <B><FONT COLOR="#A020F0">case</FONT></B> <B><FONT COLOR="#5F9EA0">BYTE_IMG</FONT></B>   : fprintf(stderr, <B><FONT COLOR="#BC8F8F">&quot;Image Type:  8-bit byte pixels, 0 - 255\n&quot;</FONT></B>);  <B><FONT COLOR="#A020F0">break</FONT></B>;
+    <B><FONT COLOR="#A020F0">case</FONT></B> <B><FONT COLOR="#5F9EA0">SHORT_IMG</FONT></B>  : fprintf(stderr, <B><FONT COLOR="#BC8F8F">&quot;Image Type: 16 bit integer pixels\n&quot;</FONT></B>);        <B><FONT COLOR="#A020F0">break</FONT></B>;
+    <B><FONT COLOR="#A020F0">case</FONT></B> <B><FONT COLOR="#5F9EA0">LONG_IMG</FONT></B>   : fprintf(stderr, <B><FONT COLOR="#BC8F8F">&quot;Image Type: 32-bit integer pixels\n&quot;</FONT></B>);        <B><FONT COLOR="#A020F0">break</FONT></B>;
+    <B><FONT COLOR="#A020F0">case</FONT></B> <B><FONT COLOR="#5F9EA0">FLOAT_IMG</FONT></B>  : fprintf(stderr, <B><FONT COLOR="#BC8F8F">&quot;Image Type: 32-bit floating point pixels\n&quot;</FONT></B>); <B><FONT COLOR="#A020F0">break</FONT></B>;
+    <B><FONT COLOR="#A020F0">case</FONT></B> <B><FONT COLOR="#5F9EA0">DOUBLE_IMG</FONT></B> : fprintf(stderr, <B><FONT COLOR="#BC8F8F">&quot;Image Type: 64-bit floating point pixels\n&quot;</FONT></B>); <B><FONT COLOR="#A020F0">break</FONT></B>;
+    <B><FONT COLOR="#A020F0">default</FONT></B>         : fprintf(stderr, <B><FONT COLOR="#BC8F8F">&quot;Image Type: UNKNOWN\n&quot;</FONT></B>);                      <B><FONT COLOR="#A020F0">break</FONT></B>;
+  }
+
+  <I><FONT COLOR="#B22222">/* Get the axis count for the image */</FONT></I>
+  fits_get_img_dim(fitsFilePtr, &amp;numAxis,  &amp;status);
+  reportAndExitOnFITSerror(status);
+  fprintf(stderr, <B><FONT COLOR="#BC8F8F">&quot;Number of axis: %d\n&quot;</FONT></B>, numAxis);
+
+  <I><FONT COLOR="#B22222">/* Find the x/y-axis dimensions and the color dimension if it exists. */</FONT></I>
+  <B><FONT COLOR="#A020F0">if</FONT></B>(numAxis &lt; 2) {
+    fprintf(stderr, <B><FONT COLOR="#BC8F8F">&quot;Too few axes to be a real image!\n&quot;</FONT></B>);
+    exit(1);
+  } <B><FONT COLOR="#A020F0">else</FONT></B> <B><FONT COLOR="#A020F0">if</FONT></B>(numAxis &gt; 3) {
+    fprintf(stderr, <B><FONT COLOR="#BC8F8F">&quot;Too many axes to be a real image!\n&quot;</FONT></B>);
+    exit(2);
+  }
+
+  <I><FONT COLOR="#B22222">/* Get the size of each axis */</FONT></I>
+  fits_get_img_size(fitsFilePtr, 3, axLengths, &amp;status);
+  reportAndExitOnFITSerror(status);
+
+  <I><FONT COLOR="#B22222">/* Find the color axis if it exists.. */</FONT></I>
+  <B><FONT COLOR="#A020F0">if</FONT></B>(numAxis == 2) {
+    lengthThreeAxis = 0;
+    xLen = axLengths[1-1];
+    yLen = axLengths[2-1];
+  } <B><FONT COLOR="#A020F0">else</FONT></B> { <I><FONT COLOR="#B22222">// (numAxis == 3)
+</FONT></I>    <B><FONT COLOR="#A020F0">if</FONT></B>(axLengths[3-1] == 3) {
+      lengthThreeAxis = 3;
+      xLen = axLengths[1-1];
+      yLen = axLengths[2-1];
+    } <B><FONT COLOR="#A020F0">else</FONT></B> <B><FONT COLOR="#A020F0">if</FONT></B>(axLengths[1-1] == 3) {
+      lengthThreeAxis = 1;
+      xLen = axLengths[2-1];
+      yLen = axLengths[3-1];
+    } <B><FONT COLOR="#A020F0">else</FONT></B> {
+      fprintf(stderr, <B><FONT COLOR="#BC8F8F">&quot;Found 3 axis, but can't figure out RGB dimension!\n&quot;</FONT></B>);
+      exit(3);
+    }
+  }
+
+  <I><FONT COLOR="#B22222">/* Compute the number of pixels */</FONT></I>
+  numPixels = xLen * yLen;
+  <B><FONT COLOR="#A020F0">if</FONT></B>(lengthThreeAxis)
+    numPixels = numPixels * 3;
+
+  <I><FONT COLOR="#B22222">/* Report on image size and color axis location */</FONT></I>
+  <B><FONT COLOR="#A020F0">if</FONT></B>(lengthThreeAxis)
+    fprintf(stderr, <B><FONT COLOR="#BC8F8F">&quot;%dx%d Color FITS image.  RGB is ax %d\n&quot;</FONT></B>, xLen, yLen, lengthThreeAxis);
+  <B><FONT COLOR="#A020F0">else</FONT></B>
+    fprintf(stderr, <B><FONT COLOR="#BC8F8F">&quot;%dx%d FITS image.\n&quot;</FONT></B>, xLen, yLen);
+
+  <I><FONT COLOR="#B22222">/* Set up fpixel for a full image read. */</FONT></I>
+  <B><FONT COLOR="#A020F0">for</FONT></B>(i=1; i&lt;=numAxis; i++) 
+    fpixel[i-1] = 1;
+
+  <I><FONT COLOR="#B22222">/* Allocate space used for the image. */</FONT></I>
+  imageArray = (FITS_READ_T *)malloc(<B><FONT COLOR="#A020F0">sizeof</FONT></B>(FITS_READ_T)*(numPixels+1));
+
+  <I><FONT COLOR="#B22222">/* Read in the data in one big gulp */</FONT></I>
+  fits_read_pix(fitsFilePtr, TDOUBLE, fpixel, numPixels, NULL, imageArray, NULL, &amp;status);
+  <I><FONT COLOR="#B22222">//fits_read_pix(fitsFilePtr, TUSHORT, fpixel, numPixels, NULL, imageArray, NULL, &amp;status);
+</FONT></I>
+  <I><FONT COLOR="#B22222">/* Compute maximum pixel value */</FONT></I>
+  FITS_READ_T maxF =  imageArray[0];
+  FITS_READ_T minF =  imageArray[0];
+  <B><FONT COLOR="#A020F0">for</FONT></B>(i=1; i&lt;numPixels; i++) {
+    <B><FONT COLOR="#A020F0">if</FONT></B>(imageArray[i] &gt; maxF) maxF = imageArray[i];
+    <B><FONT COLOR="#A020F0">if</FONT></B>(imageArray[i] &lt; minF) minF = imageArray[i];
+  }
+  fprintf(stderr, <B><FONT COLOR="#BC8F8F">&quot;pix range: [%f, %f]\n&quot;</FONT></B>, (<B><FONT COLOR="#228B22">double</FONT></B>)minF, (<B><FONT COLOR="#228B22">double</FONT></B>)maxF);
+
+  <I><FONT COLOR="#B22222">/* Print out the image file */</FONT></I>
+  <I><FONT COLOR="#B22222">/* Write the TGA header */</FONT></I>
+  putchar(0); 					<I><FONT COLOR="#B22222">/* idlength */</FONT></I>
+  putchar(0); 					<I><FONT COLOR="#B22222">/* colourmaptype */</FONT></I>
+  putchar(2); 					<I><FONT COLOR="#B22222">/* datatypecode */</FONT></I>
+  putchar(0); 					<I><FONT COLOR="#B22222">/* 16-bit colourmap origin */</FONT></I>
+  putchar(0);
+  putchar(0); 					<I><FONT COLOR="#B22222">/* colurmaplength */</FONT></I>
+  putchar(0);
+  putchar(0); 					<I><FONT COLOR="#B22222">/* colormapdepth */</FONT></I>
+  putchar(0); 					<I><FONT COLOR="#B22222">/* 16-bit x_origin */</FONT></I>
+  putchar(0);
+  putchar(0); 					<I><FONT COLOR="#B22222">/* 16-bit y_origon */</FONT></I>
+  putchar(0);
+  putchar(xLen &amp; 0x00ff);       <I><FONT COLOR="#B22222">/* LSB xLen */</FONT></I>
+  putchar((xLen &amp; 0xff00)/256); <I><FONT COLOR="#B22222">/* MSB xLen */</FONT></I>
+  putchar(yLen &amp; 0x00ff);       <I><FONT COLOR="#B22222">/* LSB yLen */</FONT></I>
+  putchar((yLen &amp; 0xff00)/256); <I><FONT COLOR="#B22222">/* MSB yLen */</FONT></I>
+  putchar(24);                  <I><FONT COLOR="#B22222">/* bits per pixel. */</FONT></I>
+  putchar(0);                   <I><FONT COLOR="#B22222">/* imagedescriptor */</FONT></I>
+  <I><FONT COLOR="#B22222">/* Write out the TGA image data */</FONT></I>
+  <B><FONT COLOR="#A020F0">for</FONT></B>(y=0;y&lt;yLen;y++)
+    <B><FONT COLOR="#A020F0">for</FONT></B>(x=0;x&lt;xLen;x++)
+      <B><FONT COLOR="#A020F0">switch</FONT></B>(lengthThreeAxis) {
+        <B><FONT COLOR="#A020F0">case</FONT></B> <B><FONT COLOR="#5F9EA0">0</FONT></B>: putchar(255*(imageArray[x+xLen*y]-minF)/(maxF-minF));
+                putchar(255*(imageArray[x+xLen*y]-minF)/(maxF-minF));
+                putchar(255*(imageArray[x+xLen*y]-minF)/(maxF-minF));             <B><FONT COLOR="#A020F0">break</FONT></B>;
+        <B><FONT COLOR="#A020F0">case</FONT></B> <B><FONT COLOR="#5F9EA0">1</FONT></B>: putchar(255*(imageArray[3*(x+xLen*y)+2]-minF)/(maxF-minF));
+                putchar(255*(imageArray[3*(x+xLen*y)+1]-minF)/(maxF-minF));
+                putchar(255*(imageArray[3*(x+xLen*y)+0]-minF)/(maxF-minF));       <B><FONT COLOR="#A020F0">break</FONT></B>;
+        <B><FONT COLOR="#A020F0">case</FONT></B> <B><FONT COLOR="#5F9EA0">3</FONT></B>: putchar(255*(imageArray[x+xLen*y+2*xLen*yLen]-minF)/(maxF-minF));
+                putchar(255*(imageArray[x+xLen*y+1*xLen*yLen]-minF)/(maxF-minF));
+                putchar(255*(imageArray[x+xLen*y+0*xLen*yLen]-minF)/(maxF-minF)); <B><FONT COLOR="#A020F0">break</FONT></B>;
+      }
+
+  <I><FONT COLOR="#B22222">/* Free up space used for the image. */</FONT></I>
+  free(imageArray);
+
+  <I><FONT COLOR="#B22222">/* We are done.  Close the file. */</FONT></I>
+  fits_close_file(fitsFilePtr, &amp;status);
+  reportAndExitOnFITSerror(status);
+
+  <I><FONT COLOR="#B22222">/* That's it.  Time to exit. */</FONT></I>
+  <B><FONT COLOR="#A020F0">return</FONT></B>(0);
+}
+</PRE>
+<HR \/>
+<ADDRESS>Generated by <A HREF="http://www.iki.fi/~mtr/genscript/">GNU Enscript 1.6.5.2</A>.</ADDRESS>
+</BODY>
+</HTML>

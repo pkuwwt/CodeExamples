@@ -1,0 +1,93 @@
+<!DOCTYPE html PUBLIC "-//IETF//DTD HTML 2.0//EN">
+<HTML>
+<HEAD>
+<TITLE>AUPG/isocLimits.c</TITLE>
+</HEAD>
+<BODY BGCOLOR="#FFFFFF" TEXT="#000000" LINK="#1F00FF" ALINK="#FF0000" VLINK="#9900DD">
+<A NAME="top"> </A>
+<A NAME="file1"> </A>
+<H1><a href="isocLimits.c">isocLimits.c</a></H1>
+
+<PRE>
+<I><FONT COLOR="#B22222">/* -*- Mode:C; Coding:us-ascii-unix; fill-column:132 -*- */</FONT></I>
+<I><FONT COLOR="#B22222">/**********************************************************************************************************************************/</FONT></I>
+<I><FONT COLOR="#B22222">/**
+   @file      isocLimits.c
+   @author    Mitch Richling &lt;http://www.mitchr.me/&gt;
+   @Copyright Copyright 1999 by Mitch Richling.  All rights reserved.
+   @brief     ISO C limits.h constants@EOL
+   @Keywords  UNIX limits ISOC POSIX
+   @Std       ISOC
+   @Tested    
+              - MacOS X.3
+              - Debian 7.4 + gcc (Debian 4.7.2-5) 4.7.2
+
+   This demonstrates some of the constants required by ISO C in the limits.h include file.  This stuff is something that
+   most UNIX programmers end up needing at some point; however, it has little to do with UNIX system programming....
+***********************************************************************************************************************************/</FONT></I>
+
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;stdio.h&gt;</FONT></B>              <I><FONT COLOR="#B22222">/* I/O lib         C89   */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;limits.h&gt;</FONT></B>             <I><FONT COLOR="#B22222">/* uname           POSIX */</FONT></I>
+
+<I><FONT COLOR="#B22222">/**********************************************************************************************************************************/</FONT></I>
+<B><FONT COLOR="#228B22">int</FONT></B> <B><FONT COLOR="#0000FF">main</FONT></B>(<B><FONT COLOR="#228B22">int</FONT></B> argc, <B><FONT COLOR="#228B22">char</FONT></B> *argv[]) {
+  printf(<B><FONT COLOR="#BC8F8F">&quot;char:\n&quot;</FONT></B>);
+  printf(<B><FONT COLOR="#BC8F8F">&quot; bare ............. size: %2d range: [%d,%d] (%s,%d-bit)\n&quot;</FONT></B>, 
+                                                           (<B><FONT COLOR="#228B22">int</FONT></B>)<B><FONT COLOR="#A020F0">sizeof</FONT></B>(<B><FONT COLOR="#228B22">char</FONT></B>),
+                                                           (<B><FONT COLOR="#228B22">int</FONT></B>)CHAR_MIN,
+                                                           (<B><FONT COLOR="#228B22">int</FONT></B>)CHAR_MAX,
+                                                           (CHAR_MIN&lt;0?<B><FONT COLOR="#BC8F8F">&quot;SIGNED&quot;</FONT></B>:<B><FONT COLOR="#BC8F8F">&quot;UNSIGNED&quot;</FONT></B>),
+                                                           (<B><FONT COLOR="#228B22">int</FONT></B>)CHAR_BIT); 
+  printf(<B><FONT COLOR="#BC8F8F">&quot; signed ........... size: %2d range: [%d,%d]\n&quot;</FONT></B>, (<B><FONT COLOR="#228B22">int</FONT></B>)<B><FONT COLOR="#A020F0">sizeof</FONT></B>(<B><FONT COLOR="#228B22">signed</FONT></B> <B><FONT COLOR="#228B22">char</FONT></B>),
+                                                           (<B><FONT COLOR="#228B22">int</FONT></B>)SCHAR_MIN, 
+                                                           (<B><FONT COLOR="#228B22">int</FONT></B>)SCHAR_MAX); 
+  printf(<B><FONT COLOR="#BC8F8F">&quot; unsigned ......... size: %2d range: [%u,%u]\n&quot;</FONT></B>, (<B><FONT COLOR="#228B22">int</FONT></B>)<B><FONT COLOR="#A020F0">sizeof</FONT></B>(<B><FONT COLOR="#228B22">unsigned</FONT></B> <B><FONT COLOR="#228B22">char</FONT></B>),
+                                                           (<B><FONT COLOR="#228B22">unsigned</FONT></B> <B><FONT COLOR="#228B22">int</FONT></B>)0,
+                                                           (<B><FONT COLOR="#228B22">unsigned</FONT></B> <B><FONT COLOR="#228B22">int</FONT></B>)UCHAR_MAX);
+
+  printf(<B><FONT COLOR="#BC8F8F">&quot;short int:\n&quot;</FONT></B>);
+  printf(<B><FONT COLOR="#BC8F8F">&quot; signed ........... size: %2d range: [%d,%d]\n&quot;</FONT></B>, (<B><FONT COLOR="#228B22">int</FONT></B>)<B><FONT COLOR="#A020F0">sizeof</FONT></B>(<B><FONT COLOR="#228B22">signed</FONT></B> <B><FONT COLOR="#228B22">short</FONT></B> <B><FONT COLOR="#228B22">int</FONT></B>),
+                                                           (<B><FONT COLOR="#228B22">int</FONT></B>)SHRT_MIN,
+                                                           (<B><FONT COLOR="#228B22">int</FONT></B>)SHRT_MAX); 
+  printf(<B><FONT COLOR="#BC8F8F">&quot; unsigned ......... size: %2d range: [%u,%u]\n&quot;</FONT></B>, (<B><FONT COLOR="#228B22">int</FONT></B>)<B><FONT COLOR="#A020F0">sizeof</FONT></B>(<B><FONT COLOR="#228B22">unsigned</FONT></B> <B><FONT COLOR="#228B22">short</FONT></B> <B><FONT COLOR="#228B22">int</FONT></B>),
+                                                           (<B><FONT COLOR="#228B22">unsigned</FONT></B>)0,
+                                                           (<B><FONT COLOR="#228B22">unsigned</FONT></B>)USHRT_MAX); 
+
+  printf(<B><FONT COLOR="#BC8F8F">&quot;int:\n&quot;</FONT></B>);
+  printf(<B><FONT COLOR="#BC8F8F">&quot; signed  .......... size: %2d range: [%d,%d]\n&quot;</FONT></B>, (<B><FONT COLOR="#228B22">int</FONT></B>)<B><FONT COLOR="#A020F0">sizeof</FONT></B>(<B><FONT COLOR="#228B22">signed</FONT></B> <B><FONT COLOR="#228B22">int</FONT></B>),               
+                                                           (<B><FONT COLOR="#228B22">int</FONT></B>)INT_MIN,  
+                                                           (<B><FONT COLOR="#228B22">int</FONT></B>)INT_MAX); 
+  printf(<B><FONT COLOR="#BC8F8F">&quot; unsigned  ........ size: %2d range: [%u,%u]\n&quot;</FONT></B>, (<B><FONT COLOR="#228B22">int</FONT></B>)<B><FONT COLOR="#A020F0">sizeof</FONT></B>(<B><FONT COLOR="#228B22">unsigned</FONT></B> <B><FONT COLOR="#228B22">int</FONT></B>),            
+                                                           (<B><FONT COLOR="#228B22">unsigned</FONT></B>)0,         
+                                                           (<B><FONT COLOR="#228B22">unsigned</FONT></B>)UINT_MAX); 
+
+  printf(<B><FONT COLOR="#BC8F8F">&quot;long int:\n&quot;</FONT></B>);
+  printf(<B><FONT COLOR="#BC8F8F">&quot; signed ........... size: %2d range: [%ld,%ld]\n&quot;</FONT></B>, (<B><FONT COLOR="#228B22">int</FONT></B>)<B><FONT COLOR="#A020F0">sizeof</FONT></B>(<B><FONT COLOR="#228B22">signed</FONT></B> <B><FONT COLOR="#228B22">long</FONT></B> <B><FONT COLOR="#228B22">int</FONT></B>),
+                                                             (<B><FONT COLOR="#228B22">long</FONT></B>)LONG_MIN,  
+                                                             (<B><FONT COLOR="#228B22">long</FONT></B>)LONG_MAX); 
+  printf(<B><FONT COLOR="#BC8F8F">&quot; unsigned ......... size: %2d range: [%lu,%lu]\n&quot;</FONT></B>, (<B><FONT COLOR="#228B22">int</FONT></B>)<B><FONT COLOR="#A020F0">sizeof</FONT></B>(<B><FONT COLOR="#228B22">unsigned</FONT></B> <B><FONT COLOR="#228B22">long</FONT></B> <B><FONT COLOR="#228B22">int</FONT></B>),        
+                                                             (<B><FONT COLOR="#228B22">unsigned</FONT></B> <B><FONT COLOR="#228B22">long</FONT></B>)0,         
+                                                             (<B><FONT COLOR="#228B22">unsigned</FONT></B> <B><FONT COLOR="#228B22">long</FONT></B>)ULONG_MAX); 
+
+  printf(<B><FONT COLOR="#BC8F8F">&quot;long long int:\n&quot;</FONT></B>);
+  printf(<B><FONT COLOR="#BC8F8F">&quot; signed  .......... size: %2d range: [%lld,%lld]\n&quot;</FONT></B>, (<B><FONT COLOR="#228B22">int</FONT></B>)<B><FONT COLOR="#A020F0">sizeof</FONT></B>(<B><FONT COLOR="#228B22">signed</FONT></B> <B><FONT COLOR="#228B22">long</FONT></B> <B><FONT COLOR="#228B22">long</FONT></B> <B><FONT COLOR="#228B22">int</FONT></B>),   
+                                                               (<B><FONT COLOR="#228B22">signed</FONT></B> <B><FONT COLOR="#228B22">long</FONT></B> <B><FONT COLOR="#228B22">long</FONT></B> <B><FONT COLOR="#228B22">int</FONT></B>)LLONG_MIN, 
+                                                               (<B><FONT COLOR="#228B22">signed</FONT></B> <B><FONT COLOR="#228B22">long</FONT></B> <B><FONT COLOR="#228B22">long</FONT></B> <B><FONT COLOR="#228B22">int</FONT></B>)LLONG_MAX); 
+  printf(<B><FONT COLOR="#BC8F8F">&quot; unsigned ......... size: %2d range: [%llu,%llu]\n&quot;</FONT></B>, (<B><FONT COLOR="#228B22">int</FONT></B>)<B><FONT COLOR="#A020F0">sizeof</FONT></B>(<B><FONT COLOR="#228B22">unsigned</FONT></B> <B><FONT COLOR="#228B22">long</FONT></B> <B><FONT COLOR="#228B22">long</FONT></B> <B><FONT COLOR="#228B22">int</FONT></B>), 
+                                                               (<B><FONT COLOR="#228B22">unsigned</FONT></B> <B><FONT COLOR="#228B22">long</FONT></B> <B><FONT COLOR="#228B22">long</FONT></B> <B><FONT COLOR="#228B22">int</FONT></B>)0,
+                                                               (<B><FONT COLOR="#228B22">unsigned</FONT></B> <B><FONT COLOR="#228B22">long</FONT></B> <B><FONT COLOR="#228B22">long</FONT></B> <B><FONT COLOR="#228B22">int</FONT></B>)ULLONG_MAX); 
+
+  printf(<B><FONT COLOR="#BC8F8F">&quot;Floating Point Types:\n&quot;</FONT></B>);
+  printf(<B><FONT COLOR="#BC8F8F">&quot; float ............ size: %2d\n&quot;</FONT></B>, (<B><FONT COLOR="#228B22">int</FONT></B>)<B><FONT COLOR="#A020F0">sizeof</FONT></B>(<B><FONT COLOR="#228B22">float</FONT></B>)); 
+  printf(<B><FONT COLOR="#BC8F8F">&quot; double ........... size: %2d\n&quot;</FONT></B>, (<B><FONT COLOR="#228B22">int</FONT></B>)<B><FONT COLOR="#A020F0">sizeof</FONT></B>(<B><FONT COLOR="#228B22">double</FONT></B>)); 
+  printf(<B><FONT COLOR="#BC8F8F">&quot; long double ...... size: %2d\n&quot;</FONT></B>, (<B><FONT COLOR="#228B22">int</FONT></B>)<B><FONT COLOR="#A020F0">sizeof</FONT></B>(<B><FONT COLOR="#228B22">long</FONT></B> <B><FONT COLOR="#228B22">double</FONT></B>)); 
+
+  printf(<B><FONT COLOR="#BC8F8F">&quot;pointer2void ...... size: %2d\n&quot;</FONT></B>,(<B><FONT COLOR="#228B22">int</FONT></B>)<B><FONT COLOR="#A020F0">sizeof</FONT></B>(<B><FONT COLOR="#228B22">void</FONT></B>*)                );
+
+  <B><FONT COLOR="#A020F0">return</FONT></B> 0;
+} <I><FONT COLOR="#B22222">/* end func main */</FONT></I>
+</PRE>
+<HR \/>
+<ADDRESS>Generated by <A HREF="http://www.iki.fi/~mtr/genscript/">GNU Enscript 1.6.5.90</A>.</ADDRESS>
+</BODY>
+</HTML>

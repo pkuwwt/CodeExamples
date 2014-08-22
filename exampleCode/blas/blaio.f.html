@@ -1,0 +1,87 @@
+<!DOCTYPE html PUBLIC "-//IETF//DTD HTML 2.0//EN">
+<HTML>
+<HEAD>
+<TITLE>blas/blaio.f</TITLE>
+</HEAD>
+<BODY BGCOLOR="#FFFFFF" TEXT="#000000" LINK="#1F00FF" ALINK="#FF0000" VLINK="#9900DD">
+<A NAME="top"> </A>
+<A NAME="file1"> </A>
+<H1><a href="blaio.f">blaio.f</a></H1>
+
+<PRE>
+<I><FONT COLOR="#B22222">C -*- Mode:Fortran; Coding:us-ascii-unix; fill-column:72 -*-
+</FONT></I><I><FONT COLOR="#B22222">CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
+</FONT></I><I><FONT COLOR="#B22222">C  @file      blaio.f
+</FONT></I><I><FONT COLOR="#B22222">C  @Author    Mitch Richling&lt;http://www.mitchr.me/&gt;
+</FONT></I><I><FONT COLOR="#B22222">C  @Copyright Copyright 1995 by Mitch Richling.  All rights reserved.
+</FONT></I><I><FONT COLOR="#B22222">C  @breif     FORTRAN linear algebra matrix vector I/O blas.@EOL
+</FONT></I><I><FONT COLOR="#B22222">C  @Keywords  blas linear algebra netlib i/o blaio
+</FONT></I><I><FONT COLOR="#B22222">C  @Std       F77 MIL-STD-1753
+</FONT></I><I><FONT COLOR="#B22222">C  @Notes     This set of routines are intended to provide simple
+</FONT></I><I><FONT COLOR="#B22222">C             matrix/vector I/O useful for debugging and simple examples.
+</FONT></I><I><FONT COLOR="#B22222">C             All of the example programs in this directory utilize this
+</FONT></I><I><FONT COLOR="#B22222">C             set of functions to help make each example less cluttered
+</FONT></I><I><FONT COLOR="#B22222">C             with I/O statements, and thus easier to understand.
+</FONT></I>
+<I><FONT COLOR="#B22222">CC----------------------------------------------------------------------
+</FONT></I>      <B><FONT COLOR="#A020F0">subroutine</FONT></B> sgeprt(m, n, a, c) 
+        <B><FONT COLOR="#228B22">integer</FONT></B> m, n
+        <B><FONT COLOR="#228B22">real</FONT></B> a(m,n)
+        character*(*) c
+        <B><FONT COLOR="#A020F0">call</FONT></B> sprtmx(m, n, a, 9, 3, <B><FONT COLOR="#BC8F8F">'['</FONT></B>, <B><FONT COLOR="#BC8F8F">']'</FONT></B>, <B><FONT COLOR="#BC8F8F">'['</FONT></B>, <B><FONT COLOR="#BC8F8F">']'</FONT></B>, c)
+      <B><FONT COLOR="#A020F0">end</FONT></B>
+
+<I><FONT COLOR="#B22222">CC----------------------------------------------------------------------
+</FONT></I>      <B><FONT COLOR="#A020F0">subroutine</FONT></B> sprtmx(m, n, a, wide, prec, ldel, 
+     *                   rdel, lidel, ridel, tag)
+      <B><FONT COLOR="#228B22">integer</FONT></B> m, n, wide, prec
+      <B><FONT COLOR="#228B22">real</FONT></B>*4  a(m, n)
+      character*(*) ldel, rdel, lidel, ridel, tag
+<I><FONT COLOR="#B22222">C     Local vars      
+</FONT></I>      <B><FONT COLOR="#228B22">character</FONT></B> fst*70
+      <B><FONT COLOR="#228B22">integer</FONT></B> i, j
+<I><FONT COLOR="#B22222">C     Build format string
+</FONT></I><I><FONT COLOR="#B22222">C     Start of format string
+</FONT></I>      fst = <B><FONT COLOR="#BC8F8F">'(1x,a'</FONT></B>
+<I><FONT COLOR="#B22222">C     Width of label
+</FONT></I>      <B><FONT COLOR="#A020F0">write</FONT></B> (fst(index(fst, <B><FONT COLOR="#BC8F8F">' '</FONT></B>):len(fst)), *) len(tag)
+      <B><FONT COLOR="#A020F0">call</FONT></B> zapspc(fst);
+<I><FONT COLOR="#B22222">C     ,a,a for the brackets 
+</FONT></I>      fst(index(fst, <B><FONT COLOR="#BC8F8F">' '</FONT></B>):len(fst))=<B><FONT COLOR="#BC8F8F">',a,a,'</FONT></B>;
+      <B><FONT COLOR="#A020F0">write</FONT></B> (fst(index(fst, <B><FONT COLOR="#BC8F8F">' '</FONT></B>):len(fst)), *) n, <B><FONT COLOR="#BC8F8F">'f'</FONT></B>, wide, <B><FONT COLOR="#BC8F8F">'.'</FONT></B>, prec
+      <B><FONT COLOR="#A020F0">call</FONT></B> zapspc(fst);
+<I><FONT COLOR="#B22222">C     ,a,a for the last brackets, and the final paren
+</FONT></I>      fst(index(fst, <B><FONT COLOR="#BC8F8F">' '</FONT></B>):len(fst))=<B><FONT COLOR="#BC8F8F">',1x,a,a)'</FONT></B>;
+<I><FONT COLOR="#B22222">C     Use format string and print out the matrix      
+</FONT></I>      <B><FONT COLOR="#A020F0">do</FONT></B> i=1,m
+         <B><FONT COLOR="#A020F0">if</FONT></B>( (i <B><FONT COLOR="#DA70D6">.eq.</FONT></B> 1) <B><FONT COLOR="#DA70D6">.and.</FONT></B> (i <B><FONT COLOR="#DA70D6">.eq.</FONT></B> m) ) <B><FONT COLOR="#A020F0">then</FONT></B>
+            <B><FONT COLOR="#A020F0">write</FONT></B> (*, fst) tag,ldel,lidel, (a(i, j), j=1,n), ridel,rdel
+         <B><FONT COLOR="#A020F0">else</FONT></B> <B><FONT COLOR="#A020F0">if</FONT></B>(i <B><FONT COLOR="#DA70D6">.eq.</FONT></B> 1) <B><FONT COLOR="#A020F0">then</FONT></B> 
+            <B><FONT COLOR="#A020F0">write</FONT></B> (*, fst) tag,ldel,lidel, (a(i, j), j=1,n), ridel,<B><FONT COLOR="#BC8F8F">' '</FONT></B>
+         <B><FONT COLOR="#A020F0">else</FONT></B> <B><FONT COLOR="#A020F0">if</FONT></B>(i <B><FONT COLOR="#DA70D6">.eq.</FONT></B> m) <B><FONT COLOR="#A020F0">then</FONT></B>
+            <B><FONT COLOR="#A020F0">write</FONT></B> (*, fst) <B><FONT COLOR="#BC8F8F">' '</FONT></B>,<B><FONT COLOR="#BC8F8F">' '</FONT></B>,lidel, (a(i, j), j=1,n),ridel,rdel
+         <B><FONT COLOR="#A020F0">else</FONT></B>
+            <B><FONT COLOR="#A020F0">write</FONT></B> (*, fst) <B><FONT COLOR="#BC8F8F">' '</FONT></B>,<B><FONT COLOR="#BC8F8F">' '</FONT></B>,lidel, (a(i, j), j=1,n),ridel,<B><FONT COLOR="#BC8F8F">' '</FONT></B>
+         endif
+      enddo
+      <B><FONT COLOR="#A020F0">end</FONT></B>
+
+<I><FONT COLOR="#B22222">CC----------------------------------------------------------------------
+</FONT></I>      <B><FONT COLOR="#A020F0">subroutine</FONT></B> zapspc(instr)
+      character*(*) instr
+      <B><FONT COLOR="#228B22">integer</FONT></B>       i, j
+      j=1
+      <B><FONT COLOR="#A020F0">do</FONT></B> i=1,len(instr)
+         <B><FONT COLOR="#A020F0">if</FONT></B>( <B><FONT COLOR="#DA70D6">.not.</FONT></B> (instr(i:i) <B><FONT COLOR="#DA70D6">.eq.</FONT></B> <B><FONT COLOR="#BC8F8F">' '</FONT></B>)) <B><FONT COLOR="#A020F0">then</FONT></B>
+            instr(j:j)=instr(i:i)
+            j=j+1
+         endif
+      enddo
+      instr(j:len(instr)) = <B><FONT COLOR="#BC8F8F">' '</FONT></B>
+      <B><FONT COLOR="#A020F0">end</FONT></B>
+     
+</PRE>
+<HR \/>
+<ADDRESS>Generated by <A HREF="http://www.iki.fi/~mtr/genscript/">GNU Enscript 1.6.5.90</A>.</ADDRESS>
+</BODY>
+</HTML>

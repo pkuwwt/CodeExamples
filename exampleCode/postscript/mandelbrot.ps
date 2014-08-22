@@ -1,0 +1,46 @@
+%!PS
+%
+% @file      mandelbrot.ps
+% @author    Mitch Richling <http://www.mitchr.me>
+% @Copyright Copyright 2002 by Mitch Richling.  All rights reserved.
+% @brief     This is a PostScript program to compute the Mandelbrot set.@EOL
+% @Keywords  mandelbrot postscript
+% @Std       ps
+
+/XMAX 504 def                             % Width of image
+/YMAX 504 def                             % Height of image
+/PSIZE 0.48 def                           % Size in pt of sample spot 
+
+/XMINR -2.0 def                           % Min re(z)
+/XMAXR 2.0 def                            % Max re(z)
+/YMINR -2.0 def                           % Min im(z)
+/YMAXR 2.0 def                            % Max im(z)
+
+true setstrokeadjust
+
+/XWIDE XMAXR XMINR sub XMAX div def       % Width of "pixel"
+/YWIDE YMAXR YMINR sub YMAX div def       % Width of "pixel"
+
+/MAXC 200 def                             % Max iterations before bailout
+
+1 PSIZE XMAX {
+  1 PSIZE YMAX { 
+     1 index 2 copy                                            % STK: x y x
+     XWIDE mul XMINR add                                       % STK: x y x cx
+     exch YWIDE mul YMINR add                                  % STK: x y x cx cy
+     0.0 0.0 0                                                 % STK: x y x cx cy zx zy c
+     { 2 index dup mul 2 index dup mul sub 5 index add         % STK: x y x cx cy zx zy c 'zx*zx-zy*zy+cx'<=>newZX
+       4 2 roll mul 2 mul 3 index add                          % STK: x y x cx cy c newZX 'zx*zy*2+cy'<=>newZY
+       3 2 roll 1 add                                          % STK: x y x cx cy newZX newZY 'c+1'<=>newC
+       3 copy                                                  % STK: x y x cx cy newZX newZY newC newZX newZY newC
+       MAXC gt                                                 % STK: x y x cx cy newZX newZY newC newZX newZY 'newC>MAXC'
+       3 1 roll dup mul exch dup mul add 4 gt                  % STK: x y x cx cy newZX newZY newC 'newC>MAXC' 'newZX*newZX+newZY*newZY>4'
+       or                                                      % STK: x y x cx cy newZX newZY newC 'newC>MAXC or newZX*newZX+newZY*newZY>4'
+       { exit } if                                             % STK: x y x cx cy newZX newZY newC
+     } loop                                             
+     dup MAXC gt { pop 0 } if
+     5 mul MAXC mod MAXC div 0 0 setrgbcolor                   % STK: x y x cx cy newZX newZY
+     pop pop pop pop 54 add exch 144 add PSIZE PSIZE rectfill  % STK: x
+     } for pop                                                 % STK:
+} for
+showpage

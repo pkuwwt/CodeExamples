@@ -1,0 +1,96 @@
+<!DOCTYPE html PUBLIC "-//IETF//DTD HTML 2.0//EN">
+<HTML>
+<HEAD>
+<TITLE>ruby/hashOfArray.rb</TITLE>
+</HEAD>
+<BODY BGCOLOR="#FFFFFF" TEXT="#000000" LINK="#1F00FF" ALINK="#FF0000" VLINK="#9900DD">
+<A NAME="top"> </A>
+<A NAME="file1"> </A>
+<H1><a href="hashOfArray.rb">hashOfArray.rb</a></H1>
+
+<PRE>
+<I><FONT COLOR="#B22222">#!/usr/local/bin/ruby
+</FONT></I>
+<I><FONT COLOR="#B22222">##
+</FONT></I><I><FONT COLOR="#B22222"># @file      hashOfArray.rb
+</FONT></I><I><FONT COLOR="#B22222"># @author    Mitch Richling &lt;http://www.mitchr.me/&gt;
+</FONT></I><I><FONT COLOR="#B22222"># @Copyright Copyright 2006 by Mitch Richling.  All rights reserved.
+</FONT></I><I><FONT COLOR="#B22222"># @brief     Building up a hash of arrays.@EOL
+</FONT></I><I><FONT COLOR="#B22222"># @Keywords  ruby example hash array perl
+</FONT></I><I><FONT COLOR="#B22222"># @Std       Ruby 1.8
+</FONT></I><I><FONT COLOR="#B22222">#
+</FONT></I><I><FONT COLOR="#B22222">#            A common Perl idiom is to use a hash of arrays to
+</FONT></I><I><FONT COLOR="#B22222">#            categorize data -- the hash is built up as new data
+</FONT></I><I><FONT COLOR="#B22222">#            categories are discovered, and data is pushed onto the
+</FONT></I><I><FONT COLOR="#B22222">#            arrays for the appropriate category.  This example
+</FONT></I><I><FONT COLOR="#B22222">#            program shows a few Ruby recipes for doing the same
+</FONT></I><I><FONT COLOR="#B22222">#            thing.
+</FONT></I><I><FONT COLOR="#B22222">#
+</FONT></I><I><FONT COLOR="#B22222">#            See the hashOfCounts.rb example too.
+</FONT></I>
+
+data = [ [1, 2], [1, 3], [4, 5] ]
+
+<I><FONT COLOR="#B22222"># Probably the most verbose way to do it..
+</FONT></I>aHash=Hash::new
+data.each <B><FONT COLOR="#A020F0">do</FONT></B> |x,y|  
+  <B><FONT COLOR="#A020F0">if</FONT></B> aHash.member?(x) <B><FONT COLOR="#A020F0">then</FONT></B>   <I><FONT COLOR="#B22222"># Note: aHash.member?(x) == !aHash[x].nil?
+</FONT></I>    aHash[x].push(y)
+  <B><FONT COLOR="#A020F0">else</FONT></B>
+    aHash[x] = Array.new(1, y)  <I><FONT COLOR="#B22222"># or 'Array.new.push(y)', or '[ y ]'
+</FONT></I>  <B><FONT COLOR="#A020F0">end</FONT></B>
+<B><FONT COLOR="#A020F0">end</FONT></B>
+puts(<B><FONT COLOR="#BC8F8F">&quot;===============&quot;</FONT></B>)
+aHash.each <B><FONT COLOR="#A020F0">do</FONT></B> |x,y|
+  puts(<B><FONT COLOR="#BC8F8F">&quot;#{x} : #{y.inspect}&quot;</FONT></B>)
+<B><FONT COLOR="#A020F0">end</FONT></B>
+
+<I><FONT COLOR="#B22222"># This is a common ruby idiom
+</FONT></I>aHash=Hash::new
+data.each <B><FONT COLOR="#A020F0">do</FONT></B> |x,y|
+  (aHash[x] ||= []).push(y)  <I><FONT COLOR="#B22222"># Same as: aHash[x] = (aHash[x] || []); aHash[x].push(y)
+</FONT></I><B><FONT COLOR="#A020F0">end</FONT></B>
+puts(<B><FONT COLOR="#BC8F8F">&quot;===============&quot;</FONT></B>)
+aHash.each <B><FONT COLOR="#A020F0">do</FONT></B> |x,y|
+  puts(<B><FONT COLOR="#BC8F8F">&quot;#{x} : #{y.inspect}&quot;</FONT></B>)
+<B><FONT COLOR="#A020F0">end</FONT></B>
+
+<I><FONT COLOR="#B22222"># The following is a rather perl-ish way to get it done.  This example
+</FONT></I><I><FONT COLOR="#B22222"># depends upon the fact that + creates a NEW object, and that + also
+</FONT></I><I><FONT COLOR="#B22222"># concatenates arrays.
+</FONT></I>aHash=Hash.new(Array.new)
+data.each <B><FONT COLOR="#A020F0">do</FONT></B> |x,y|
+  aHash[x] += Array.new(1, y)
+<B><FONT COLOR="#A020F0">end</FONT></B>
+puts(<B><FONT COLOR="#BC8F8F">&quot;===============&quot;</FONT></B>)
+aHash.each <B><FONT COLOR="#A020F0">do</FONT></B> |x,y|
+  puts(<B><FONT COLOR="#BC8F8F">&quot;#{x} : #{y.inspect}&quot;</FONT></B>)
+<B><FONT COLOR="#A020F0">end</FONT></B>
+
+<I><FONT COLOR="#B22222"># WARNING WARNING WARNING WARNING WARNING WARNING WARNING WARNING 
+</FONT></I><I><FONT COLOR="#B22222"># WARNING WARNING WARNING WARNING WARNING WARNING WARNING WARNING 
+</FONT></I><I><FONT COLOR="#B22222"># WARNING WARNING WARNING WARNING WARNING WARNING WARNING WARNING 
+</FONT></I><I><FONT COLOR="#B22222">#
+</FONT></I><I><FONT COLOR="#B22222"># The following code doesn't do what you might expect!!!!
+</FONT></I><I><FONT COLOR="#B22222">#
+</FONT></I><I><FONT COLOR="#B22222"># aHash=Hash.new(Array.new) means that every time we evaluate
+</FONT></I><I><FONT COLOR="#B22222"># aHash[foo] when foo is not already a key, we get the Array.new
+</FONT></I><I><FONT COLOR="#B22222"># object specified in the constructor -- we get precisely that object,
+</FONT></I><I><FONT COLOR="#B22222"># and not a copy.  In the following code, we keep pushing y onto the
+</FONT></I><I><FONT COLOR="#B22222"># array given in the constructor -- so if we evaluate aHash[foo] we
+</FONT></I><I><FONT COLOR="#B22222"># get an array containing the values we pushed on! For this reason,
+</FONT></I><I><FONT COLOR="#B22222"># the following code doesn't do what most Perl programmers expect.
+</FONT></I>aHash=Hash.new(Array.new)
+data.each <B><FONT COLOR="#A020F0">do</FONT></B> |x,y|
+  aHash[x].push(y)
+<B><FONT COLOR="#A020F0">end</FONT></B>
+puts(<B><FONT COLOR="#BC8F8F">&quot;===============&quot;</FONT></B>)
+aHash.each <B><FONT COLOR="#A020F0">do</FONT></B> |x,y|
+  puts(<B><FONT COLOR="#BC8F8F">&quot;#{x} : #{y.inspect}&quot;</FONT></B>)
+<B><FONT COLOR="#A020F0">end</FONT></B>
+puts(<B><FONT COLOR="#BC8F8F">&quot;aHash[0]=#{aHash[0].inspect}&quot;</FONT></B>)
+</PRE>
+<HR \/>
+<ADDRESS>Generated by <A HREF="http://www.iki.fi/~mtr/genscript/">GNU Enscript 1.6.5.2</A>.</ADDRESS>
+</BODY>
+</HTML>

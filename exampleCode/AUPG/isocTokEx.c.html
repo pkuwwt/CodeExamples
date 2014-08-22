@@ -1,0 +1,75 @@
+<!DOCTYPE html PUBLIC "-//IETF//DTD HTML 2.0//EN">
+<HTML>
+<HEAD>
+<TITLE>AUPG/isocTokEx.c</TITLE>
+</HEAD>
+<BODY BGCOLOR="#FFFFFF" TEXT="#000000" LINK="#1F00FF" ALINK="#FF0000" VLINK="#9900DD">
+<A NAME="top"> </A>
+<A NAME="file1"> </A>
+<H1><a href="isocTokEx.c">isocTokEx.c</a></H1>
+
+<PRE>
+<I><FONT COLOR="#B22222">/* -*- Mode:C; Coding:us-ascii-unix; fill-column:132 -*- */</FONT></I>
+<I><FONT COLOR="#B22222">/**********************************************************************************************************************************/</FONT></I>
+<I><FONT COLOR="#B22222">/**
+   @file      isocTokEx.c
+   @author    Mitch Richling &lt;http://www.mitchr.me/&gt;
+   @Copyright Copyright 1996,2001 by Mitch Richling.  All rights reserved.
+   @brief     Typical UNIX applicaiton of ISO C90 strtok() function@EOL
+   @Keywords  strtok_r UNIX text delimited split cut awk
+   @Std       C90
+   @Tested    
+              - Solaris 2.8
+              - MacOS X.2
+              - Linux (RH 7.3)
+              - Debian 7.4 + gcc (Debian 4.7.2-5) 4.7.2
+
+   This example has very little to do with UNIX APIs; however, many UNIX systems programmers must deal with text delimited
+   databases.  Consider for example: /etc/passwd, /etc/group, and /etc/shadow.  While breaking up such files with tools like perl or
+   the shell (cut/awk) is a simple and frequent task, doing so in C via the standard strtok/strtok_r interface is a stumbling block
+   for many novice C programmers.
+
+   NOTE: strtok has difficulty with empty tokens, and for this reason many UNIX programmers use the BSD function strsep().  This
+   function is available for many UNIX platforms.  An alternative for the C++ programmer is found in the boost library.
+***********************************************************************************************************************************/</FONT></I>
+
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;stdlib.h&gt;</FONT></B>             <I><FONT COLOR="#B22222">/* Standard Lib    C89   */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;string.h&gt;</FONT></B>             <I><FONT COLOR="#B22222">/* Strings         C89   */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;stdio.h&gt;</FONT></B>              <I><FONT COLOR="#B22222">/* I/O lib         C89   */</FONT></I>
+
+<I><FONT COLOR="#B22222">/**********************************************************************************************************************************/</FONT></I>
+<B><FONT COLOR="#228B22">int</FONT></B> <B><FONT COLOR="#0000FF">main</FONT></B>(<B><FONT COLOR="#228B22">int</FONT></B> argc, <B><FONT COLOR="#228B22">char</FONT></B> *argv[]) {
+  <B><FONT COLOR="#228B22">char</FONT></B> *pwStr = <B><FONT COLOR="#BC8F8F">&quot;root:*:0:0:System Administrator:/var/root:/bin/sh::&quot;</FONT></B>;
+  <B><FONT COLOR="#228B22">char</FONT></B>  *p, sepChar = <B><FONT COLOR="#BC8F8F">':'</FONT></B>;                 <I><FONT COLOR="#B22222">/* for: DIY */</FONT></I>
+  <B><FONT COLOR="#228B22">char</FONT></B> *sep = <B><FONT COLOR="#BC8F8F">&quot;:&quot;</FONT></B>, *pwField, pwStrC[1024]; <I><FONT COLOR="#B22222">/* for: strtok_r/strtok */</FONT></I>
+  <B><FONT COLOR="#228B22">char</FONT></B> *stCtx;                             <I><FONT COLOR="#B22222">/* for: strtok_r*/</FONT></I>
+
+  <I><FONT COLOR="#B22222">/* If I had a dime for every time I have seen strtok reimplemented, I would be rich!  Don't do it.  Just don't! :) */</FONT></I>
+  printf(<B><FONT COLOR="#BC8F8F">&quot;The DIY (do-it-yourself) way:\n&quot;</FONT></B>);
+  printf(<B><FONT COLOR="#BC8F8F">&quot;'&quot;</FONT></B>);
+  <B><FONT COLOR="#A020F0">for</FONT></B>(p=pwStr; *p!=<B><FONT COLOR="#BC8F8F">'\0'</FONT></B>; p++)
+    <B><FONT COLOR="#A020F0">if</FONT></B>(*p == sepChar)
+      printf(<B><FONT COLOR="#BC8F8F">&quot;'\n'&quot;</FONT></B>);
+    <B><FONT COLOR="#A020F0">else</FONT></B>
+      printf(<B><FONT COLOR="#BC8F8F">&quot;%c&quot;</FONT></B>, *p);
+  printf(<B><FONT COLOR="#BC8F8F">&quot;'\n&quot;</FONT></B>);
+
+  <I><FONT COLOR="#B22222">/* Now we illustrate the traditional use of strtok */</FONT></I>
+  strcpy(pwStrC, pwStr); <I><FONT COLOR="#B22222">/* Can't use a constant string for strtok */</FONT></I>
+  printf(<B><FONT COLOR="#BC8F8F">&quot;\nThe strtok way:\n&quot;</FONT></B>);
+  <B><FONT COLOR="#A020F0">for</FONT></B>(pwField=strtok(pwStrC, sep); pwField; pwField=strtok(NULL, sep))
+    printf(<B><FONT COLOR="#BC8F8F">&quot;'%s'\n&quot;</FONT></B>, pwField);
+
+  <I><FONT COLOR="#B22222">/* strtok_r is slightly more complex to call, but it is thread safe. */</FONT></I>
+  strcpy(pwStrC, pwStr); <I><FONT COLOR="#B22222">/* Can't use a constant string for strtok_r */</FONT></I>
+  printf(<B><FONT COLOR="#BC8F8F">&quot;\nThe strtok_r way:\n&quot;</FONT></B>);
+  <B><FONT COLOR="#A020F0">for</FONT></B>(pwField=strtok_r(pwStrC, sep, &amp;stCtx); pwField; pwField=strtok_r(NULL,  sep, &amp;stCtx))
+    printf(<B><FONT COLOR="#BC8F8F">&quot;'%s'\n&quot;</FONT></B>, pwField);
+  
+  <B><FONT COLOR="#A020F0">return</FONT></B> 0;
+} <I><FONT COLOR="#B22222">/* end func main */</FONT></I>
+</PRE>
+<HR \/>
+<ADDRESS>Generated by <A HREF="http://www.iki.fi/~mtr/genscript/">GNU Enscript 1.6.5.90</A>.</ADDRESS>
+</BODY>
+</HTML>

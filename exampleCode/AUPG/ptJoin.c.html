@@ -1,0 +1,117 @@
+<!DOCTYPE html PUBLIC "-//IETF//DTD HTML 2.0//EN">
+<HTML>
+<HEAD>
+<TITLE>AUPG/ptJoin.c</TITLE>
+</HEAD>
+<BODY BGCOLOR="#FFFFFF" TEXT="#000000" LINK="#1F00FF" ALINK="#FF0000" VLINK="#9900DD">
+<A NAME="top"> </A>
+<A NAME="file1"> </A>
+<H1><a href="ptJoin.c">ptJoin.c</a></H1>
+
+<PRE>
+<I><FONT COLOR="#B22222">/* -*- Mode:C; Coding:us-ascii-unix; fill-column:132 -*- */</FONT></I>
+<I><FONT COLOR="#B22222">/**********************************************************************************************************************************/</FONT></I>
+<I><FONT COLOR="#B22222">/**
+   @file      ptJoin.c
+   @author    Mitch Richling &lt;http://www.mitchr.me/&gt;
+   @Copyright Copyright 1998 by Mitch Richling.  All rights reserved.
+   @brief     Basic pthread programming@EOL
+   @Keywords  UNIX pthreads POSIX mutex
+   @Std       ISOC POSIX UNIX98 BSD4.3 SYSV3
+   @Tested    
+              - Solaris 2.8
+              - MacOS X.2        
+              - Linux (RH 7.3)
+
+   This little C program illustrates the pthread_join() system call that is part of the POSIX threads API.
+***********************************************************************************************************************************/</FONT></I>
+
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;sys/types.h&gt;</FONT></B>          <I><FONT COLOR="#B22222">/* UNIX types      POSIX */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;stdio.h&gt;</FONT></B>              <I><FONT COLOR="#B22222">/* I/O lib         C89   */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;string.h&gt;</FONT></B>             <I><FONT COLOR="#B22222">/* Strings         C89   */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;dirent.h&gt;</FONT></B>             <I><FONT COLOR="#B22222">/* UNIX dirs       POSIX */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;errno.h&gt;</FONT></B>              <I><FONT COLOR="#B22222">/* error stf       POSIX */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;utime.h&gt;</FONT></B>              <I><FONT COLOR="#B22222">/* utime           POSIX */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;sys/stat.h&gt;</FONT></B>           <I><FONT COLOR="#B22222">/* UNIX stat       POSIX */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;time.h&gt;</FONT></B>               <I><FONT COLOR="#B22222">/* time            C89   */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;pthread.h&gt;</FONT></B>            <I><FONT COLOR="#B22222">/* threads         POSIX */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;sched.h&gt;</FONT></B>              <I><FONT COLOR="#B22222">/* threads         POSIX */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;stdlib.h&gt;</FONT></B>             <I><FONT COLOR="#B22222">/* Standard Lib    C89   */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;unistd.h&gt;</FONT></B>             <I><FONT COLOR="#B22222">/* UNIX std stf    POSIX */</FONT></I>
+
+<I><FONT COLOR="#B22222">/**********************************************************************************************************************************/</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&quot;mtUtils.h&quot;</FONT></B>
+
+<I><FONT COLOR="#B22222">/**********************************************************************************************************************************/</FONT></I>
+<B><FONT COLOR="#228B22">void</FONT></B> <B><FONT COLOR="#0000FF">workThread1</FONT></B>(<B><FONT COLOR="#228B22">void</FONT></B> *reqArg);
+<B><FONT COLOR="#228B22">void</FONT></B> <B><FONT COLOR="#0000FF">workThread2</FONT></B>(<B><FONT COLOR="#228B22">void</FONT></B> *reqArg);
+
+<I><FONT COLOR="#B22222">/**********************************************************************************************************************************/</FONT></I>
+<B><FONT COLOR="#228B22">int</FONT></B> <B><FONT COLOR="#0000FF">main</FONT></B>(<B><FONT COLOR="#228B22">int</FONT></B> argc, <B><FONT COLOR="#228B22">char</FONT></B> *argv[]) {
+  pthread_t thread;
+  <B><FONT COLOR="#228B22">void</FONT></B> *threadReturn;
+
+  mtPrintf(<B><FONT COLOR="#BC8F8F">&quot;main: startup...\n&quot;</FONT></B>);
+
+  <B><FONT COLOR="#A020F0">if</FONT></B>(pthread_create(&amp;thread, NULL, (PTHRFUNC*)workThread1, (<B><FONT COLOR="#228B22">void</FONT></B> *)NULL) != 0) {
+       mtPrintf(<B><FONT COLOR="#BC8F8F">&quot;ERROR: pthread_create() failed.\n&quot;</FONT></B>);
+       exit(1);
+     } <I><FONT COLOR="#B22222">/* end if */</FONT></I>
+  mtPrintf(<B><FONT COLOR="#BC8F8F">&quot;main: waiting for thread 1 shutdown...\n&quot;</FONT></B>);
+  <I><FONT COLOR="#B22222">/* Wait, don't care about the exit value... */</FONT></I>
+  <B><FONT COLOR="#A020F0">if</FONT></B>(pthread_join(thread, NULL)) {
+    mtPrintf(<B><FONT COLOR="#BC8F8F">&quot;ERROR: pthread_join() failed.\n&quot;</FONT></B>);
+    exit(1);
+  } <I><FONT COLOR="#B22222">/* end if */</FONT></I>
+
+  <B><FONT COLOR="#A020F0">if</FONT></B>(pthread_create(&amp;thread, NULL, (PTHRFUNC*)workThread2, (<B><FONT COLOR="#228B22">void</FONT></B> *)NULL) != 0) {
+       mtPrintf(<B><FONT COLOR="#BC8F8F">&quot;ERROR: pthread_create() failed.\n&quot;</FONT></B>);
+       exit(1);
+     } <I><FONT COLOR="#B22222">/* end if */</FONT></I>
+  mtPrintf(<B><FONT COLOR="#BC8F8F">&quot;main: waiting for thread shutdown...\n&quot;</FONT></B>);
+  <I><FONT COLOR="#B22222">/* Wait, don't care about the exit value... */</FONT></I>
+  <B><FONT COLOR="#A020F0">if</FONT></B>(pthread_join(thread, &amp;threadReturn)) {
+       mtPrintf(<B><FONT COLOR="#BC8F8F">&quot;ERROR: pthread_join() failed.\n&quot;</FONT></B>);
+       exit(1);
+  } <I><FONT COLOR="#B22222">/* end if */</FONT></I>
+  <I><FONT COLOR="#B22222">/* We know that the thread returned an int, so we cast-n-dereference threadReturn to print the result. */</FONT></I>
+  mtPrintf(<B><FONT COLOR="#BC8F8F">&quot;main: Thread ended with exit code: %d\n&quot;</FONT></B>, *((<B><FONT COLOR="#228B22">int</FONT></B>*)threadReturn));
+  <I><FONT COLOR="#B22222">/* We know that the thread malloced space for threadReturn, so we free it. */</FONT></I>
+  free(threadReturn);
+
+  mtPrintf(<B><FONT COLOR="#BC8F8F">&quot;main: Goodbye.\n&quot;</FONT></B>);
+  <B><FONT COLOR="#A020F0">return</FONT></B> (0);
+} <I><FONT COLOR="#B22222">/* end func main */</FONT></I>
+
+<I><FONT COLOR="#B22222">/**********************************************************************************************************************************/</FONT></I>
+<B><FONT COLOR="#228B22">void</FONT></B> <B><FONT COLOR="#0000FF">workThread1</FONT></B>(<B><FONT COLOR="#228B22">void</FONT></B> *reqArg) {
+  <B><FONT COLOR="#228B22">int</FONT></B> i;
+
+  mtPrintf(<B><FONT COLOR="#BC8F8F">&quot;thread 1 startup\n&quot;</FONT></B>);
+  <B><FONT COLOR="#A020F0">for</FONT></B>(i=0;i&lt;3;i++) {
+    sleep(1);
+    mtPrintf(<B><FONT COLOR="#BC8F8F">&quot;thread 1 waiting...%d.\n&quot;</FONT></B>, i);
+  } <I><FONT COLOR="#B22222">/* end for */</FONT></I>
+  mtPrintf(<B><FONT COLOR="#BC8F8F">&quot;thread 1 shutdown.\n&quot;</FONT></B>);
+
+} <I><FONT COLOR="#B22222">/* end func workerThread1 */</FONT></I>
+
+<I><FONT COLOR="#B22222">/**********************************************************************************************************************************/</FONT></I>
+<B><FONT COLOR="#228B22">void</FONT></B> <B><FONT COLOR="#0000FF">workThread2</FONT></B>(<B><FONT COLOR="#228B22">void</FONT></B> *reqArg) {
+  <B><FONT COLOR="#228B22">int</FONT></B> i, *exitValue;
+
+  mtPrintf(<B><FONT COLOR="#BC8F8F">&quot;thread 2 startup\n&quot;</FONT></B>);
+  <B><FONT COLOR="#A020F0">for</FONT></B>(i=0;i&lt;3;i++) {
+    sleep(1);
+    mtPrintf(<B><FONT COLOR="#BC8F8F">&quot;thread 2 waiting...%d.\n&quot;</FONT></B>, i);
+  } <I><FONT COLOR="#B22222">/* end for */</FONT></I>
+  mtPrintf(<B><FONT COLOR="#BC8F8F">&quot;thread 2 shutdown.\n&quot;</FONT></B>);
+  mallocNsetInt(&amp;exitValue, 42);
+  pthread_exit(exitValue);
+
+} <I><FONT COLOR="#B22222">/* end func workerThread2 */</FONT></I>
+</PRE>
+<HR \/>
+<ADDRESS>Generated by <A HREF="http://www.iki.fi/~mtr/genscript/">GNU Enscript 1.6.5.90</A>.</ADDRESS>
+</BODY>
+</HTML>

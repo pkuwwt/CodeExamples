@@ -1,0 +1,144 @@
+<!DOCTYPE html PUBLIC "-//IETF//DTD HTML 2.0//EN">
+<HTML>
+<HEAD>
+<TITLE>cpp/thread04_condition.cpp</TITLE>
+</HEAD>
+<BODY BGCOLOR="#FFFFFF" TEXT="#000000" LINK="#1F00FF" ALINK="#FF0000" VLINK="#9900DD">
+<A NAME="top"> </A>
+<A NAME="file1"> </A>
+<H1><a href="thread04_condition.cpp">thread04_condition.cpp</a></H1>
+
+<PRE>
+<I><FONT COLOR="#B22222">// -*- Mode:C++; Coding:us-ascii-unix; fill-column:132 -*-
+</FONT></I><I><FONT COLOR="#B22222">/**********************************************************************************************************************************/</FONT></I>
+<I><FONT COLOR="#B22222">/**
+   @file      thread04_condition.cpp
+   @author    Mitch Richling &lt;http://www.mitchr.me&gt;
+   @Copyright Copyright 2012 by Mitch Richling.  All rights reserved.
+   @brief     Demo C++11 condition variables.@EOL
+   @Keywords  none
+   @Std       C++11
+***********************************************************************************************************************************/</FONT></I>
+
+<I><FONT COLOR="#B22222">////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+</FONT></I>#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;iostream&gt;</FONT></B>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;thread&gt;</FONT></B>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;mutex&gt;</FONT></B>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;condition_variable&gt;</FONT></B>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;chrono&gt;</FONT></B>
+
+<I><FONT COLOR="#B22222">////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+</FONT></I><I><FONT COLOR="#B22222">// Potatoes have non-negative integer names.  We use -1 to mean the universe has run out of potatoes!  One common method used in C++
+</FONT></I><I><FONT COLOR="#B22222">// to associate mutexes and condition_variables with the variables they are associated with is to put them all in a struct or class
+</FONT></I><I><FONT COLOR="#B22222">// together.
+</FONT></I><I><FONT COLOR="#B22222">//
+</FONT></I><I><FONT COLOR="#B22222">// Style note: isHot must be set true when we put a new ID in a potato.  Setting them both external to the struct is a substandard
+</FONT></I><I><FONT COLOR="#B22222">// OOP design -- we should have a method that sets them booth, and another to set a potato to cool.  That said, this program is
+</FONT></I><I><FONT COLOR="#B22222">// about understanding thread locks and condition variables C++11, and I think it helps to see the components set explicitly near
+</FONT></I><I><FONT COLOR="#B22222">// the thread lock manipulation code.  So, sorry for the substandard potato OOP.  At least I spelled potato correctly... :)
+</FONT></I>
+<B><FONT COLOR="#228B22">struct</FONT></B> potato {
+    <B><FONT COLOR="#228B22">bool</FONT></B> isHot = false;   
+    <B><FONT COLOR="#228B22">int</FONT></B> ID;
+    <B><FONT COLOR="#5F9EA0">std</FONT></B>::mutex mtx;
+    <B><FONT COLOR="#5F9EA0">std</FONT></B>::condition_variable cv;
+};
+
+potato thePotato;
+
+<I><FONT COLOR="#B22222">////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+</FONT></I><I><FONT COLOR="#B22222">// This function will be called by a thread. It waits for a hot potato, and cools it. :)
+</FONT></I><B><FONT COLOR="#228B22">void</FONT></B> <B><FONT COLOR="#0000FF">PotatoCooler</FONT></B>() {
+  <B><FONT COLOR="#5F9EA0">std</FONT></B>::unique_lock&lt;std::mutex&gt; thePotato_lock(thePotato.mtx ,std::defer_lock);
+  <B><FONT COLOR="#A020F0">while</FONT></B> (true) {
+    thePotato_lock.lock();
+    <B><FONT COLOR="#5F9EA0">std</FONT></B>::cout &lt;&lt; <B><FONT COLOR="#BC8F8F">&quot;work: waiting!&quot;</FONT></B> &lt;&lt; std::endl;
+    thePotato.cv.wait(thePotato_lock);
+    <B><FONT COLOR="#A020F0">if</FONT></B>(thePotato.isHot) {
+      <B><FONT COLOR="#5F9EA0">std</FONT></B>::cout &lt;&lt; <B><FONT COLOR="#BC8F8F">&quot;work: pop &quot;</FONT></B> &lt;&lt; thePotato.ID &lt;&lt; std::endl;
+      <B><FONT COLOR="#5F9EA0">std</FONT></B>::this_thread::sleep_for(std::chrono::milliseconds(5)); <I><FONT COLOR="#B22222">// Our Potatoes cool very quickly. :)
+</FONT></I>      thePotato.isHot = false;
+      <B><FONT COLOR="#A020F0">if</FONT></B>(thePotato.ID == -1) {
+        <B><FONT COLOR="#5F9EA0">std</FONT></B>::cout &lt;&lt; <B><FONT COLOR="#BC8F8F">&quot;work: Bye Bye!&quot;</FONT></B> &lt;&lt; std::endl;
+        <B><FONT COLOR="#A020F0">break</FONT></B>;
+      } <I><FONT COLOR="#B22222">// end if
+</FONT></I>    } <I><FONT COLOR="#B22222">// end if
+</FONT></I>    thePotato_lock.unlock();
+  } <I><FONT COLOR="#B22222">// end while
+</FONT></I>  <I><FONT COLOR="#B22222">// We don't need to unlock the mutex as that will happen when it gets destroyed
+</FONT></I>} <I><FONT COLOR="#B22222">// end func PotatoCooler
+</FONT></I>
+<I><FONT COLOR="#B22222">////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+</FONT></I><B><FONT COLOR="#228B22">int</FONT></B> <B><FONT COLOR="#0000FF">main</FONT></B>()  {
+
+  <I><FONT COLOR="#B22222">// Construct and launch our thread
+</FONT></I>  <B><FONT COLOR="#5F9EA0">std</FONT></B>::thread thread(PotatoCooler);
+
+  <I><FONT COLOR="#B22222">// Here we push a hot potato, and wait for PotatoCooler to cool it off..
+</FONT></I>  <B><FONT COLOR="#5F9EA0">std</FONT></B>::unique_lock&lt;std::mutex&gt; thePotato_lock(thePotato.mtx ,std::defer_lock);
+  <B><FONT COLOR="#228B22">bool</FONT></B> universeHasHotPotatoes = true;
+  <B><FONT COLOR="#A020F0">for</FONT></B>(<B><FONT COLOR="#228B22">int</FONT></B> potatoNumber=0; universeHasHotPotatoes; ) {
+    thePotato_lock.lock();
+    <B><FONT COLOR="#A020F0">if</FONT></B>(thePotato.isHot) {
+      <B><FONT COLOR="#5F9EA0">std</FONT></B>::cout &lt;&lt; <B><FONT COLOR="#BC8F8F">&quot;main: have new hot potato, but old one is still hot&quot;</FONT></B> &lt;&lt; std::endl;
+      thePotato_lock.unlock();
+      thePotato.cv.notify_all();
+      <I><FONT COLOR="#B22222">// Sleep is redundant with sleep at end of loop, but here so you can play with sleep location in this loop.
+</FONT></I>      <B><FONT COLOR="#5F9EA0">std</FONT></B>::this_thread::sleep_for(std::chrono::milliseconds(10));
+    } <B><FONT COLOR="#A020F0">else</FONT></B> {
+      <B><FONT COLOR="#A020F0">if</FONT></B>(potatoNumber&lt;10) {
+        <B><FONT COLOR="#5F9EA0">std</FONT></B>::cout &lt;&lt; <B><FONT COLOR="#BC8F8F">&quot;main: push &quot;</FONT></B> &lt;&lt; potatoNumber &lt;&lt; std::endl;
+        thePotato.ID = potatoNumber;
+        thePotato.isHot = true;
+        potatoNumber++;
+        thePotato_lock.unlock();
+        thePotato.cv.notify_all();
+      } <B><FONT COLOR="#A020F0">else</FONT></B> {
+        <B><FONT COLOR="#A020F0">if</FONT></B>(thePotato.isHot) {
+          <B><FONT COLOR="#5F9EA0">std</FONT></B>::cout &lt;&lt; <B><FONT COLOR="#BC8F8F">&quot;main: waiting for potato to cool&quot;</FONT></B> &lt;&lt; std::endl;
+        } <B><FONT COLOR="#A020F0">else</FONT></B> {
+          universeHasHotPotatoes = false;
+          thePotato_lock.unlock();
+        } <I><FONT COLOR="#B22222">// end if/else
+</FONT></I>      } <I><FONT COLOR="#B22222">// end if/else
+</FONT></I>      <I><FONT COLOR="#B22222">// Wait for a bit before putting new work in thePotato. It is instructive to comment out this line, and watch what happens.
+</FONT></I>      <B><FONT COLOR="#5F9EA0">std</FONT></B>::this_thread::sleep_for(std::chrono::milliseconds(10));
+    } <I><FONT COLOR="#B22222">// end if/else
+</FONT></I>  } <I><FONT COLOR="#B22222">// end for
+</FONT></I>
+  <I><FONT COLOR="#B22222">// Here we push the &quot;quit working&quot; work unit onto the thePotato queue.  We don't wait.
+</FONT></I>  thePotato_lock.lock();
+  <B><FONT COLOR="#5F9EA0">std</FONT></B>::cout &lt;&lt; <B><FONT COLOR="#BC8F8F">&quot;main: push &quot;</FONT></B> &lt;&lt; -1 &lt;&lt; std::endl;
+  thePotato.ID = -1;
+  thePotato.isHot = true;
+  thePotato_lock.unlock();
+
+  <I><FONT COLOR="#B22222">// Now we wait for the worker thread to process the &quot;quit working&quot; work unit.. :)
+</FONT></I>  <B><FONT COLOR="#228B22">bool</FONT></B> potatoCoolerIsAlive = true;
+  <B><FONT COLOR="#A020F0">while</FONT></B>(potatoCoolerIsAlive) {
+    thePotato_lock.lock(); 
+    <B><FONT COLOR="#5F9EA0">std</FONT></B>::cout &lt;&lt; <B><FONT COLOR="#BC8F8F">&quot;main: HI &quot;</FONT></B> &lt;&lt; std::endl;
+    <B><FONT COLOR="#A020F0">if</FONT></B>(thePotato.isHot) {
+      <B><FONT COLOR="#5F9EA0">std</FONT></B>::cout &lt;&lt; <B><FONT COLOR="#BC8F8F">&quot;main: guard potato still hot&quot;</FONT></B> &lt;&lt; std::endl;
+      thePotato_lock.unlock();
+      thePotato.cv.notify_all();
+      <B><FONT COLOR="#5F9EA0">std</FONT></B>::this_thread::sleep_for(std::chrono::milliseconds(10));
+    } <B><FONT COLOR="#A020F0">else</FONT></B> {
+      <B><FONT COLOR="#5F9EA0">std</FONT></B>::cout &lt;&lt; <B><FONT COLOR="#BC8F8F">&quot;main: guard potato is cool!&quot;</FONT></B> &lt;&lt; std::endl;
+      potatoCoolerIsAlive = false;
+      thePotato_lock.unlock();
+    } <I><FONT COLOR="#B22222">// end if/else
+</FONT></I>  } <I><FONT COLOR="#B22222">// end while
+</FONT></I>
+  <B><FONT COLOR="#5F9EA0">std</FONT></B>::cout &lt;&lt; <B><FONT COLOR="#BC8F8F">&quot;main: joining &quot;</FONT></B> &lt;&lt; std::endl;
+
+  <I><FONT COLOR="#B22222">// Now we join just in case the worker thread has something to do before it can finish.
+</FONT></I>  thread.join();
+
+  <B><FONT COLOR="#5F9EA0">std</FONT></B>::cout &lt;&lt; <B><FONT COLOR="#BC8F8F">&quot;main: DONE!&quot;</FONT></B> &lt;&lt; std::endl;
+} <I><FONT COLOR="#B22222">// end func main
+</FONT></I></PRE>
+<HR \/>
+<ADDRESS>Generated by <A HREF="http://www.iki.fi/~mtr/genscript/">GNU Enscript 1.6.5.90</A>.</ADDRESS>
+</BODY>
+</HTML>

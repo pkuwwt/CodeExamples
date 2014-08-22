@@ -1,0 +1,365 @@
+<!DOCTYPE html PUBLIC "-//IETF//DTD HTML 2.0//EN">
+<HTML>
+<HEAD>
+<TITLE>AUPG/suid0tmp.c</TITLE>
+</HEAD>
+<BODY BGCOLOR="#FFFFFF" TEXT="#000000" LINK="#1F00FF" ALINK="#FF0000" VLINK="#9900DD">
+<A NAME="top"> </A>
+<A NAME="file1"> </A>
+<H1><a href="suid0tmp.c">suid0tmp.c</a></H1>
+
+<PRE>
+<I><FONT COLOR="#B22222">/* -*- Mode:C; Coding:us-ascii-unix; fill-column:132 -*- */</FONT></I>
+<I><FONT COLOR="#B22222">/**********************************************************************************************************************************/</FONT></I>
+<I><FONT COLOR="#B22222">/**
+   @file      suid0tmp.c
+   @author    Mitch Richling &lt;http://www.mitchr.me/&gt;
+   @Copyright Copyright 1994 by Mitch Richling.  All rights reserved.
+   @brief     SUID0 template in C@EOL
+   @Keywords  suid root template
+   @Std       ISOC POSIX
+   @Tested    
+              - BROKEN: Solaris 2.8 (No paths.h)
+              - MacOS X.2
+              - Linux (RH 7.3)
+              - Ubuntu 10.10
+   
+   This is an example program intended to illustrate how to develop an SUID0 program.  This code demonstrates a reasonable overall
+   structure for an SUID0 program.  Several things are demonstrated:
+
+      -  how to query uid/euid/gid/egid, 
+      -  how to log to syslog
+      -  How to use asprintf to avoid the buffer overflows, that haunt sprintf
+      -  How to sanitize the user environment 
+      -  How to make sure open files inherited from the parent process are safe.
+      -  How to completely change user identity to increase privileges.
+      -  How to permanently surrender SUID privileges.
+
+   NOTE: In general, the &quot;system&quot; function should not be used in an SUID0 program, but it is used here for illustration.
+***********************************************************************************************************************************/</FONT></I>
+
+<I><FONT COLOR="#B22222">/* Define _GNU_SOURCE to get get asprintf */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">define</FONT></B> <FONT COLOR="#B8860B">_GNU_SOURCE</FONT>
+
+<I><FONT COLOR="#B22222">/**********************************************************************************************************************************/</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;errno.h&gt;</FONT></B>              <I><FONT COLOR="#B22222">/* error stf       POSIX */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;paths.h&gt;</FONT></B>              <I><FONT COLOR="#B22222">/* UNIX Paths      ????  */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;pwd.h&gt;</FONT></B>                <I><FONT COLOR="#B22222">/* UNIX passwd     POSIX */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;stdio.h&gt;</FONT></B>              <I><FONT COLOR="#B22222">/* I/O lib         C89   */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;stdlib.h&gt;</FONT></B>             <I><FONT COLOR="#B22222">/* Standard Lib    C89   */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;sys/stat.h&gt;</FONT></B>           <I><FONT COLOR="#B22222">/* UNIX stat       POSIX */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;sys/types.h&gt;</FONT></B>          <I><FONT COLOR="#B22222">/* UNIX types      POSIX */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;syslog.h&gt;</FONT></B>             <I><FONT COLOR="#B22222">/* UNIX syslog     UNIX  */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;unistd.h&gt;</FONT></B>             <I><FONT COLOR="#B22222">/* UNIX std stf    POSIX */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;utime.h&gt;</FONT></B>              <I><FONT COLOR="#B22222">/* utime           POSIX */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;string.h&gt;</FONT></B>             <I><FONT COLOR="#B22222">/* Strings         C89   */</FONT></I>
+
+<I><FONT COLOR="#B22222">/**********************************************************************************************************************************/</FONT></I>
+<I><FONT COLOR="#B22222">/** define the uid we will set the binary to. */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">define</FONT></B> <FONT COLOR="#B8860B">TARGETEUID</FONT> 0
+<I><FONT COLOR="#B22222">/** define the gid we will set the binary to. */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">define</FONT></B> <FONT COLOR="#B8860B">TARGETEGID</FONT> 0
+
+<I><FONT COLOR="#B22222">/**********************************************************************************************************************************/</FONT></I>
+#<B><FONT COLOR="#5F9EA0">define</FONT></B> <FONT COLOR="#B8860B">PROGNAME</FONT> <B><FONT COLOR="#BC8F8F">&quot;suid0tmp&quot;</FONT></B>
+#<B><FONT COLOR="#5F9EA0">define</FONT></B> <FONT COLOR="#B8860B">WHOAMIBIN</FONT> <B><FONT COLOR="#BC8F8F">&quot;/usr/bin/whoami&quot;</FONT></B>
+
+<I><FONT COLOR="#B22222">/**********************************************************************************************************************************/</FONT></I>
+<B><FONT COLOR="#228B22">int</FONT></B> <B><FONT COLOR="#0000FF">secureEnv</FONT></B>(<B><FONT COLOR="#228B22">char</FONT></B> **keepEnv, <B><FONT COLOR="#228B22">char</FONT></B> **setEnv, <B><FONT COLOR="#228B22">char</FONT></B> **defEnv);
+<B><FONT COLOR="#228B22">void</FONT></B> <B><FONT COLOR="#0000FF">secureEnvOrExit</FONT></B>(<B><FONT COLOR="#228B22">char</FONT></B> **keepEnv, <B><FONT COLOR="#228B22">char</FONT></B> **setEnv, <B><FONT COLOR="#228B22">char</FONT></B> **defEnv);
+<B><FONT COLOR="#228B22">void</FONT></B> <B><FONT COLOR="#0000FF">secureFDsOrExit</FONT></B>();
+<B><FONT COLOR="#228B22">int</FONT></B> <B><FONT COLOR="#0000FF">secureFDs</FONT></B>();
+
+<I><FONT COLOR="#B22222">/**********************************************************************************************************************************/</FONT></I>
+<B><FONT COLOR="#228B22">extern</FONT></B> <B><FONT COLOR="#228B22">char</FONT></B> **environ;
+
+<I><FONT COLOR="#B22222">/**********************************************************************************************************************************/</FONT></I>
+<B><FONT COLOR="#228B22">int</FONT></B> <B><FONT COLOR="#0000FF">main</FONT></B>(<B><FONT COLOR="#228B22">int</FONT></B> argc, <B><FONT COLOR="#228B22">char</FONT></B> *argv[]) {
+  uid_t theUid;
+  uid_t theEuid;
+  gid_t theGid;
+  <B><FONT COLOR="#228B22">char</FONT></B> *strBuf;
+
+  <I><FONT COLOR="#B22222">/* Close all FDs over 2, and make sure all FDs under 3 are open. Exit if we can't fix the FDs.*/</FONT></I>
+  secureFDsOrExit();
+
+  <I><FONT COLOR="#B22222">/* Discover who the user is, and store the info.  At this point the euid/egid should be set by the SUID/SGID bits of the binary.
+     The uid/gid should be the uid/gid of the parent process -- the real user. */</FONT></I>
+  theUid  = getuid();
+  theEuid = geteuid();
+  theGid  = getgid();  <I><FONT COLOR="#B22222">// getegid();
+</FONT></I>
+  <I><FONT COLOR="#B22222">/* Log the activity.  Note that we do not use sprintf as it is not safe.  Note also that we don't use snprintf as it is not
+     portable (it exists on many platforms including BSD and Linux).  asprintf is also not portable, but it is part of GCC which is
+     available on most platforms. */</FONT></I>
+  <B><FONT COLOR="#A020F0">if</FONT></B>(asprintf(&amp;strBuf, <B><FONT COLOR="#BC8F8F">&quot;%s(%s): run by uid=%ld&quot;</FONT></B>, PROGNAME, argv[0], (<B><FONT COLOR="#228B22">long</FONT></B>)theUid) &lt;= 0) {
+    printf(<B><FONT COLOR="#BC8F8F">&quot;ERROR: asprinf() failure..\n&quot;</FONT></B>);
+    exit(1);
+  } <I><FONT COLOR="#B22222">/* end if */</FONT></I>
+  syslog(LOG_NOTICE | LOG_AUTH, <B><FONT COLOR="#BC8F8F">&quot;%s&quot;</FONT></B>, strBuf);
+
+  <I><FONT COLOR="#B22222">/* If we didn't actually change user it could be that the filesystem doesn't support SUID bits, or that the bits were not set on
+     the binary.  Whatever the reason, we exit now. */</FONT></I>
+  <B><FONT COLOR="#A020F0">if</FONT></B>(theEuid != TARGETEUID) {
+    printf(<B><FONT COLOR="#BC8F8F">&quot;ERROR: SUID not granted.\n&quot;</FONT></B>);
+    exit(1);
+  } <I><FONT COLOR="#B22222">/* end if */</FONT></I>
+
+  <I><FONT COLOR="#B22222">/* If we didn't actually change group.  Could be that the filesystem doesn't support SUID bits, or that the bits were not set on
+     the binary. */</FONT></I>
+  <B><FONT COLOR="#A020F0">if</FONT></B>(theEuid != TARGETEGID) {
+    printf(<B><FONT COLOR="#BC8F8F">&quot;ERROR: SGID not granted.\n&quot;</FONT></B>);
+    exit(1);
+  } <I><FONT COLOR="#B22222">/* end if */</FONT></I>
+
+  <I><FONT COLOR="#B22222">/* Here we do whatever we want to with the current IDs */</FONT></I>
+  printf(<B><FONT COLOR="#BC8F8F">&quot;1 uid: %ld euid: %ld gid: %ld egid: %ld\n&quot;</FONT></B>, 
+         (<B><FONT COLOR="#228B22">long</FONT></B>)getuid(), (<B><FONT COLOR="#228B22">long</FONT></B>)geteuid(), 
+         (<B><FONT COLOR="#228B22">long</FONT></B>)getgid(), (<B><FONT COLOR="#228B22">long</FONT></B>)getegid());
+  system(WHOAMIBIN);
+
+  <I><FONT COLOR="#B22222">/* Now we make sure we really look like the target by setting the uid/gid as well.  We can really only do this if the target UID
+     is 0(root). */</FONT></I>
+  setuid(TARGETEUID);
+  setgid(TARGETEGID);
+
+  printf(<B><FONT COLOR="#BC8F8F">&quot;2 uid: %ld euid: %ld gid: %ld egid: %ld\n&quot;</FONT></B>, 
+         (<B><FONT COLOR="#228B22">long</FONT></B>)getuid(), (<B><FONT COLOR="#228B22">long</FONT></B>)geteuid(), 
+         (<B><FONT COLOR="#228B22">long</FONT></B>)getgid(), (<B><FONT COLOR="#228B22">long</FONT></B>)getegid());
+  system(WHOAMIBIN);
+
+  <I><FONT COLOR="#B22222">/* Now we become the user -- or at least the uid/gid of the parent process.  Note we set the gid/egid first.  If we set the
+     uid/euid first, we would not have privilege to change the gid/egid Again, note that if the TARGET is not 0(root) we can't do
+     this part. */</FONT></I>
+  setgid(theGid);
+  setegid(theGid);
+  setuid(theUid);
+  seteuid(theUid);
+
+  printf(<B><FONT COLOR="#BC8F8F">&quot;3 uid: %ld euid: %ld gid: %ld egid: %ld\n&quot;</FONT></B>,  (<B><FONT COLOR="#228B22">long</FONT></B>)getuid(), (<B><FONT COLOR="#228B22">long</FONT></B>)geteuid(),  (<B><FONT COLOR="#228B22">long</FONT></B>)getgid(), (<B><FONT COLOR="#228B22">long</FONT></B>)getegid());
+  system(WHOAMIBIN);
+
+  <I><FONT COLOR="#B22222">/* Finish up */</FONT></I>
+  <B><FONT COLOR="#A020F0">return</FONT></B> (0);
+} <I><FONT COLOR="#B22222">/* end func main */</FONT></I>
+
+<I><FONT COLOR="#B22222">/**********************************************************************************************************************************/</FONT></I>
+<B><FONT COLOR="#228B22">void</FONT></B> <B><FONT COLOR="#0000FF">secureFDsOrExit</FONT></B>() {
+  <B><FONT COLOR="#228B22">int</FONT></B> secureFDreturn;
+
+  <I><FONT COLOR="#B22222">/* Close all FDs over 2, and make sure all FDs under 3 are open. */</FONT></I>
+  secureFDreturn = secureFDs();
+  <B><FONT COLOR="#A020F0">if</FONT></B>(secureFDreturn == 1) {
+    printf(<B><FONT COLOR="#BC8F8F">&quot;ERROR: Could not determine file descriptor table size.\n&quot;</FONT></B>);
+    exit(1);
+  } <B><FONT COLOR="#A020F0">else</FONT></B> <B><FONT COLOR="#A020F0">if</FONT></B>( (secureFDreturn &gt;= 2) &amp;&amp; (secureFDreturn &lt;= 4) ) {
+    printf(<B><FONT COLOR="#BC8F8F">&quot;ERROR: Unknown stat error (FD: %d).\n&quot;</FONT></B>, secureFDreturn-2);
+    exit(1);
+  } <B><FONT COLOR="#A020F0">else</FONT></B> <B><FONT COLOR="#A020F0">if</FONT></B>( (secureFDreturn &gt;= 5) &amp;&amp; (secureFDreturn &lt;= 7) ) {
+    printf(<B><FONT COLOR="#BC8F8F">&quot;ERROR: Could not reopen FD %d.\n&quot;</FONT></B>, secureFDreturn-5);
+    exit(1);
+  } <B><FONT COLOR="#A020F0">else</FONT></B> <B><FONT COLOR="#A020F0">if</FONT></B>( (secureFDreturn &gt;= 8) &amp;&amp; (secureFDreturn &lt;= 10) ) {
+    printf(<B><FONT COLOR="#BC8F8F">&quot;ERROR: Wrong FD result from reopen of %d\n&quot;</FONT></B>, secureFDreturn-8);
+    exit(1);
+  } <I><FONT COLOR="#B22222">/* end if/else */</FONT></I>
+} <I><FONT COLOR="#B22222">/* end func secureFDsOrExit */</FONT></I>
+
+<I><FONT COLOR="#B22222">/**********************************************************************************************************************************/</FONT></I>
+<I><FONT COLOR="#B22222">/* Closes all file descriptors greater than 2.  Makes sure that stdin, stdout, and stderr are open.  If they are not, then it opens
+   them.
+
+   Returns: -1  Everything worked (reopens required) 
+             0  Everything worked
+             1  Error using getdtablesize
+             2  Unknown stat error (wasn't EBADF) stdin
+             3  Unknown stat error (wasn't EBADF) stdout
+             4  Unknown stat error (wasn't EBADF) stderr
+             5  If the reopen fails               stdin
+             6  If the reopen fails               stdout
+             7  If the reopen fails               stderr
+             8  Wrong FD result from reopen       stdin
+             9  Wrong FD result from reopen       stdout
+            10  Wrong FD result from reopen       stderr
+ */</FONT></I>
+<B><FONT COLOR="#228B22">int</FONT></B> <B><FONT COLOR="#0000FF">secureFDs</FONT></B>() {
+  <B><FONT COLOR="#228B22">int</FONT></B> daReturn = 0;
+  <B><FONT COLOR="#228B22">int</FONT></B> numFDs; 
+  <B><FONT COLOR="#228B22">struct</FONT></B> stat s;
+  FILE *f;
+  <B><FONT COLOR="#228B22">int</FONT></B> fd;
+
+  <B><FONT COLOR="#A020F0">if</FONT></B>( (numFDs = getdtablesize()) &lt; 0) {
+    <B><FONT COLOR="#A020F0">return</FONT></B> 1;
+  } <I><FONT COLOR="#B22222">/* end if */</FONT></I>
+
+  <I><FONT COLOR="#B22222">/* Close all file descriptors except stdin, stdout, and stderr (0, 1, and 2) */</FONT></I>
+  <B><FONT COLOR="#A020F0">for</FONT></B>(fd=3; fd&lt;numFDs; fd++) 
+    close(fd);
+
+  <I><FONT COLOR="#B22222">/* Make sure that FD 0, 1, and 2 are open.  If they are not, then open them and make sure stdin, stdout, and stderr are associated
+     with FD 0, 1, and 2. */</FONT></I>
+  <B><FONT COLOR="#A020F0">for</FONT></B>(fd=0; fd&lt;3; fd++) {
+    <B><FONT COLOR="#A020F0">if</FONT></B>(fstat(fd, &amp;s) &lt; 0) { <I><FONT COLOR="#B22222">/* It has a problem, or it is closed. */</FONT></I>
+      daReturn = -1;
+      <B><FONT COLOR="#A020F0">if</FONT></B>(errno != EBADF) { <I><FONT COLOR="#B22222">/* EBADF == closed, most of the time. */</FONT></I>
+        <B><FONT COLOR="#A020F0">return</FONT></B> 2+fd;
+      } <I><FONT COLOR="#B22222">/* end if */</FONT></I>
+      <I><FONT COLOR="#B22222">/* fd is closed if we get here. */</FONT></I>
+      f = NULL;
+      <B><FONT COLOR="#A020F0">if</FONT></B>(fd == 0) {
+        f = freopen(_PATH_DEVNULL, <B><FONT COLOR="#BC8F8F">&quot;rb&quot;</FONT></B>, stdin);
+      } <B><FONT COLOR="#A020F0">else</FONT></B> <B><FONT COLOR="#A020F0">if</FONT></B>(fd == 1) {
+        f = freopen(_PATH_DEVNULL, <B><FONT COLOR="#BC8F8F">&quot;wb&quot;</FONT></B>, stdout);
+      } <B><FONT COLOR="#A020F0">else</FONT></B> <B><FONT COLOR="#A020F0">if</FONT></B>(fd == 2) {
+        f = freopen(_PATH_DEVNULL, <B><FONT COLOR="#BC8F8F">&quot;wb&quot;</FONT></B>, stderr);
+      } <I><FONT COLOR="#B22222">/* end if/else */</FONT></I>
+      <B><FONT COLOR="#A020F0">if</FONT></B>(f == NULL) { <I><FONT COLOR="#B22222">/* The freopen failed. */</FONT></I>
+        <B><FONT COLOR="#A020F0">return</FONT></B> 5+fd;
+      } <I><FONT COLOR="#B22222">/* end if */</FONT></I>
+      <B><FONT COLOR="#A020F0">if</FONT></B>(fd != fileno(f)) { <I><FONT COLOR="#B22222">/* Somehow didn't get the right FD! */</FONT></I>
+        <B><FONT COLOR="#A020F0">return</FONT></B> 8+fd;
+      } <I><FONT COLOR="#B22222">/* end if */</FONT></I>
+    } <I><FONT COLOR="#B22222">/* end if */</FONT></I>
+  } <I><FONT COLOR="#B22222">/* end for */</FONT></I>
+  <B><FONT COLOR="#A020F0">return</FONT></B> daReturn;
+} <I><FONT COLOR="#B22222">/* end secureFDs */</FONT></I>
+
+<I><FONT COLOR="#B22222">/**********************************************************************************************************************************/</FONT></I>
+<I><FONT COLOR="#B22222">/* This function calls secureEnv() and exits if anything goes wrong.  The arguments are the same as what secureEnv() requires, and
+   they are directly passed to secureEnv(). */</FONT></I>
+<B><FONT COLOR="#228B22">void</FONT></B> <B><FONT COLOR="#0000FF">secureEnvOrExit</FONT></B>(<B><FONT COLOR="#228B22">char</FONT></B> **keepEnv, <B><FONT COLOR="#228B22">char</FONT></B> **setEnv, <B><FONT COLOR="#228B22">char</FONT></B> **defEnv) {
+  <B><FONT COLOR="#228B22">int</FONT></B> secureEnvReturn;
+  secureEnvReturn = secureEnv(keepEnv, setEnv, defEnv);
+  <B><FONT COLOR="#A020F0">if</FONT></B>       (secureEnvReturn == 1)  {
+    printf(<B><FONT COLOR="#BC8F8F">&quot;ERROR: Could not zap environment variable.\n&quot;</FONT></B>);
+  } <B><FONT COLOR="#A020F0">else</FONT></B> <B><FONT COLOR="#A020F0">if</FONT></B>(secureEnvReturn == 2)  {
+    printf(<B><FONT COLOR="#BC8F8F">&quot;ERROR: Insanely long environment variable.\n&quot;</FONT></B>);
+  } <B><FONT COLOR="#A020F0">else</FONT></B> <B><FONT COLOR="#A020F0">if</FONT></B>(secureEnvReturn == 3)  {
+    printf(<B><FONT COLOR="#BC8F8F">&quot;ERROR: Could not set environment variable.\n&quot;</FONT></B>);
+  } <B><FONT COLOR="#A020F0">else</FONT></B> <B><FONT COLOR="#A020F0">if</FONT></B>(secureEnvReturn == 4)  {
+    printf(<B><FONT COLOR="#BC8F8F">&quot;ERROR: Call to getpwuid failed.\n&quot;</FONT></B>);
+  } <B><FONT COLOR="#A020F0">else</FONT></B> <B><FONT COLOR="#A020F0">if</FONT></B>(secureEnvReturn == 6)  {
+    printf(<B><FONT COLOR="#BC8F8F">&quot;ERROR: Could not set PATH to default value.\n&quot;</FONT></B>);
+  } <B><FONT COLOR="#A020F0">else</FONT></B> <B><FONT COLOR="#A020F0">if</FONT></B>(secureEnvReturn == 7)  {
+    printf(<B><FONT COLOR="#BC8F8F">&quot;ERROR: Could not set TMPDIR to default value.\n&quot;</FONT></B>);
+  } <B><FONT COLOR="#A020F0">else</FONT></B> <B><FONT COLOR="#A020F0">if</FONT></B>(secureEnvReturn == 8)  {
+    printf(<B><FONT COLOR="#BC8F8F">&quot;ERROR: Could not set HOME to default value.\n&quot;</FONT></B>);
+  } <B><FONT COLOR="#A020F0">else</FONT></B> <B><FONT COLOR="#A020F0">if</FONT></B>(secureEnvReturn == 9)  {
+    printf(<B><FONT COLOR="#BC8F8F">&quot;ERROR: Could not set LOGNAME to default value.\n&quot;</FONT></B>);
+  } <B><FONT COLOR="#A020F0">else</FONT></B> <B><FONT COLOR="#A020F0">if</FONT></B>(secureEnvReturn == 10) {
+    printf(<B><FONT COLOR="#BC8F8F">&quot;ERROR: Could not set SHELL to default value.\n&quot;</FONT></B>);
+  } <I><FONT COLOR="#B22222">/* end if/else */</FONT></I>
+
+  <B><FONT COLOR="#A020F0">if</FONT></B>(secureEnvReturn &gt; 0)
+    exit(1);
+} <I><FONT COLOR="#B22222">/* end secureEnvReturn */</FONT></I>
+
+<I><FONT COLOR="#B22222">/**********************************************************************************************************************************/</FONT></I>
+<I><FONT COLOR="#B22222">/* Defaults:  keepEnv==NULL =&gt; keep nothing
+              setEnv==NULL  =&gt; set nothing
+              defEnv==NULL  =&gt; set PATH, SHELL, LOGNAME, and HOME
+   Returns: 0 =&gt; Everything worked
+            1 =&gt; Malformed element of envdir (no '=' char)
+            2 =&gt; An environment variable name was very long (&gt;512b)
+            3 =&gt; Could not set environment variable (from setEnv)
+            4 =&gt; Could not get passwd info (for defEnv)
+            5 =&gt; Not used
+            6 =&gt; Could not set PATH to default value (from defEnv)
+            7 =&gt; Could not set TMPDIR to default value (from defEnv)
+            8 =&gt; Could not set HOME to default value (from defEnv)
+            9 =&gt; Could not set LOGNAME to default value (from defEnv)
+           10 =&gt; Could not set SHELL to default value (from defEnv)
+*/</FONT></I>
+<B><FONT COLOR="#228B22">int</FONT></B> <B><FONT COLOR="#0000FF">secureEnv</FONT></B>(<B><FONT COLOR="#228B22">char</FONT></B> **keepEnv, <B><FONT COLOR="#228B22">char</FONT></B> **setEnv, <B><FONT COLOR="#228B22">char</FONT></B> **defEnv) {
+  <B><FONT COLOR="#228B22">char</FONT></B> *DkeepEnv[] = {NULL
+                     };
+  <B><FONT COLOR="#228B22">char</FONT></B> *DsetEnv[] = {NULL
+                    };
+  <B><FONT COLOR="#228B22">char</FONT></B> *DdefEnv[] = {<B><FONT COLOR="#BC8F8F">&quot;PATH&quot;</FONT></B>,
+                     <B><FONT COLOR="#BC8F8F">&quot;SHELL&quot;</FONT></B>,
+                     <B><FONT COLOR="#BC8F8F">&quot;LOGNAME&quot;</FONT></B>,
+                     <B><FONT COLOR="#BC8F8F">&quot;HOME&quot;</FONT></B>,
+                     NULL
+                    };
+  <B><FONT COLOR="#228B22">char</FONT></B> **cp, **pp, *eqLoc;
+  <B><FONT COLOR="#228B22">int</FONT></B> keep;
+  <B><FONT COLOR="#228B22">char</FONT></B> chrBuf[1048];
+  <B><FONT COLOR="#228B22">struct</FONT></B> passwd *pwEnt = NULL;
+  uid_t theUID;
+
+  <I><FONT COLOR="#B22222">/* Take care of default values for the arguments. */</FONT></I>
+  <B><FONT COLOR="#A020F0">if</FONT></B>(keepEnv == NULL) 
+    keepEnv=DkeepEnv;
+  <B><FONT COLOR="#A020F0">if</FONT></B>(setEnv == NULL)  
+    setEnv=DsetEnv;
+  <B><FONT COLOR="#A020F0">if</FONT></B>(defEnv == NULL)  
+    defEnv=DdefEnv;
+
+  <I><FONT COLOR="#B22222">/* Delete all variables not listed in the keepEnv variable. */</FONT></I>
+  <B><FONT COLOR="#A020F0">for</FONT></B>(cp=environ; *cp != NULL; cp++){
+    keep=0;
+    <B><FONT COLOR="#A020F0">for</FONT></B>(pp=keepEnv; (*pp != NULL) &amp;&amp; (!keep); pp++) {
+      <B><FONT COLOR="#A020F0">if</FONT></B>(strstr(*cp, *pp) == *cp) { <I><FONT COLOR="#B22222">/* keepEnv line must start the environ line */</FONT></I>
+        <B><FONT COLOR="#A020F0">if</FONT></B>(strlen(*cp) &gt; strlen(*pp)) { <I><FONT COLOR="#B22222">/* environ line must be longer keepEnv line */</FONT></I>
+          <B><FONT COLOR="#A020F0">if</FONT></B>((*cp)[strlen(*pp)] == <B><FONT COLOR="#BC8F8F">'='</FONT></B>) { <I><FONT COLOR="#B22222">/* Make sure it is a complete match */</FONT></I>
+            keep = 1;
+          } <I><FONT COLOR="#B22222">/* end if */</FONT></I>
+        } <I><FONT COLOR="#B22222">/* end if */</FONT></I>
+      } <I><FONT COLOR="#B22222">/* end if */</FONT></I>
+    } <I><FONT COLOR="#B22222">/* end for */</FONT></I>
+    <B><FONT COLOR="#A020F0">if</FONT></B>(keep) {
+    } <B><FONT COLOR="#A020F0">else</FONT></B> {
+      eqLoc = strchr(*cp, <B><FONT COLOR="#BC8F8F">'='</FONT></B>);
+      <B><FONT COLOR="#A020F0">if</FONT></B>(eqLoc == NULL) {
+        <B><FONT COLOR="#A020F0">return</FONT></B> 1;
+      } <I><FONT COLOR="#B22222">/* end if */</FONT></I>
+      <B><FONT COLOR="#A020F0">if</FONT></B>((eqLoc - *cp) &gt; 512) {
+        <B><FONT COLOR="#A020F0">return</FONT></B> 2;
+      } <I><FONT COLOR="#B22222">/* end if */</FONT></I>
+      strncpy(chrBuf, *cp, (eqLoc-*cp));
+      chrBuf[eqLoc-*cp] = <B><FONT COLOR="#BC8F8F">'\0'</FONT></B>;
+      unsetenv(chrBuf);
+      cp=environ; <I><FONT COLOR="#B22222">/* Start over. */</FONT></I>
+    } <I><FONT COLOR="#B22222">/* end if/else */</FONT></I>
+  } <I><FONT COLOR="#B22222">/* end for */</FONT></I>
+
+  <I><FONT COLOR="#B22222">/* Set all the variables given by setEnv. */</FONT></I>
+  <B><FONT COLOR="#A020F0">for</FONT></B>(pp=setEnv; *pp != NULL ; pp++) {
+    <B><FONT COLOR="#A020F0">if</FONT></B>(putenv(*pp) &lt; 0) {
+      <B><FONT COLOR="#A020F0">return</FONT></B> 3;
+    } <I><FONT COLOR="#B22222">/* end if */</FONT></I>
+  } <I><FONT COLOR="#B22222">/* end for */</FONT></I>
+
+  <I><FONT COLOR="#B22222">/* Now set all the variables in defEnv to the default values specified by various system parameters. Supported are: PATH, HOME,
+     LOGNAME, SHELL, TMPDIR. */</FONT></I>
+  <B><FONT COLOR="#A020F0">for</FONT></B>(pp=defEnv; *pp != NULL ; pp++) {
+    <B><FONT COLOR="#A020F0">if</FONT></B>         (strcmp(*pp, <B><FONT COLOR="#BC8F8F">&quot;PATH&quot;</FONT></B>) == 0) {
+      <B><FONT COLOR="#A020F0">if</FONT></B>(setenv(<B><FONT COLOR="#BC8F8F">&quot;PATH&quot;</FONT></B>, _PATH_STDPATH, 1) &lt; 0)
+        <B><FONT COLOR="#A020F0">return</FONT></B> 6;
+    } <B><FONT COLOR="#A020F0">else</FONT></B> <B><FONT COLOR="#A020F0">if</FONT></B>(strcmp(*pp, <B><FONT COLOR="#BC8F8F">&quot;TMPDIR&quot;</FONT></B>) == 0) {
+      <B><FONT COLOR="#A020F0">if</FONT></B>(setenv(<B><FONT COLOR="#BC8F8F">&quot;TMPDIR&quot;</FONT></B>, _PATH_TMP, 1) &lt; 0)
+        <B><FONT COLOR="#A020F0">return</FONT></B> 7;
+    } <B><FONT COLOR="#A020F0">else</FONT></B> { <I><FONT COLOR="#B22222">/* Must be something from the passwd DB. */</FONT></I>
+      theUID = getuid();
+      <B><FONT COLOR="#A020F0">if</FONT></B>((pwEnt = getpwuid(theUID)) == NULL) {
+        <B><FONT COLOR="#A020F0">return</FONT></B> 4;
+      } <I><FONT COLOR="#B22222">/* end if */</FONT></I>
+      <B><FONT COLOR="#A020F0">if</FONT></B>(strcmp(*pp, <B><FONT COLOR="#BC8F8F">&quot;HOME&quot;</FONT></B>) == 0) {
+        <B><FONT COLOR="#A020F0">if</FONT></B>(setenv(<B><FONT COLOR="#BC8F8F">&quot;HOME&quot;</FONT></B>, pwEnt-&gt;pw_dir, 1) &lt; 0) 
+          <B><FONT COLOR="#A020F0">return</FONT></B> 8;
+      } <B><FONT COLOR="#A020F0">else</FONT></B> <B><FONT COLOR="#A020F0">if</FONT></B>(strcmp(*pp, <B><FONT COLOR="#BC8F8F">&quot;LOGNAME&quot;</FONT></B>) == 0) {
+        <B><FONT COLOR="#A020F0">if</FONT></B>(setenv(<B><FONT COLOR="#BC8F8F">&quot;LOGNAME&quot;</FONT></B>, pwEnt-&gt;pw_name, 1) &lt; 0)
+          <B><FONT COLOR="#A020F0">return</FONT></B> 9;
+      } <B><FONT COLOR="#A020F0">else</FONT></B> <B><FONT COLOR="#A020F0">if</FONT></B>(strcmp(*pp, <B><FONT COLOR="#BC8F8F">&quot;SHELL&quot;</FONT></B>) == 0) {
+        <B><FONT COLOR="#A020F0">if</FONT></B>(setenv(<B><FONT COLOR="#BC8F8F">&quot;SHELL&quot;</FONT></B>, pwEnt-&gt;pw_shell, 1) &lt; 0)
+          <B><FONT COLOR="#A020F0">return</FONT></B> 10;
+      } <I><FONT COLOR="#B22222">/* end if/else */</FONT></I>
+    } <I><FONT COLOR="#B22222">/* end if/else */</FONT></I>
+  } <I><FONT COLOR="#B22222">/* end for */</FONT></I>
+  <B><FONT COLOR="#A020F0">return</FONT></B> 0;
+} <I><FONT COLOR="#B22222">/* end func secureEnv */</FONT></I>
+</PRE>
+<HR \/>
+<ADDRESS>Generated by <A HREF="http://www.iki.fi/~mtr/genscript/">GNU Enscript 1.6.5.90</A>.</ADDRESS>
+</BODY>
+</HTML>

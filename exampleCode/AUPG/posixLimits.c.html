@@ -1,0 +1,66 @@
+<!DOCTYPE html PUBLIC "-//IETF//DTD HTML 2.0//EN">
+<HTML>
+<HEAD>
+<TITLE>AUPG/posixLimits.c</TITLE>
+</HEAD>
+<BODY BGCOLOR="#FFFFFF" TEXT="#000000" LINK="#1F00FF" ALINK="#FF0000" VLINK="#9900DD">
+<A NAME="top"> </A>
+<A NAME="file1"> </A>
+<H1><a href="posixLimits.c">posixLimits.c</a></H1>
+
+<PRE>
+<I><FONT COLOR="#B22222">/* -*- Mode:C; Coding:us-ascii-unix; fill-column:132 -*- */</FONT></I>
+<I><FONT COLOR="#B22222">/**********************************************************************************************************************************/</FONT></I>
+<I><FONT COLOR="#B22222">/**
+   @file      posixLimits.c
+   @author    Mitch Richling &lt;http://www.mitchr.me/&gt;
+   @Copyright Copyright 1999 by Mitch Richling.  All rights reserved.
+   @brief     UNIX posixLimits function@EOL
+   @Keywords  UNIX limits POSIX
+   @Std       IEEE Std 1003.1-1988 (POSIX.1) ISOC
+   @Tested    
+              - MacOS X.3
+              - Debian 7.4 + gcc (Debian 4.7.2-5) 4.7.2
+
+   POSIX.1 requires several constants to be present in the limits.h header file.  Be warned, if strict ANSI/ISO C is used, the
+   defines below are generally NOT be present!
+***********************************************************************************************************************************/</FONT></I>
+
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;unistd.h&gt;</FONT></B>             <I><FONT COLOR="#B22222">/* UNIX std stf    POSIX */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;stdio.h&gt;</FONT></B>              <I><FONT COLOR="#B22222">/* I/O lib         C89   */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;limits.h&gt;</FONT></B>             <I><FONT COLOR="#B22222">/* uname           POSIX */</FONT></I>
+
+<I><FONT COLOR="#B22222">/**********************************************************************************************************************************/</FONT></I>
+<B><FONT COLOR="#228B22">int</FONT></B> <B><FONT COLOR="#0000FF">main</FONT></B>(<B><FONT COLOR="#228B22">int</FONT></B> argc, <B><FONT COLOR="#228B22">char</FONT></B> *argv[]) {
+
+  printf(<B><FONT COLOR="#BC8F8F">&quot;_POSIX_ARG_MAX ....... Max argument length to exec ............. %llu\n&quot;</FONT></B>, (<B><FONT COLOR="#228B22">unsigned</FONT></B> <B><FONT COLOR="#228B22">long</FONT></B> <B><FONT COLOR="#228B22">long</FONT></B> <B><FONT COLOR="#228B22">int</FONT></B>)_POSIX_ARG_MAX        );
+  printf(<B><FONT COLOR="#BC8F8F">&quot;_POSIX_CHILD_MAX ..... Number of children per user ............. %llu\n&quot;</FONT></B>, (<B><FONT COLOR="#228B22">unsigned</FONT></B> <B><FONT COLOR="#228B22">long</FONT></B> <B><FONT COLOR="#228B22">long</FONT></B> <B><FONT COLOR="#228B22">int</FONT></B>)_POSIX_CHILD_MAX      );
+  printf(<B><FONT COLOR="#BC8F8F">&quot;_POSIX_LINK_MAX ...... Max links to a file ..................... %llu\n&quot;</FONT></B>, (<B><FONT COLOR="#228B22">unsigned</FONT></B> <B><FONT COLOR="#228B22">long</FONT></B> <B><FONT COLOR="#228B22">long</FONT></B> <B><FONT COLOR="#228B22">int</FONT></B>)_POSIX_LINK_MAX       );
+  printf(<B><FONT COLOR="#BC8F8F">&quot;_POSIX_MAX_CANON ..... Bytes on terminal canonical input queue . %llu\n&quot;</FONT></B>, (<B><FONT COLOR="#228B22">unsigned</FONT></B> <B><FONT COLOR="#228B22">long</FONT></B> <B><FONT COLOR="#228B22">long</FONT></B> <B><FONT COLOR="#228B22">int</FONT></B>)_POSIX_MAX_CANON      );
+  printf(<B><FONT COLOR="#BC8F8F">&quot;_POSIX_MAX_INPUT ..... terminal input queue length ............. %llu\n&quot;</FONT></B>, (<B><FONT COLOR="#228B22">unsigned</FONT></B> <B><FONT COLOR="#228B22">long</FONT></B> <B><FONT COLOR="#228B22">long</FONT></B> <B><FONT COLOR="#228B22">int</FONT></B>)_POSIX_MAX_INPUT      );
+  printf(<B><FONT COLOR="#BC8F8F">&quot;_POSIX_NAME_MAX ...... max filename length ..................... %llu\n&quot;</FONT></B>, (<B><FONT COLOR="#228B22">unsigned</FONT></B> <B><FONT COLOR="#228B22">long</FONT></B> <B><FONT COLOR="#228B22">long</FONT></B> <B><FONT COLOR="#228B22">int</FONT></B>)_POSIX_NAME_MAX       );
+  printf(<B><FONT COLOR="#BC8F8F">&quot;_POSIX_NGROUPS_MAX ... Number of secondary groups .............. %llu\n&quot;</FONT></B>, (<B><FONT COLOR="#228B22">unsigned</FONT></B> <B><FONT COLOR="#228B22">long</FONT></B> <B><FONT COLOR="#228B22">long</FONT></B> <B><FONT COLOR="#228B22">int</FONT></B>)_POSIX_NGROUPS_MAX    );
+  printf(<B><FONT COLOR="#BC8F8F">&quot;_POSIX_OPEN_MAX ...... Max open files per process .............. %llu\n&quot;</FONT></B>, (<B><FONT COLOR="#228B22">unsigned</FONT></B> <B><FONT COLOR="#228B22">long</FONT></B> <B><FONT COLOR="#228B22">long</FONT></B> <B><FONT COLOR="#228B22">int</FONT></B>)_POSIX_OPEN_MAX       );
+  printf(<B><FONT COLOR="#BC8F8F">&quot;_POSIX_PATH_MAX ...... Max pathname length ..................... %llu\n&quot;</FONT></B>, (<B><FONT COLOR="#228B22">unsigned</FONT></B> <B><FONT COLOR="#228B22">long</FONT></B> <B><FONT COLOR="#228B22">long</FONT></B> <B><FONT COLOR="#228B22">int</FONT></B>)_POSIX_PATH_MAX       );
+  printf(<B><FONT COLOR="#BC8F8F">&quot;_POSIX_SSIZE_MAX ..... Max for ssize_t type .................... %llu\n&quot;</FONT></B>, (<B><FONT COLOR="#228B22">unsigned</FONT></B> <B><FONT COLOR="#228B22">long</FONT></B> <B><FONT COLOR="#228B22">long</FONT></B> <B><FONT COLOR="#228B22">int</FONT></B>)_POSIX_SSIZE_MAX      );
+  printf(<B><FONT COLOR="#BC8F8F">&quot;_POSIX_STREAM_MAX .... Max I/O streams per process ............. %llu\n&quot;</FONT></B>, (<B><FONT COLOR="#228B22">unsigned</FONT></B> <B><FONT COLOR="#228B22">long</FONT></B> <B><FONT COLOR="#228B22">long</FONT></B> <B><FONT COLOR="#228B22">int</FONT></B>)_POSIX_STREAM_MAX     );
+
+<I><FONT COLOR="#B22222">//  printf(&quot;_POSIX_HOST_NAME_MAX . gethostname length max .................. %llu\n&quot;, (unsigned long long int)_POSIX_HOST_NAME_MAX  );
+</FONT></I><I><FONT COLOR="#B22222">//  printf(&quot;_POSIX_LOGIN_NAME_MAX  Max login name length ................... %llu\n&quot;, (unsigned long long int)_POSIX_LOGIN_NAME_MAX );
+</FONT></I><I><FONT COLOR="#B22222">//  printf(&quot;_POSIX_SYMLINK_MAX ... Max bytes in a symbolic link ............ %llu\n&quot;, (unsigned long long int)_POSIX_SYMLINK_MAX    );
+</FONT></I><I><FONT COLOR="#B22222">//  printf(&quot;_POSIX_SYMLOOP_MAX ... Max symlinks in sequence ................ %llu\n&quot;, (unsigned long long int)_POSIX_SYMLOOP_MAX    );
+</FONT></I><I><FONT COLOR="#B22222">//  printf(&quot;_POSIX_TTY_NAME_MAX .. Max length of a terminal name ........... %llu\n&quot;, (unsigned long long int)_POSIX_TTY_NAME_MAX   );
+</FONT></I>
+  printf(<B><FONT COLOR="#BC8F8F">&quot;_POSIX_TZNAME_MAX .... Max length of a time zone ............... %llu\n&quot;</FONT></B>, (<B><FONT COLOR="#228B22">unsigned</FONT></B> <B><FONT COLOR="#228B22">long</FONT></B> <B><FONT COLOR="#228B22">long</FONT></B> <B><FONT COLOR="#228B22">int</FONT></B>)_POSIX_TZNAME_MAX     );
+
+  <B><FONT COLOR="#A020F0">return</FONT></B> 0;
+} <I><FONT COLOR="#B22222">/* end func main */</FONT></I>
+
+
+
+
+</PRE>
+<HR \/>
+<ADDRESS>Generated by <A HREF="http://www.iki.fi/~mtr/genscript/">GNU Enscript 1.6.5.90</A>.</ADDRESS>
+</BODY>
+</HTML>

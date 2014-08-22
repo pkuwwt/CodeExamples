@@ -1,0 +1,119 @@
+<!DOCTYPE html PUBLIC "-//IETF//DTD HTML 2.0//EN">
+<HTML>
+<HEAD>
+<TITLE>AUPG/dirDepthC.cpp</TITLE>
+</HEAD>
+<BODY BGCOLOR="#FFFFFF" TEXT="#000000" LINK="#1F00FF" ALINK="#FF0000" VLINK="#9900DD">
+<A NAME="top"> </A>
+<A NAME="file1"> </A>
+<H1><a href="dirDepthC.cpp">dirDepthC.cpp</a></H1>
+
+<PRE>
+<I><FONT COLOR="#B22222">// -*- Mode:C++; Coding:us-ascii-unix; fill-column:132 -*-
+</FONT></I><I><FONT COLOR="#B22222">/**********************************************************************************************************************************/</FONT></I>
+<I><FONT COLOR="#B22222">/**
+   @file      dirDepthC.cpp
+   @author    Mitch Richling &lt;http://www.mitchr.me/&gt;
+   @Copyright Copyright 1995 by Mitch Richling.  All rights reserved.
+   @brief     Depth first traversal of UNIX directory trees@EOL
+   @Keywords  UNIX readdir depth first directory traversal
+   @Std       ISOC POSIX UNIX98 BSD4.3 SYSV3
+   @Tested    
+              - Solaris 2.8
+              - MacOS X.2
+              - Linux (RH 7.3)
+
+   This C++ program is intended to illustrate how to traverse a directory tree depth first.  That is to say, that all files at a
+   particular level of the tree are stated before the program descends.  It simply prints out the names of all files found.
+   
+   This program reads all the file names in a directory and places any subdirectory names into an STL container to be traversed
+   later.  A C version of this program uses a home grown linked list (dirDepth.c).
+   
+   The string handling is C-style, as that is what natively works with the UNIX C APIs.  chdir'ing instead of constructing strings
+   might be faster on some systems.  On many systems a memcpy function will operate faster than a strcpy/strcat.  The lengths of the
+   strings are computed anyway, so a memcpy is the way to go.
+   
+   Note that this implementation doesn't suffer from any limitations on the number of open directory descriptors -- this
+   implementation only has one open directory descriptor at any time.
+   
+   The functions used are all POSIX or ISO C++ and thus this program will run on most BSD and SRV implementations of UNIX.
+***********************************************************************************************************************************/</FONT></I>
+
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;queue&gt;</FONT></B>                   <I><FONT COLOR="#B22222">/* STL queue               C++98/11 */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;list&gt;</FONT></B>                    <I><FONT COLOR="#B22222">/* STL list                C++98/11 */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;stdio.h&gt;</FONT></B>                 <I><FONT COLOR="#B22222">/* I/O lib                 C89      */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;string.h&gt;</FONT></B>                <I><FONT COLOR="#B22222">/* Strings                 C89      */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;sys/types.h&gt;</FONT></B>             <I><FONT COLOR="#B22222">/* UNIX types              POSIX    */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;dirent.h&gt;</FONT></B>                <I><FONT COLOR="#B22222">/* UNIX dirs               POSIX    */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;errno.h&gt;</FONT></B>                 <I><FONT COLOR="#B22222">/* error stf               POSIX    */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;utime.h&gt;</FONT></B>                 <I><FONT COLOR="#B22222">/* utime                   POSIX    */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;sys/stat.h&gt;</FONT></B>              <I><FONT COLOR="#B22222">/* UNIX stat               POSIX    */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;time.h&gt;</FONT></B>                  <I><FONT COLOR="#B22222">/* time                    C89      */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;stdlib.h&gt;</FONT></B>                <I><FONT COLOR="#B22222">/* Standard Lib            C89      */</FONT></I>
+
+<I><FONT COLOR="#B22222">/**********************************************************************************************************************************/</FONT></I>
+<B><FONT COLOR="#228B22">int</FONT></B> <B><FONT COLOR="#0000FF">main</FONT></B>(<B><FONT COLOR="#228B22">int</FONT></B> argc, <B><FONT COLOR="#228B22">char</FONT></B> *argv[]) {
+  <B><FONT COLOR="#228B22">struct</FONT></B> stat s;                                    <I><FONT COLOR="#B22222">/** Used to stat each file. */</FONT></I>
+  <B><FONT COLOR="#5F9EA0">std</FONT></B>::queue&lt;<B><FONT COLOR="#228B22">char</FONT></B> *, std::list&lt;<B><FONT COLOR="#228B22">char</FONT></B> *&gt; &gt; listOdirs; <I><FONT COLOR="#B22222">/** Hold the names for dirs to traverse next */</FONT></I>
+
+  <I><FONT COLOR="#B22222">/* Stat the root of the tree we are to traverse. */</FONT></I>
+  <B><FONT COLOR="#A020F0">if</FONT></B>((argc == 2) &amp;&amp; (lstat(argv[1], &amp;s) &lt; 0)) {
+    printf(<B><FONT COLOR="#BC8F8F">&quot;ERROR: Bad first argument\n&quot;</FONT></B>);
+    exit(1);
+  }
+  <I><FONT COLOR="#B22222">/* Now that we have stat'ed the thing, we push it onto the list of directories */</FONT></I>
+  <B><FONT COLOR="#228B22">char</FONT></B> *wrkBuf = (<B><FONT COLOR="#228B22">char</FONT></B> *)malloc(strlen(argv[1]) + 1);
+  strcpy(wrkBuf, argv[1]);
+  listOdirs.push(wrkBuf);
+
+  <B><FONT COLOR="#A020F0">while</FONT></B>(!(listOdirs.empty())) {
+    <B><FONT COLOR="#228B22">char</FONT></B> *curDir = listOdirs.front();
+    DIR *dp;
+    <B><FONT COLOR="#A020F0">if</FONT></B>((dp = opendir(curDir)) == NULL) {
+      printf(<B><FONT COLOR="#BC8F8F">&quot;ERROR: dirDepth: %s: %s\n&quot;</FONT></B>, curDir, strerror(errno));
+    } <B><FONT COLOR="#A020F0">else</FONT></B> {
+      <I><FONT COLOR="#B22222">/* We have opened the directory, now we read each file name from it and store the file names that correspond to sub
+         directories in our linked list for traversal later. */</FONT></I>
+      <B><FONT COLOR="#228B22">long</FONT></B> len_curDir = strlen(curDir);
+      <B><FONT COLOR="#228B22">struct</FONT></B> dirent *dep;
+      <B><FONT COLOR="#A020F0">while</FONT></B>((dep = readdir(dp)) != NULL) {
+        <I><FONT COLOR="#B22222">/* Make sure we don't process .. and . */</FONT></I>
+        <B><FONT COLOR="#A020F0">if</FONT></B>((strcmp(dep-&gt;d_name, <B><FONT COLOR="#BC8F8F">&quot;..&quot;</FONT></B>) != 0) &amp;&amp; (strcmp(dep-&gt;d_name, <B><FONT COLOR="#BC8F8F">&quot;.&quot;</FONT></B>) != 0)) {
+          <I><FONT COLOR="#B22222">/* Allocate space for and construct the complete path name. */</FONT></I>
+          <B><FONT COLOR="#228B22">long</FONT></B> len_d_name = strlen(dep-&gt;d_name);
+          <B><FONT COLOR="#228B22">char</FONT></B> *name = (<B><FONT COLOR="#228B22">char</FONT></B> *)malloc(len_d_name + len_curDir + 2);
+          strcpy(name, curDir);
+          strcat(name, <B><FONT COLOR="#BC8F8F">&quot;/&quot;</FONT></B>);
+          strcat(name, dep-&gt;d_name);
+          <I><FONT COLOR="#B22222">/* Now that we have a complete path name, let's stat the file in question. */</FONT></I>
+          <B><FONT COLOR="#A020F0">if</FONT></B>(lstat(name, &amp;s) &lt; 0) {
+            printf(<B><FONT COLOR="#BC8F8F">&quot;ERROR: dirDepth: %s: %s\n&quot;</FONT></B>, name, strerror(errno));
+            free(name);
+          } <B><FONT COLOR="#A020F0">else</FONT></B> {
+            <I><FONT COLOR="#B22222">/* We have successfully stated the file, now let's process it: */</FONT></I>
+            <B><FONT COLOR="#A020F0">if</FONT></B>(S_ISDIR(s.st_mode)) {    <I><FONT COLOR="#B22222">/* Process directories. */</FONT></I>
+              <I><FONT COLOR="#B22222">/* This is a directory, so we must add it to our list of directories to traverse. */</FONT></I>
+              listOdirs.push(name);
+              printf(<B><FONT COLOR="#BC8F8F">&quot; D: %s\n&quot;</FONT></B>, name);
+            } <B><FONT COLOR="#A020F0">else</FONT></B> {            <I><FONT COLOR="#B22222">/* Process non-directories. */</FONT></I>
+              printf(<B><FONT COLOR="#BC8F8F">&quot;ND: %s\n&quot;</FONT></B>, name);
+              <I><FONT COLOR="#B22222">/* Free up the space for the pathname. */</FONT></I>
+              free(name);
+            } <I><FONT COLOR="#B22222">/* end if/else */</FONT></I>
+          } <I><FONT COLOR="#B22222">/* end if/else */</FONT></I>
+        } <I><FONT COLOR="#B22222">/* end if */</FONT></I>
+      } <I><FONT COLOR="#B22222">/* end while */</FONT></I>
+      closedir(dp);
+    } <I><FONT COLOR="#B22222">/* end if/else */</FONT></I>
+    <I><FONT COLOR="#B22222">/* We have finished walking the current directory, so we remove it from the list. */</FONT></I>
+    free(curDir);
+    listOdirs.pop();
+  } <I><FONT COLOR="#B22222">/* end while */</FONT></I>
+
+  <B><FONT COLOR="#A020F0">return</FONT></B> 0;
+} <I><FONT COLOR="#B22222">/* end func main */</FONT></I>
+</PRE>
+<HR \/>
+<ADDRESS>Generated by <A HREF="http://www.iki.fi/~mtr/genscript/">GNU Enscript 1.6.5.90</A>.</ADDRESS>
+</BODY>
+</HTML>

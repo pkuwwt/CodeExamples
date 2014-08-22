@@ -1,0 +1,93 @@
+<!DOCTYPE html PUBLIC "-//IETF//DTD HTML 2.0//EN">
+<HTML>
+<HEAD>
+<TITLE>ruby/fileStat.rb</TITLE>
+</HEAD>
+<BODY BGCOLOR="#FFFFFF" TEXT="#000000" LINK="#1F00FF" ALINK="#FF0000" VLINK="#9900DD">
+<A NAME="top"> </A>
+<A NAME="file1"> </A>
+<H1><a href="fileStat.rb">fileStat.rb</a></H1>
+
+<PRE>
+<I><FONT COLOR="#B22222">#!/usr/local/bin/ruby
+</FONT></I>
+<I><FONT COLOR="#B22222">##
+</FONT></I><I><FONT COLOR="#B22222"># @file      fileStat.rb
+</FONT></I><I><FONT COLOR="#B22222"># @author    Mitch Richling &lt;http://www.mitchr.me/&gt;
+</FONT></I><I><FONT COLOR="#B22222"># @Copyright Copyright 2006 by Mitch Richling.  All rights reserved.
+</FONT></I><I><FONT COLOR="#B22222"># @brief     File Stat with Ruby.@EOL
+</FONT></I><I><FONT COLOR="#B22222"># @Keywords  ruby example file lstat
+</FONT></I><I><FONT COLOR="#B22222"># @Std       Ruby 1.8
+</FONT></I><I><FONT COLOR="#B22222">#
+</FONT></I><I><FONT COLOR="#B22222">#             FileTest provides a great many tests, but File::Stat is
+</FONT></I><I><FONT COLOR="#B22222">#             the place to look for file meta data like time stamps.
+</FONT></I><I><FONT COLOR="#B22222">#             You can also do file tests with stat, and if you have
+</FONT></I><I><FONT COLOR="#B22222">#             already stat'ed a file, it is faster to test the
+</FONT></I><I><FONT COLOR="#B22222">#             existing stat structure than to use FileTest.
+</FONT></I><I><FONT COLOR="#B22222">#
+</FONT></I><I><FONT COLOR="#B22222">#             Some of the stuff in the stat class:
+</FONT></I><I><FONT COLOR="#B22222">#               File Times
+</FONT></I><I><FONT COLOR="#B22222">#                  stat.atime
+</FONT></I><I><FONT COLOR="#B22222">#                  stat.ctime
+</FONT></I><I><FONT COLOR="#B22222">#                  stat.mtime
+</FONT></I><I><FONT COLOR="#B22222">#               Device holding file
+</FONT></I><I><FONT COLOR="#B22222">#                  stat.blksize =&gt; native file system block size
+</FONT></I><I><FONT COLOR="#B22222">#                  stat.blockdev? =&gt; block device?
+</FONT></I><I><FONT COLOR="#B22222">#                  stat.dev =&gt; device (Major and minor parts: stat.dev_major &amp; stat.dev_minor)
+</FONT></I><I><FONT COLOR="#B22222">#               Size related info
+</FONT></I><I><FONT COLOR="#B22222">#                  stat.blocks =&gt; number of blocks
+</FONT></I><I><FONT COLOR="#B22222">#                  stat.size =&gt; size of stat in bytes.
+</FONT></I><I><FONT COLOR="#B22222">#                  stat.zero? =&gt; zero length file?
+</FONT></I><I><FONT COLOR="#B22222">#               File type info
+</FONT></I><I><FONT COLOR="#B22222">#                  stat.chardev?
+</FONT></I><I><FONT COLOR="#B22222">#                  stat.directory?
+</FONT></I><I><FONT COLOR="#B22222">#                  stat.file?
+</FONT></I><I><FONT COLOR="#B22222">#                  stat.ftype =&gt; file type
+</FONT></I><I><FONT COLOR="#B22222">#                  stat.pipe?
+</FONT></I><I><FONT COLOR="#B22222">#                  stat.socket?
+</FONT></I><I><FONT COLOR="#B22222">#                  stat.symlink?
+</FONT></I><I><FONT COLOR="#B22222">#               Owner info
+</FONT></I><I><FONT COLOR="#B22222">#                  stat.gid =&gt; numeric group id of the owner of stat.
+</FONT></I><I><FONT COLOR="#B22222">#                  stat.ino =&gt; inode number for stat.
+</FONT></I><I><FONT COLOR="#B22222">#                  stat.uid =&gt; numeric user id of the owner of stat.
+</FONT></I><I><FONT COLOR="#B22222">#               File mode info
+</FONT></I><I><FONT COLOR="#B22222">#                  stat.executable?
+</FONT></I><I><FONT COLOR="#B22222">#                  stat.executable_real?
+</FONT></I><I><FONT COLOR="#B22222">#                  stat.grpowned?
+</FONT></I><I><FONT COLOR="#B22222">#                  stat.mode =&gt; integer permission bits
+</FONT></I><I><FONT COLOR="#B22222">#                  stat.owned?
+</FONT></I><I><FONT COLOR="#B22222">#                  stat.readable?
+</FONT></I><I><FONT COLOR="#B22222">#                  stat.readable_real?
+</FONT></I><I><FONT COLOR="#B22222">#                  stat.setgid?
+</FONT></I><I><FONT COLOR="#B22222">#                  stat.setuid?
+</FONT></I><I><FONT COLOR="#B22222">#                  stat.sticky?
+</FONT></I><I><FONT COLOR="#B22222">#                  stat.writable?
+</FONT></I><I><FONT COLOR="#B22222">#                  stat.writable_real?
+</FONT></I><I><FONT COLOR="#B22222">#               Misc
+</FONT></I><I><FONT COLOR="#B22222">#                  stat.nlink =&gt; number of hard links to stat.
+</FONT></I>
+
+<I><FONT COLOR="#B22222"># We stat a file (this source code file)..
+</FONT></I><B><FONT COLOR="#A020F0">begin</FONT></B>  
+  statData = File::Stat.new(<B><FONT COLOR="#BC8F8F">'fileStat.rb'</FONT></B>)
+  <I><FONT COLOR="#B22222">#or:        statData = File.stat('fileStat.rb')
+</FONT></I>  <I><FONT COLOR="#B22222">#see also:  statData = File.lstat('fileStat.rb')
+</FONT></I><B><FONT COLOR="#A020F0">rescue</FONT></B> 
+  puts(<B><FONT COLOR="#BC8F8F">&quot;ERROR: Could not stat fileStat.rb&quot;</FONT></B>)
+  exit(1)
+<B><FONT COLOR="#A020F0">end</FONT></B>
+
+puts(<B><FONT COLOR="#BC8F8F">&quot;atime: #{statData.atime}&quot;</FONT></B>)
+puts(<B><FONT COLOR="#BC8F8F">&quot;mtime: #{statData.mtime}&quot;</FONT></B>)
+puts(<B><FONT COLOR="#BC8F8F">&quot;ctime: #{statData.ctime}&quot;</FONT></B>)
+
+<I><FONT COLOR="#B22222"># Most methods in File::Stat can also be accessed like this:
+</FONT></I>puts(<B><FONT COLOR="#BC8F8F">&quot;atime: #{File.stat('fileStat.rb').atime}&quot;</FONT></B>)
+puts(<B><FONT COLOR="#BC8F8F">&quot;mtime: #{File.stat('fileStat.rb').mtime}&quot;</FONT></B>)
+puts(<B><FONT COLOR="#BC8F8F">&quot;ctime: #{File.stat('fileStat.rb').ctime}&quot;</FONT></B>)
+
+</PRE>
+<HR \/>
+<ADDRESS>Generated by <A HREF="http://www.iki.fi/~mtr/genscript/">GNU Enscript 1.6.5.2</A>.</ADDRESS>
+</BODY>
+</HTML>

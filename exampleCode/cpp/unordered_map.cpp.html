@@ -1,0 +1,77 @@
+<!DOCTYPE html PUBLIC "-//IETF//DTD HTML 2.0//EN">
+<HTML>
+<HEAD>
+<TITLE>cpp/unordered_map.cpp</TITLE>
+</HEAD>
+<BODY BGCOLOR="#FFFFFF" TEXT="#000000" LINK="#1F00FF" ALINK="#FF0000" VLINK="#9900DD">
+<A NAME="top"> </A>
+<A NAME="file1"> </A>
+<H1><a href="unordered_map.cpp">unordered_map.cpp</a></H1>
+
+<PRE>
+<I><FONT COLOR="#B22222">// -*- Mode:C++; Coding:us-ascii-unix; fill-column:132 -*-
+</FONT></I><I><FONT COLOR="#B22222">/**********************************************************************************************************************************/</FONT></I>
+<I><FONT COLOR="#B22222">/**
+   @file      unordered_map.cpp
+   @author    Mitch Richling &lt;http://www.mitchr.me&gt;
+   @Copyright Copyright 2013 by Mitch Richling.  All rights reserved.
+   @brief     Example of how to use unordered_maps in the STL specified by C++ 11 .@EOL
+   @Keywords  Standard C++ I/O character string iostream
+   @Std       C++11
+
+   Except for the fact that &quot;unordered_map&quot; is used in place of &quot;map&quot;, this code is virtually identical to map.cc -- that is one of
+   the beautiful features of the design of the STL.
+***********************************************************************************************************************************/</FONT></I>
+
+<I><FONT COLOR="#B22222">////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+</FONT></I>#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;unordered_map&gt;</FONT></B>           <I><FONT COLOR="#B22222">/* STL hash map            C++11    */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;string&gt;</FONT></B>                  <I><FONT COLOR="#B22222">/* C++ strings             C++98/11 */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;iostream&gt;</FONT></B>                <I><FONT COLOR="#B22222">/* C++ iostream            C++98/11 */</FONT></I>
+
+<I><FONT COLOR="#B22222">////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+</FONT></I><B><FONT COLOR="#228B22">int</FONT></B> <B><FONT COLOR="#0000FF">main</FONT></B>() {
+  <B><FONT COLOR="#5F9EA0">std</FONT></B>::unordered_map&lt;std::string, std::string&gt; myMap;
+
+  myMap[<B><FONT COLOR="#BC8F8F">&quot;foo&quot;</FONT></B>] = <B><FONT COLOR="#BC8F8F">&quot;first value&quot;</FONT></B>;
+  myMap[<B><FONT COLOR="#BC8F8F">&quot;bar&quot;</FONT></B>] = <B><FONT COLOR="#BC8F8F">&quot;second value&quot;</FONT></B>;
+
+  <I><FONT COLOR="#B22222">// We can extract a value with the [] operator
+</FONT></I>  <B><FONT COLOR="#5F9EA0">std</FONT></B>::cout &lt;&lt; <B><FONT COLOR="#BC8F8F">&quot;Find 'foo' with [] operator: map[\&quot;foo\&quot;]=&quot;</FONT></B> &lt;&lt; myMap[<B><FONT COLOR="#BC8F8F">&quot;foo&quot;</FONT></B>] &lt;&lt; std::endl;
+
+  <I><FONT COLOR="#B22222">// One must be careful with [], because if what you are looking for is NOT in the map, it will be added (The key will be what you
+</FONT></I>  <I><FONT COLOR="#B22222">// were looking for, and the value will be the default construction of the data value type.  We use count() to figure out if &quot;zod&quot;
+</FONT></I>  <I><FONT COLOR="#B22222">// is a key in the map.  For a map, count() will be 0 or 1 as keys must be unique in a map.  This is a typical idiom.
+</FONT></I>  <B><FONT COLOR="#5F9EA0">std</FONT></B>::cout &lt;&lt; <B><FONT COLOR="#BC8F8F">&quot;zod is &quot;</FONT></B> &lt;&lt; (myMap.count(<B><FONT COLOR="#BC8F8F">&quot;zod&quot;</FONT></B>)?<B><FONT COLOR="#BC8F8F">&quot;&quot;</FONT></B>:<B><FONT COLOR="#BC8F8F">&quot;NOT &quot;</FONT></B>) &lt;&lt; <B><FONT COLOR="#BC8F8F">&quot;in the map&quot;</FONT></B> &lt;&lt; std::endl;  
+  myMap[<B><FONT COLOR="#BC8F8F">&quot;zod&quot;</FONT></B>];
+  <B><FONT COLOR="#5F9EA0">std</FONT></B>::cout &lt;&lt; <B><FONT COLOR="#BC8F8F">&quot;zod is &quot;</FONT></B> &lt;&lt; (myMap.count(<B><FONT COLOR="#BC8F8F">&quot;zod&quot;</FONT></B>)?<B><FONT COLOR="#BC8F8F">&quot;&quot;</FONT></B>:<B><FONT COLOR="#BC8F8F">&quot;NOT &quot;</FONT></B>) &lt;&lt; <B><FONT COLOR="#BC8F8F">&quot;in the map&quot;</FONT></B> &lt;&lt; std::endl;  
+
+  <I><FONT COLOR="#B22222">// We can traverse the whole thing with an iterator.  The local variable in the for loop is a typical idiom -- just like ints in
+</FONT></I>  <I><FONT COLOR="#B22222">// an array traversal.  Note we must use the stuff from pair&lt;&gt; as that is what you get from the iterators in a map.
+</FONT></I>  <B><FONT COLOR="#5F9EA0">std</FONT></B>::cout &lt;&lt; <B><FONT COLOR="#BC8F8F">&quot;All the elements of the map:&quot;</FONT></B> &lt;&lt; std::endl;
+  <B><FONT COLOR="#A020F0">for</FONT></B>(std::unordered_map&lt;std::string, std::string&gt;::iterator myMapIter = myMap.begin(); myMapIter != myMap.end(); ++myMapIter)
+    <B><FONT COLOR="#5F9EA0">std</FONT></B>::cout &lt;&lt; <B><FONT COLOR="#BC8F8F">&quot;  \&quot;&quot;</FONT></B> &lt;&lt; myMapIter-&gt;first &lt;&lt; <B><FONT COLOR="#BC8F8F">&quot;\&quot;  = &quot;</FONT></B> &lt;&lt; myMapIter-&gt;second &lt;&lt; std::endl;
+
+  <I><FONT COLOR="#B22222">// How to look for something.
+</FONT></I>  <B><FONT COLOR="#5F9EA0">std</FONT></B>::unordered_map&lt;std::string, std::string&gt;::iterator myMapIter;
+
+  <I><FONT COLOR="#B22222">// std::map's fast find should be used (not &lt;algorithm&gt;'s find).
+</FONT></I>  <B><FONT COLOR="#5F9EA0">std</FONT></B>::cout &lt;&lt; <B><FONT COLOR="#BC8F8F">&quot;Looking for FOO... &quot;</FONT></B>;
+  myMapIter = myMap.find(<B><FONT COLOR="#BC8F8F">&quot;FOO&quot;</FONT></B>);
+  <B><FONT COLOR="#A020F0">if</FONT></B>(myMapIter != myMap.end())
+    <B><FONT COLOR="#5F9EA0">std</FONT></B>::cout &lt;&lt; <B><FONT COLOR="#BC8F8F">&quot;Found it: &quot;</FONT></B> &lt;&lt; myMapIter-&gt;second &lt;&lt; std::endl;
+  <B><FONT COLOR="#A020F0">else</FONT></B>
+    <B><FONT COLOR="#5F9EA0">std</FONT></B>::cout &lt;&lt; <B><FONT COLOR="#BC8F8F">&quot;Didn't find it&quot;</FONT></B> &lt;&lt; std::endl;
+
+  <I><FONT COLOR="#B22222">// Just searching again to show the other case
+</FONT></I>  <B><FONT COLOR="#5F9EA0">std</FONT></B>::cout &lt;&lt; <B><FONT COLOR="#BC8F8F">&quot;Looking for foo... &quot;</FONT></B>;
+  myMapIter = myMap.find(<B><FONT COLOR="#BC8F8F">&quot;foo&quot;</FONT></B>);
+  <B><FONT COLOR="#A020F0">if</FONT></B>(myMapIter != myMap.end())
+    <B><FONT COLOR="#5F9EA0">std</FONT></B>::cout &lt;&lt; <B><FONT COLOR="#BC8F8F">&quot;Found it: &quot;</FONT></B> &lt;&lt; myMapIter-&gt;second &lt;&lt; std::endl;
+  <B><FONT COLOR="#A020F0">else</FONT></B>
+    <B><FONT COLOR="#5F9EA0">std</FONT></B>::cout &lt;&lt; <B><FONT COLOR="#BC8F8F">&quot;Didn't find it&quot;</FONT></B> &lt;&lt; std::endl;
+} <I><FONT COLOR="#B22222">// end func main
+</FONT></I></PRE>
+<HR \/>
+<ADDRESS>Generated by <A HREF="http://www.iki.fi/~mtr/genscript/">GNU Enscript 1.6.5.90</A>.</ADDRESS>
+</BODY>
+</HTML>

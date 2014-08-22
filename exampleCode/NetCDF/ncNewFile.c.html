@@ -1,0 +1,138 @@
+<!DOCTYPE html PUBLIC "-//IETF//DTD HTML 2.0//EN">
+<HTML>
+<HEAD>
+<TITLE>NetCDF/ncNewFile.c</TITLE>
+</HEAD>
+<BODY BGCOLOR="#FFFFFF" TEXT="#000000" LINK="#1F00FF" ALINK="#FF0000" VLINK="#9900DD">
+<A NAME="top"> </A>
+<A NAME="file1"> </A>
+<H1><a href="ncNewFile.c">ncNewFile.c</a></H1>
+
+<PRE>
+<I><FONT COLOR="#B22222">/**
+   @file      ncNewFile.c 
+   @author    Mitch Richling &lt;http://www.mitchr.me/&gt;
+   @Copyright Copyright 1998,2000 by Mitch Richling.  All rights reserved.
+   @brief     How to create a NetCDF file.@EOL
+   @Keywords  none
+   @Std       C89
+
+              This is a simple example illustrating how to create a
+              new NetCDF file and populate it with some data.  I have
+              been using this bit of code as a template for new NetCDF
+              programs for a long time.  It is very similar to the
+              example program in the NetCDF documentation; however,
+              this code also illustrates real world error checking.
+
+              This example is self contained except for the functions
+              starting with &quot;mjrNC_&quot;, which can be found in the
+              mjrNetCDF.[ch] files.  They are all simple functions
+              that serve to take some of the tedium out of using the
+              NetCDF library.
+*/</FONT></I>
+
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;netcdf.h&gt;</FONT></B>             <I><FONT COLOR="#B22222">/* NetCDF Files          */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;stdio.h&gt;</FONT></B>              <I><FONT COLOR="#B22222">/* I/O lib         ISOC  */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;string.h&gt;</FONT></B>             <I><FONT COLOR="#B22222">/* Strings         ISOC  */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;stdlib.h&gt;</FONT></B>             <I><FONT COLOR="#B22222">/* Standard Lib    ISOC  */</FONT></I>
+
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&quot;mjrNetCDF.h&quot;</FONT></B>
+
+#<B><FONT COLOR="#5F9EA0">define</FONT></B> <FONT COLOR="#B8860B">MAX_X</FONT> 10
+#<B><FONT COLOR="#5F9EA0">define</FONT></B> <FONT COLOR="#B8860B">MAX_Y</FONT> 20
+#<B><FONT COLOR="#5F9EA0">define</FONT></B> <FONT COLOR="#B8860B">MAX_T</FONT> 24
+
+#<B><FONT COLOR="#5F9EA0">define</FONT></B> <FONT COLOR="#B8860B">TST_FILE_NAME</FONT> <B><FONT COLOR="#BC8F8F">&quot;a3DtestFile.nc&quot;</FONT></B>
+
+<B><FONT COLOR="#228B22">int</FONT></B> <B><FONT COLOR="#0000FF">main</FONT></B>(<B><FONT COLOR="#228B22">int</FONT></B> argc, <B><FONT COLOR="#228B22">char</FONT></B> *argv[]);
+
+<B><FONT COLOR="#228B22">int</FONT></B> <B><FONT COLOR="#0000FF">main</FONT></B>(<B><FONT COLOR="#228B22">int</FONT></B> argc, <B><FONT COLOR="#228B22">char</FONT></B> *argv[]) {
+  <B><FONT COLOR="#228B22">int</FONT></B> ncFileID, tempID, presID, dimIDs[3];
+  <B><FONT COLOR="#228B22">int</FONT></B> i, j, k, id;
+  <B><FONT COLOR="#228B22">float</FONT></B> temp[MAX_X][MAX_Y][MAX_T];
+  <B><FONT COLOR="#228B22">float</FONT></B> pres[MAX_X][MAX_Y][MAX_T];
+  <B><FONT COLOR="#228B22">int</FONT></B> status;
+
+  <I><FONT COLOR="#B22222">/* Create fake data. */</FONT></I>
+  id=0;
+  <B><FONT COLOR="#A020F0">for</FONT></B>(i=0; i&lt;MAX_X; i++)
+    <B><FONT COLOR="#A020F0">for</FONT></B>(j=0; j&lt;MAX_Y; j++)
+      <B><FONT COLOR="#A020F0">for</FONT></B>(k=0; k&lt;MAX_T; k++) {
+        temp[i][j][k] = (1000. + k)/(i+1);
+        pres[i][j][k] = id;
+        id++;
+      } <I><FONT COLOR="#B22222">/* end for */</FONT></I>
+
+  <I><FONT COLOR="#B22222">/* Create the file. */</FONT></I>
+  status = nc_create(TST_FILE_NAME, NC_CLOBBER, &amp;ncFileID);
+  mjrNC_chkError(status);
+
+  <I><FONT COLOR="#B22222">/* Note:  The file is in &quot;define mode&quot; after it is created. */</FONT></I>
+
+  <I><FONT COLOR="#B22222">/* Define three dimensions. */</FONT></I> 
+  status = nc_def_dim(ncFileID, <B><FONT COLOR="#BC8F8F">&quot;xAxis&quot;</FONT></B>, MAX_X, &amp;dimIDs[0]);
+  mjrNC_chkError(status);
+  status = nc_def_dim(ncFileID, <B><FONT COLOR="#BC8F8F">&quot;yAxis&quot;</FONT></B>, MAX_X, &amp;dimIDs[1]);
+  mjrNC_chkError(status);
+  status = nc_def_dim(ncFileID, <B><FONT COLOR="#BC8F8F">&quot;tAxis&quot;</FONT></B>, MAX_T, &amp;dimIDs[2]);
+  mjrNC_chkError(status);
+
+  <I><FONT COLOR="#B22222">/* Define two data variables. */</FONT></I>
+  status = nc_def_var(ncFileID, <B><FONT COLOR="#BC8F8F">&quot;temp&quot;</FONT></B>, NC_FLOAT, 3, dimIDs, &amp;tempID);
+  mjrNC_chkError(status);
+  status = nc_def_var(ncFileID, <B><FONT COLOR="#BC8F8F">&quot;pres&quot;</FONT></B>, NC_FLOAT, 3, dimIDs, &amp;presID);
+  mjrNC_chkError(status);
+
+  <I><FONT COLOR="#B22222">/* Define Standard Global Attributes. */</FONT></I> 
+  <I><FONT COLOR="#B22222">/*  Author of the data file */</FONT></I>
+  status = mjrNC_putAttCStr(ncFileID, NC_GLOBAL, <B><FONT COLOR="#BC8F8F">&quot;author&quot;</FONT></B>, <B><FONT COLOR="#BC8F8F">&quot;Mitch Richling&quot;</FONT></B>);
+  mjrNC_chkError(status);
+  <I><FONT COLOR="#B22222">/*  Simple title for data set -- used by many generic NetCDF applications. */</FONT></I>
+  status = mjrNC_putAttCStr(ncFileID, NC_GLOBAL, <B><FONT COLOR="#BC8F8F">&quot;title&quot;</FONT></B>, <B><FONT COLOR="#BC8F8F">&quot;Example File&quot;</FONT></B>);
+  mjrNC_chkError(status);
+  <I><FONT COLOR="#B22222">/*  This attribute is used by many generic NetCDF applications. */</FONT></I>
+  status = mjrNC_putAttCStr(ncFileID, NC_GLOBAL, <B><FONT COLOR="#BC8F8F">&quot;history&quot;</FONT></B>, <B><FONT COLOR="#BC8F8F">&quot;NONE&quot;</FONT></B>);
+  mjrNC_chkError(status);
+  <I><FONT COLOR="#B22222">/*  Create time for the data file */</FONT></I>
+  status = mjrNC_putAttCStr(ncFileID, NC_GLOBAL, <B><FONT COLOR="#BC8F8F">&quot;ctime&quot;</FONT></B>, <B><FONT COLOR="#BC8F8F">&quot;YYYY-MM-DD HH-MM-SS ZON&quot;</FONT></B>);
+  mjrNC_chkError(status);
+  <I><FONT COLOR="#B22222">/*  Last modification time */</FONT></I>
+  status = mjrNC_putAttCStr(ncFileID, NC_GLOBAL, <B><FONT COLOR="#BC8F8F">&quot;mtime&quot;</FONT></B>, <B><FONT COLOR="#BC8F8F">&quot;YYYY-MM-DD HH-MM-SS ZON&quot;</FONT></B>);
+  mjrNC_chkError(status);
+
+  <I><FONT COLOR="#B22222">/*  Try to use standard unit names and formats (used by many NetCDF programs). */</FONT></I>
+  status = mjrNC_putAttCStr(ncFileID, tempID, <B><FONT COLOR="#BC8F8F">&quot;units&quot;</FONT></B>, <B><FONT COLOR="#BC8F8F">&quot;celcius&quot;</FONT></B>);
+  mjrNC_chkError(status);
+
+  <I><FONT COLOR="#B22222">/*  Try to use standard unit names and formats (used by many NetCDF programs). */</FONT></I>
+  status = mjrNC_putAttCStr(ncFileID, presID, <B><FONT COLOR="#BC8F8F">&quot;units&quot;</FONT></B>, <B><FONT COLOR="#BC8F8F">&quot;inHG&quot;</FONT></B>);
+  mjrNC_chkError(status);
+
+  <I><FONT COLOR="#B22222">/*  Use this value for labeling plots and the like (used by many NetCDF programs). */</FONT></I>
+  status = mjrNC_putAttCStr(ncFileID, tempID, <B><FONT COLOR="#BC8F8F">&quot;long_name&quot;</FONT></B>, <B><FONT COLOR="#BC8F8F">&quot;Surface Temperature&quot;</FONT></B>);
+  mjrNC_chkError(status);
+
+  <I><FONT COLOR="#B22222">/* Take the file out of &quot;define mode&quot; (we are done with metadata stuff) */</FONT></I>
+  status = nc_enddef(ncFileID);
+  mjrNC_chkError(status);
+
+  <I><FONT COLOR="#B22222">/* Write the pressure and temperature data. */</FONT></I>
+  status = nc_put_var_float(ncFileID, tempID, &amp;temp[0][0][0]);
+  mjrNC_chkError(status);
+  status = nc_put_var_float(ncFileID, presID, &amp;pres[0][0][0]);
+  mjrNC_chkError(status);
+
+  <I><FONT COLOR="#B22222">/* Close the netCDF file. */</FONT></I>
+  status = nc_close(ncFileID);
+  mjrNC_chkError(status);
+
+  <B><FONT COLOR="#A020F0">return</FONT></B> 0;
+
+} <I><FONT COLOR="#B22222">/* end func main */</FONT></I>
+
+
+</PRE>
+<HR \/>
+<ADDRESS>Generated by <A HREF="http://www.iki.fi/~mtr/genscript/">GNU Enscript 1.6.5.2</A>.</ADDRESS>
+</BODY>
+</HTML>

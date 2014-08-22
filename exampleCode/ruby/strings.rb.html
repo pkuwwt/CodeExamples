@@ -1,0 +1,139 @@
+<!DOCTYPE html PUBLIC "-//IETF//DTD HTML 2.0//EN">
+<HTML>
+<HEAD>
+<TITLE>ruby/strings.rb</TITLE>
+</HEAD>
+<BODY BGCOLOR="#FFFFFF" TEXT="#000000" LINK="#1F00FF" ALINK="#FF0000" VLINK="#9900DD">
+<A NAME="top"> </A>
+<A NAME="file1"> </A>
+<H1><a href="strings.rb">strings.rb</a></H1>
+
+<PRE>
+<I><FONT COLOR="#B22222">#!/usr/local/bin/ruby
+</FONT></I>
+<I><FONT COLOR="#B22222">##
+</FONT></I><I><FONT COLOR="#B22222"># @file      strings.rb
+</FONT></I><I><FONT COLOR="#B22222"># @author    Mitch Richling &lt;http://www.mitchr.me/&gt;
+</FONT></I><I><FONT COLOR="#B22222"># @Copyright Copyright 2006 by Mitch Richling.  All rights reserved.
+</FONT></I><I><FONT COLOR="#B22222"># @brief     Simple string manipulation in Ruby.@EOL
+</FONT></I><I><FONT COLOR="#B22222"># @Keywords  ruby example strings
+</FONT></I><I><FONT COLOR="#B22222"># @Std       Ruby 1.8
+</FONT></I><I><FONT COLOR="#B22222">#
+</FONT></I><I><FONT COLOR="#B22222">#            This example is still a work in progress
+</FONT></I><I><FONT COLOR="#B22222">#
+</FONT></I>
+aVar = <B><FONT COLOR="#BC8F8F">'HELLO'</FONT></B>
+
+<I><FONT COLOR="#B22222"># With single quoted strings, you get what you type.
+</FONT></I>puts(<B><FONT COLOR="#BC8F8F">'SINGLE'</FONT></B>, <B><FONT COLOR="#BC8F8F">'  ABCD'</FONT></B>, <B><FONT COLOR="#BC8F8F">'  AB\tCD'</FONT></B>, <B><FONT COLOR="#BC8F8F">'  AB#{1.abs()}CD'</FONT></B>, <B><FONT COLOR="#BC8F8F">'  #{aVar}'</FONT></B>)
+
+<I><FONT COLOR="#B22222"># With double quoted strings, we get substitution (perl-esq)
+</FONT></I>puts(<B><FONT COLOR="#BC8F8F">&quot;DOUBLE&quot;</FONT></B>, <B><FONT COLOR="#BC8F8F">&quot;  ABCD&quot;</FONT></B>, <B><FONT COLOR="#BC8F8F">&quot;  AB\tCD&quot;</FONT></B>, <B><FONT COLOR="#BC8F8F">&quot;  AB#{1.abs()}CD&quot;</FONT></B>, <B><FONT COLOR="#BC8F8F">&quot;  #{aVar}&quot;</FONT></B>)
+
+<I><FONT COLOR="#B22222"># Shell/Perl-like &quot;here&quot; documents
+</FONT></I>bigString = &lt;&lt;END_OF_TEXT
+This is a here
+document
+END_OF_TEXT
+
+<I><FONT COLOR="#B22222"># The &quot;big string&quot;, C-like pattern is to split as in C, but use +
+</FONT></I>anotherBigString = <B><FONT COLOR="#BC8F8F">&quot;A common idiom is to put  &quot;</FONT></B> +
+                   <B><FONT COLOR="#BC8F8F">&quot;big strings together like this&quot;</FONT></B>
+
+<I><FONT COLOR="#B22222"># You can't expect integers and the like to be magically transformed
+</FONT></I><I><FONT COLOR="#B22222"># into strings when the need presents itself like in Perl.  Other
+</FONT></I><I><FONT COLOR="#B22222"># object types must be serialized into strings first.  Most objects
+</FONT></I><I><FONT COLOR="#B22222"># have a method .to_s() that will do the trick:
+</FONT></I>puts(2.to_s() + <B><FONT COLOR="#BC8F8F">&quot; hello&quot;</FONT></B>)
+puts(2.0.to_s() + <B><FONT COLOR="#BC8F8F">&quot; hello&quot;</FONT></B>)
+
+<I><FONT COLOR="#B22222"># Many objects can be transformed back
+</FONT></I>puts(<B><FONT COLOR="#BC8F8F">&quot;2&quot;</FONT></B>.to_i())
+puts(<B><FONT COLOR="#BC8F8F">&quot;2&quot;</FONT></B>.to_f())
+
+<I><FONT COLOR="#B22222"># Some functions operate in place on the calling object, while others
+</FONT></I><I><FONT COLOR="#B22222"># simply return a new value.  Generally, the ones with an exclamation
+</FONT></I><I><FONT COLOR="#B22222"># sign at the end are the ones that operate in place.
+</FONT></I>puts(<B><FONT COLOR="#BC8F8F">&quot;In pace operations:&quot;</FONT></B>)
+aString = <B><FONT COLOR="#BC8F8F">&quot;hello&quot;</FONT></B>
+puts(aString.reverse.inspect)
+puts(aString.inspect)
+aString.reverse!
+puts(aString.inspect)
+
+<I><FONT COLOR="#B22222"># Unlike Perl, Ruby strings may be manipulated like an array of characters:
+</FONT></I>puts(<B><FONT COLOR="#BC8F8F">&quot;String parts:&quot;</FONT></B>)
+puts(<B><FONT COLOR="#BC8F8F">&quot;abcdef&quot;</FONT></B>[1].inspect)                     <I><FONT COLOR="#B22222"># Char 1 as a fixnum -- not a string or char
+</FONT></I>puts(<B><FONT COLOR="#BC8F8F">&quot;abcdef&quot;</FONT></B>[1].chr.inspect)                 <I><FONT COLOR="#B22222"># Char 1 as a char
+</FONT></I>puts(<B><FONT COLOR="#BC8F8F">&quot;abcdef&quot;</FONT></B>[1,1].inspect)                   <I><FONT COLOR="#B22222"># Char 1 as a 1 element long string
+</FONT></I>puts(<B><FONT COLOR="#BC8F8F">&quot;abcdef&quot;</FONT></B>[2..3].inspect)                  <I><FONT COLOR="#B22222"># Char 2 till 3
+</FONT></I>puts(<B><FONT COLOR="#BC8F8F">&quot;abcdef&quot;</FONT></B>.slice(2,3).inspect)             <I><FONT COLOR="#B22222"># Char 2 till 3
+</FONT></I>puts(<B><FONT COLOR="#BC8F8F">&quot;abcdef&quot;</FONT></B>[3..-1].inspect)                 <I><FONT COLOR="#B22222"># Char 3 to the end
+</FONT></I>puts(<B><FONT COLOR="#BC8F8F">&quot;abcdef&quot;</FONT></B>[-1,1].inspect)                  <I><FONT COLOR="#B22222"># Last char
+</FONT></I>puts(<B><FONT COLOR="#BC8F8F">&quot;abcdef&quot;</FONT></B>[-4..-1].inspect)                <I><FONT COLOR="#B22222"># Fourth to last to end
+</FONT></I>puts(<B><FONT COLOR="#BC8F8F">&quot;abcdef&quot;</FONT></B>[-4..2].inspect)                 <I><FONT COLOR="#B22222"># Two chars starting at Fourth to last 
+</FONT></I>puts(<B><FONT COLOR="#BC8F8F">&quot;abcdef&quot;</FONT></B>[2,1].inspect)                   <I><FONT COLOR="#B22222"># Start at 2, get 1 char
+</FONT></I>puts(<B><FONT COLOR="#BC8F8F">&quot;abcdef&quot;</FONT></B>.slice(/b.*e/).inspect)          <I><FONT COLOR="#B22222"># Extract regex match (nil if no match)
+</FONT></I>puts(<B><FONT COLOR="#BC8F8F">&quot;abcdef&quot;</FONT></B>.slice(/(a.c)(d.f)/, 2).inspect) <I><FONT COLOR="#B22222"># Extract second sub-match from regex (nil if no match)
+</FONT></I>
+<I><FONT COLOR="#B22222"># Sub-strings of strings are lvalues
+</FONT></I>puts(<B><FONT COLOR="#BC8F8F">&quot;Assigning to sub-strings&quot;</FONT></B>)
+aString = <B><FONT COLOR="#BC8F8F">&quot;abcdefghij&quot;</FONT></B>
+puts(aString)
+aString[2,3] = <B><FONT COLOR="#BC8F8F">&quot;CDE&quot;</FONT></B>
+puts(aString)
+aString[6..8] = <B><FONT COLOR="#BC8F8F">&quot;GHI&quot;</FONT></B>
+puts(aString)
+
+<I><FONT COLOR="#B22222"># Iterate over bytes with each_byte or lines with each_line
+</FONT></I>puts(<B><FONT COLOR="#BC8F8F">&quot;String iteration&quot;</FONT></B>)
+<B><FONT COLOR="#BC8F8F">&quot;abcd&quot;</FONT></B>.each_byte { |c|
+  print(<B><FONT COLOR="#BC8F8F">&quot; &gt;#{c}&lt; &quot;</FONT></B>)
+}
+puts()
+
+<I><FONT COLOR="#B22222"># split works like Perl, but scan shows ruby goodness.  Note the
+</FONT></I><I><FONT COLOR="#B22222"># pattern for scan is the thing we WANT, not the thing that separates
+</FONT></I><I><FONT COLOR="#B22222"># the things we want.  Of course you can do split().each too!  This
+</FONT></I><I><FONT COLOR="#B22222"># makes scan much like the tokenize APIs in other languages.
+</FONT></I>puts(<B><FONT COLOR="#BC8F8F">&quot;String tokenize&quot;</FONT></B>)
+<B><FONT COLOR="#BC8F8F">&quot;a,b,c,d&quot;</FONT></B>.scan(<B><FONT COLOR="#BC8F8F">'[^,]'</FONT></B>) { |f|
+  print(<B><FONT COLOR="#BC8F8F">&quot; &gt;#{f}&lt; &quot;</FONT></B>)
+}
+
+<I><FONT COLOR="#B22222"># Ruby has an inherent ordering on characters, and that ordering leads
+</FONT></I><I><FONT COLOR="#B22222"># to the obvious lexicographical ordering for strings.  Ruby supports
+</FONT></I><I><FONT COLOR="#B22222"># order arithmetic (increment/decrement) based upon this ordering as
+</FONT></I><I><FONT COLOR="#B22222"># well as iteration.  Very handy for cryptographic applications.
+</FONT></I>puts(<B><FONT COLOR="#BC8F8F">&quot;String Arithmetic&quot;</FONT></B>)
+puts(<B><FONT COLOR="#BC8F8F">&quot;aaaa&quot;</FONT></B>.<B><FONT COLOR="#A020F0">next</FONT></B>)
+puts(<B><FONT COLOR="#BC8F8F">&quot;aaaa&quot;</FONT></B>.succ)
+<B><FONT COLOR="#BC8F8F">&quot;aaaa&quot;</FONT></B>.upto(<B><FONT COLOR="#BC8F8F">&quot;aaad&quot;</FONT></B>) { |s|
+  print(<B><FONT COLOR="#BC8F8F">&quot; #{s} &quot;</FONT></B>)
+}
+puts
+
+<I><FONT COLOR="#B22222"># Ruby has a ton of string manipulation tools.  Some of them include:
+</FONT></I><I><FONT COLOR="#B22222">#
+</FONT></I><I><FONT COLOR="#B22222">#   Case conversion: capitalize, capitalize!, downcase, downcase!, swapcase, swapcase!, upcase, upcase!
+</FONT></I><I><FONT COLOR="#B22222">#   Padding: center, ljust, rjust
+</FONT></I><I><FONT COLOR="#B22222">#   Remove leading/trailing whitespace: chomp, chomp!, lstrip, lstrip!, rstrip, rstrip!, strip, strip!
+</FONT></I><I><FONT COLOR="#B22222">#   Substring search: count, index, rindex, include?
+</FONT></I><I><FONT COLOR="#B22222">#   Extract parts: slice, slice!, []
+</FONT></I><I><FONT COLOR="#B22222">#   Search &amp; replace: sub, sub!, gsub, gsub! 
+</FONT></I><I><FONT COLOR="#B22222">#   Comparison: casecmp, &lt;=&gt;, eql?
+</FONT></I><I><FONT COLOR="#B22222">#   tr-like: delete, delete!, tr, tr!, tr_s, tr_s!, squeeze, squeeze!
+</FONT></I><I><FONT COLOR="#B22222">#   Concatenation: concat, +, &lt;&lt;
+</FONT></I><I><FONT COLOR="#B22222">#   String reversal: reverse, reverse!
+</FONT></I><I><FONT COLOR="#B22222">#   Length: length
+</FONT></I><I><FONT COLOR="#B22222">#   Conversion to other types: to_f, to_i, to_s, to_str, to_sym, hex, oct
+</FONT></I><I><FONT COLOR="#B22222">#   String arithmetic &amp; arithmetic iteration: upto, next, next!, succ, succ!
+</FONT></I><I><FONT COLOR="#B22222">#   iteration: each (same as line_line), each_byte, each_char, each_line
+</FONT></I><I><FONT COLOR="#B22222">#   Tokenize/split: scan, split, unpack
+</FONT></I><I><FONT COLOR="#B22222">#   Boolean tests: empty?, is_binary_data?
+</FONT></I><I><FONT COLOR="#B22222">#   Other: insert
+</FONT></I></PRE>
+<HR \/>
+<ADDRESS>Generated by <A HREF="http://www.iki.fi/~mtr/genscript/">GNU Enscript 1.6.5.2</A>.</ADDRESS>
+</BODY>
+</HTML>

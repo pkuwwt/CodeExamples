@@ -1,0 +1,107 @@
+<?xml version="1.0"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head id="tmplKeepHead">
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <meta id="tmplMetaContent" name="Description" content="Mitch Richling: Random Number Example Programs" />
+    
+    <link href="../CSS/main4.css" rel="stylesheet" type="text/css" />
+    
+    <title id="tmplPageTitle">Mitch Richling: Random Number Example Programs</title>
+  </head>
+  <body id="tmplKeepBody">
+    <div class="snippet" id="topLink"><body><div class="snippet" id="topLink">
+     <a id="topHomeLink" href="http://www.mitchr.me/" title="Jump to my homepage"><img alt="Link: Mitch Richling's Home Page" src="../pics/mr_blue.gif" /></a>
+</div></body></div>
+    <div class="snippet" id="topCopy"><body><div class="snippet" id="topCopy">
+  <p id="topCopyRight">&#xA9;&#xA0;2009&#xA0;Mitch&#xA0;Richling</p>
+</div></body></div>
+    <h1 id="tmplDocTitle">Random Number Example Programs</h1>
+    <div class="snippet" id="BrowserGrump"><body><div class="snippet" id="BrowserGrump">
+      <!--[if lt IE 7]><br><br><br><br>
+      <p>WARNING: Your copy of Internet  Explorer is very old - from before
+      2001!!!  It is by far too old to properly work with this site, and
+      many others all across the internet.  For a dramatically better
+      browsing experience you should
+      <a href="../browser.html">upgrade to a more modern browser</a>.
+      </p><br><br><![endif]-->
+      
+      <!--[if IE 7]><br /><br /><br /><br />
+      <p>WARNING: Your copy of Internet Explorer (version 7 from 2006)
+      is not compatible with the many web standards in common
+      use today. While you will be able to read much of the content on 
+      this site, it may be very strangely formatted.  For a better
+      browsing experience you should
+      <a href="../browser.html">upgrade to a more modern browser</a>.
+      </p><br /><br /><![endif]-->
+    </div></body></div>
+    <div class="minMar">
+      <div class="threeBearWidthAndCenter">
+        <div id="tmplDocContent">
+      <div class="exCodeList">
+        <p>Good random number generation is easy with all of the tools available to the modern programmer.  Here you will find a
+          number of examples showing how to get random numbers from various sources.  The makefile is
+          <a href="random/makefile.html">here</a>.</p>
+        <h2>Random Topics. <code>:)</code></h2>
+        <dl>
+          <dt><a href="random/lcgPermPowTwo.cpp.html">lcgPermPowTwo.cpp</a></dt>
+          <dd>One way to use an LCG to permute a string.</dd>
+          <dt><a href="random/minStdRandGenC.c.html">minStdRandGenC.c</a>
+            <a href="random/minStdRandGenF.f.html">minStdRandGenF.f</a><br />
+            <a href="random/minStdRandGenPL.pl.html">minStdRandGenPL.pl</a>
+            <a href="random/minStdRandGenPY.py.html">minStdRandGenPY.py</a>
+            <a href="random/minStdRandGenRB.rb.html">minStdRandGenRB.rb</a>
+            <a href="random/minStdRandGenCL.lisp.html">minStdRandGenCL.clisp</a></dt>          <dd>32-bit overflow avoiding implementation of the minimal standard random number generator.</dd>
+          <dt><a href="random/smplMinStdRandGenRB.rb.html">smplMinStdRandGenRB.rb</a>
+            <a href="random/smplMinStdRandGenCL.lisp.html">smplMinStdRandGenCL.clisp</a></dt>  <dd>Arbitrary precession arithmetic implementation of the minimal standard random number generator via native language support.</dd>
+          <dt><a href="GMP/gmpLCG.c.html">gmpLCG.c</a></dt>                                    <dd>Arbitrary precession arithmetic implementation of the minimal standard random number generator via <a href="http://www.mitchr.me../../SS/softwareDevelopment/index.html#pkgGMP">GMP</a></dd>
+          <dt><a href="random/randFileEx.c.html">randFileEx.c</a>
+            <a href="random/randFileC.c.html">randFileC.c</a>
+            <a href="random/randFileC.h.html">randFileC.h</a></dt>                             <dd>How use files full of random bytes as a random number generator. High quality files are available on the web and on CD-ROM.</dd>
+          <dt><a href="GMP/randPi.c.html">randPi.c</a></dt>                                    <dd>Approximate the value of Pi with random numbers (uses the <a href="GMP.html">GMP</a>)</dd>
+        </dl>
+        <h2>Low Quality Generators (UNIX based)</h2>
+        <dl>
+          <dt><a href="random/bsdRandomEx.c.html">bsdRandomEx.c</a></dt>                      <dd>How to make use of the BSD random(), srandom(), and srandomdev() functions.</dd>
+          <dt><a href="random/rand48Ex.c.html">rand48Ex.c</a></dt>                            <dd>How to make use of the rand48 group of functions found on many UNIX platforms</dd>
+        </dl>
+        <h2>Other Low Quality Generators</h2>
+        <dl>
+          <dt><a href="GMP/gmpRandEx.c.html">gmpRandEx.c</a></dt>                            <dd>Simple use of the random functions in the <a href="GMP.html">GMP</a>.</dd>
+        </dl>
+        <h2>Low Quality Standard Language Generators</h2>
+        <dl>
+          <dt><a href="random/f90Rand.f90.html">f90Rand.f90</a></dt>                         <dd>How to use RANDOM_SEED() and RANDOM_NUMBER()in standard Fortran 90</dd>
+          <dt><a href="random/isocRandEx.c.html">isocRandEx.c</a></dt>                       <dd>How use the srand() and rand() functions specified in ISO C</dd>
+          <dt><a href="random/clispRandEx.lisp.html">clispRandEx.lisp</a></dt>               <dd>How to make use of the Common Lisp random number generator.</dd>
+        </dl>
+        <h2>RANLIB (A Trusted Simulation Quality Generator)</h2>
+        <dl>
+          <dt><a href="random/ranlibExF.f90.html">ranlibExF.f90</a>
+              <a href="random/ranlibM.f90.html">ranlibM.f90</a></dt>                         <dd>Relatively complete example illustrating the Fortran version of RANLIB and a Fortran 90 module specifying some interfaces to RANLIB.</dd>
+       <dt><a href="random/ranlibExFC.c.html">ranlibExFC.c</a>
+            <a href="random/ranlibF.h.html">ranlibF.h</a>
+            <a href="random/ranlibF.c.html">ranlibF.c</a></dt>                               <dd>C version of <a href="random/ranlibExF.f90.html">ranlibExF.f90</a> using simple C wrappers for the Fortran library.</dd>
+          <dt><a href="random/ranlibExC.c.html">ranlibExC.c</a></dt>                         <dd>Short example showing how to use the C version of RANLIB.</dd>
+        </dl>
+        <h2>Simulation Quality Generators</h2>
+        <dl>
+          <dt><a href="GSL/gslRand.c.html">glsRand.c</a></dt>                                <dd>Simple example illustrating how to use the GSL random number generators.</dd>
+          <dt><a href="boost/boostRandEx.cpp.html">boostRandEx.cpp</a></dt>                  <dd>Minimal example of the <a href="boost.html">boost</a> random number generator.  The make file is <a href="boost/makefile.html">here</a>.</dd>
+          <dt><a href="random/prngEx.c.html">prngEx.c</a></dt>                               <dd>Example showing how to use PRNG</dd>
+        </dl>
+        <h2>Cryptographic Generators</h2>
+        <dl>
+          <dt><a href="random/opensslPRandEx.c.html">opensslPRandEX.c</a></dt>               <dd>Trivial use of OpenSSL to generate random numbers.</dd>
+        </dl>
+      </div>
+    </div>
+      </div>
+    </div>
+    <div class="snippet" id="botCopy"><body><div class="snippet" id="botCopy">
+    <div id="botPadAndCopyRight">
+      &#xA9;&#xA0;2009&#xA0;Mitch&#xA0;Richling
+    </div>
+</div></body></div>
+  </body>
+</html>

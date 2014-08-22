@@ -1,0 +1,74 @@
+<!DOCTYPE html PUBLIC "-//IETF//DTD HTML 2.0//EN">
+<HTML>
+<HEAD>
+<TITLE>cpp/thread03_mutex.cpp</TITLE>
+</HEAD>
+<BODY BGCOLOR="#FFFFFF" TEXT="#000000" LINK="#1F00FF" ALINK="#FF0000" VLINK="#9900DD">
+<A NAME="top"> </A>
+<A NAME="file1"> </A>
+<H1><a href="thread03_mutex.cpp">thread03_mutex.cpp</a></H1>
+
+<PRE>
+<I><FONT COLOR="#B22222">// -*- Mode:C++; Coding:us-ascii-unix; fill-column:132 -*-
+</FONT></I><I><FONT COLOR="#B22222">/**********************************************************************************************************************************/</FONT></I>
+<I><FONT COLOR="#B22222">/**
+   @file      thread03_mutex.cpp
+   @author    Mitch Richling &lt;http://www.mitchr.me&gt;
+   @Copyright Copyright 2012 by Mitch Richling.  All rights reserved.
+   @brief     Demo C++11 mutexes with old school-style syntax.@EOL
+   @Keywords  none
+   @Std       C++11
+***********************************************************************************************************************************/</FONT></I>
+
+<I><FONT COLOR="#B22222">////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+</FONT></I>#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;iostream&gt;</FONT></B>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;thread&gt;</FONT></B>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;mutex&gt;</FONT></B>
+ 
+<I><FONT COLOR="#B22222">////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+</FONT></I><I><FONT COLOR="#B22222">// This is a mutex that will protect std::cout (STDOUT in C-lingo).  In C++11 we are only guaranteed that writes to cout will be
+</FONT></I><I><FONT COLOR="#B22222">// &quot;safe&quot; at a byte level, not that entire writes will be atomic.  So we need to protect STDOUT if we want to guarantee that our
+</FONT></I><I><FONT COLOR="#B22222">// output will be human readable.
+</FONT></I>std::mutex stdout_mutex;
+
+<I><FONT COLOR="#B22222">////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+</FONT></I><I><FONT COLOR="#B22222">// This little function will be called by a thread. It locks the stdout_mutex using explicit lock/unlock code very much like the raw
+</FONT></I><I><FONT COLOR="#B22222">// POSIX APIs.  This technique is very C-like, but workerThread2 uses a more C++ methodology.
+</FONT></I><B><FONT COLOR="#228B22">void</FONT></B> <B><FONT COLOR="#0000FF">workerThread1</FONT></B>() {
+  stdout_mutex.lock();
+  <B><FONT COLOR="#5F9EA0">std</FONT></B>::cout &lt;&lt; <B><FONT COLOR="#BC8F8F">&quot;Hello from thread (1) &quot;</FONT></B> &lt;&lt; std::this_thread::get_id() &lt;&lt; <B><FONT COLOR="#BC8F8F">&quot;)&quot;</FONT></B> &lt;&lt; std::endl;
+  stdout_mutex.unlock();
+}
+
+<I><FONT COLOR="#B22222">////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+</FONT></I><I><FONT COLOR="#B22222">// This little function will be called by a thread.  It works just like workerThread1, but uses a RAII approach that seems more
+</FONT></I><I><FONT COLOR="#B22222">// natural for a C++ programmer.
+</FONT></I><B><FONT COLOR="#228B22">void</FONT></B> <B><FONT COLOR="#0000FF">workerThread2</FONT></B>() {
+  <B><FONT COLOR="#5F9EA0">std</FONT></B>::lock_guard&lt;std::mutex&gt; stdout_guard(stdout_mutex);
+  <B><FONT COLOR="#5F9EA0">std</FONT></B>::cout &lt;&lt; <B><FONT COLOR="#BC8F8F">&quot;Hello from thread (2) &quot;</FONT></B> &lt;&lt; std::this_thread::get_id() &lt;&lt; <B><FONT COLOR="#BC8F8F">&quot;)&quot;</FONT></B> &lt;&lt; std::endl;
+}
+
+<I><FONT COLOR="#B22222">////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+</FONT></I><B><FONT COLOR="#228B22">int</FONT></B> <B><FONT COLOR="#0000FF">main</FONT></B>()  {
+
+  <I><FONT COLOR="#B22222">// Construct and launch our threads
+</FONT></I>  <B><FONT COLOR="#5F9EA0">std</FONT></B>::thread thread1(workerThread1);
+  <B><FONT COLOR="#5F9EA0">std</FONT></B>::thread thread2(workerThread2);
+
+  { <I><FONT COLOR="#B22222">// We need to lock here because we potentially have three threads in flight that want to write to stdout -- workerThread1,
+</FONT></I>    <I><FONT COLOR="#B22222">// workerThread2, and main.
+</FONT></I>    <B><FONT COLOR="#5F9EA0">std</FONT></B>::lock_guard&lt;std::mutex&gt; stdout_guard(stdout_mutex);
+    <B><FONT COLOR="#5F9EA0">std</FONT></B>::cout &lt;&lt; <B><FONT COLOR="#BC8F8F">&quot;Waiting... &quot;</FONT></B> &lt;&lt; std::endl;
+  }
+
+  <I><FONT COLOR="#B22222">// Join to each thread so that main will wait for them all to finish
+</FONT></I>  thread1.join();
+  thread2.join();
+
+  <B><FONT COLOR="#5F9EA0">std</FONT></B>::cout &lt;&lt; <B><FONT COLOR="#BC8F8F">&quot;DONE!&quot;</FONT></B> &lt;&lt; std::endl;
+} <I><FONT COLOR="#B22222">// end func main
+</FONT></I></PRE>
+<HR \/>
+<ADDRESS>Generated by <A HREF="http://www.iki.fi/~mtr/genscript/">GNU Enscript 1.6.5.90</A>.</ADDRESS>
+</BODY>
+</HTML>

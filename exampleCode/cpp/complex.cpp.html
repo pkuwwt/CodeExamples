@@ -1,0 +1,58 @@
+<!DOCTYPE html PUBLIC "-//IETF//DTD HTML 2.0//EN">
+<HTML>
+<HEAD>
+<TITLE>cpp/complex.cpp</TITLE>
+</HEAD>
+<BODY BGCOLOR="#FFFFFF" TEXT="#000000" LINK="#1F00FF" ALINK="#FF0000" VLINK="#9900DD">
+<A NAME="top"> </A>
+<A NAME="file1"> </A>
+<H1><a href="complex.cpp">complex.cpp</a></H1>
+
+<PRE>
+<I><FONT COLOR="#B22222">// -*- Mode:C++; Coding:us-ascii-unix; fill-column:132 -*-
+</FONT></I><I><FONT COLOR="#B22222">/**********************************************************************************************************************************/</FONT></I>
+<I><FONT COLOR="#B22222">/**
+   @file      complex.cpp
+   @author    Mitch Richling &lt;http://www.mitchr.me&gt;
+   @Copyright Copyright 2000 by Mitch Richling.  All rights reserved.
+   @brief     Complex number types in STL. @EOL
+   @Keywords  complex stl math
+   @Std       C++98
+
+   One must be careful with this type as some standard library implementations have not paid much attention to performance for
+   complex numbers -- this isn't FORTRAN after all...
+              
+***********************************************************************************************************************************/</FONT></I>
+
+<I><FONT COLOR="#B22222">////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+</FONT></I>#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;iostream&gt;</FONT></B>                <I><FONT COLOR="#B22222">/* C++ iostream            C++98/11 */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;complex&gt;</FONT></B>                 <I><FONT COLOR="#B22222">/* STL algorithm           C++98/11 */</FONT></I>
+
+<I><FONT COLOR="#B22222">////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+</FONT></I><B><FONT COLOR="#228B22">int</FONT></B> <B><FONT COLOR="#0000FF">main</FONT></B>(<B><FONT COLOR="#228B22">void</FONT></B>) {
+
+  <B><FONT COLOR="#5F9EA0">std</FONT></B>::<B><FONT COLOR="#228B22">complex</FONT></B>&lt;<B><FONT COLOR="#228B22">float</FONT></B>&gt; c(1,2);
+  <B><FONT COLOR="#5F9EA0">std</FONT></B>::<B><FONT COLOR="#228B22">complex</FONT></B>&lt;<B><FONT COLOR="#228B22">float</FONT></B>&gt; zero = std::<B><FONT COLOR="#228B22">complex</FONT></B>&lt;<B><FONT COLOR="#228B22">float</FONT></B>&gt;(0,0);
+
+   <B><FONT COLOR="#5F9EA0">std</FONT></B>::cout &lt;&lt; <B><FONT COLOR="#BC8F8F">&quot;zero                    :: &quot;</FONT></B> &lt;&lt;  zero                    &lt;&lt; std::endl;
+   <B><FONT COLOR="#5F9EA0">std</FONT></B>::cout &lt;&lt; <B><FONT COLOR="#BC8F8F">&quot;c                       :: &quot;</FONT></B> &lt;&lt;  c                       &lt;&lt; std::endl;
+   <B><FONT COLOR="#5F9EA0">std</FONT></B>::cout &lt;&lt; <B><FONT COLOR="#BC8F8F">&quot;std::sin(c)             :: &quot;</FONT></B> &lt;&lt;  std::sin(c)             &lt;&lt; std::endl; 
+   <B><FONT COLOR="#5F9EA0">std</FONT></B>::cout &lt;&lt; <B><FONT COLOR="#BC8F8F">&quot;std::sinh(c)            :: &quot;</FONT></B> &lt;&lt;  std::sinh(c)            &lt;&lt; std::endl; 
+   <B><FONT COLOR="#5F9EA0">std</FONT></B>::cout &lt;&lt; <B><FONT COLOR="#BC8F8F">&quot;std::cos(c)             :: &quot;</FONT></B> &lt;&lt;  std::cos(c)             &lt;&lt; std::endl; 
+   <B><FONT COLOR="#5F9EA0">std</FONT></B>::cout &lt;&lt; <B><FONT COLOR="#BC8F8F">&quot;std::cosh(c)            :: &quot;</FONT></B> &lt;&lt;  std::cosh(c)            &lt;&lt; std::endl; 
+   <B><FONT COLOR="#5F9EA0">std</FONT></B>::cout &lt;&lt; <B><FONT COLOR="#BC8F8F">&quot;std::tan(c)             :: &quot;</FONT></B> &lt;&lt;  std::tan(c)             &lt;&lt; std::endl; <I><FONT COLOR="#B22222">// C++11 adds: acos, asin, &amp; atan
+</FONT></I>   <B><FONT COLOR="#5F9EA0">std</FONT></B>::cout &lt;&lt; <B><FONT COLOR="#BC8F8F">&quot;std::tanh(c)            :: &quot;</FONT></B> &lt;&lt;  std::tanh(c)            &lt;&lt; std::endl; <I><FONT COLOR="#B22222">// C++11 adds: acosh, asinh, &amp; atanh
+</FONT></I>   <B><FONT COLOR="#5F9EA0">std</FONT></B>::cout &lt;&lt; <B><FONT COLOR="#BC8F8F">&quot;std::sqrt(c)            :: &quot;</FONT></B> &lt;&lt;  std::sqrt(c)            &lt;&lt; std::endl;
+   <B><FONT COLOR="#5F9EA0">std</FONT></B>::cout &lt;&lt; <B><FONT COLOR="#BC8F8F">&quot;(c*c)                   :: &quot;</FONT></B> &lt;&lt;  (c*c)                   &lt;&lt; std::endl;
+   <B><FONT COLOR="#5F9EA0">std</FONT></B>::cout &lt;&lt; <B><FONT COLOR="#BC8F8F">&quot;std::abs(c)             :: &quot;</FONT></B> &lt;&lt;  std::abs(c)             &lt;&lt; std::endl;
+   <B><FONT COLOR="#5F9EA0">std</FONT></B>::cout &lt;&lt; <B><FONT COLOR="#BC8F8F">&quot;std::pow(std::abs(c),2) :: &quot;</FONT></B> &lt;&lt;  std::pow(std::abs(c),2) &lt;&lt; std::endl;
+   <B><FONT COLOR="#5F9EA0">std</FONT></B>::cout &lt;&lt; <B><FONT COLOR="#BC8F8F">&quot;(c*std::conj(c))        :: &quot;</FONT></B> &lt;&lt;  (c*std::conj(c))        &lt;&lt; std::endl;
+   <B><FONT COLOR="#5F9EA0">std</FONT></B>::cout &lt;&lt; <B><FONT COLOR="#BC8F8F">&quot;std::real(c)            :: &quot;</FONT></B> &lt;&lt;  std::real(c)            &lt;&lt; std::endl;
+   <B><FONT COLOR="#5F9EA0">std</FONT></B>::cout &lt;&lt; <B><FONT COLOR="#BC8F8F">&quot;std::imag(c)            :: &quot;</FONT></B> &lt;&lt;  std::imag(c)            &lt;&lt; std::endl;
+
+} <I><FONT COLOR="#B22222">/* end function main */</FONT></I>
+</PRE>
+<HR \/>
+<ADDRESS>Generated by <A HREF="http://www.iki.fi/~mtr/genscript/">GNU Enscript 1.6.5.90</A>.</ADDRESS>
+</BODY>
+</HTML>

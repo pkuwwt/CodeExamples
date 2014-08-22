@@ -1,0 +1,120 @@
+<!DOCTYPE html PUBLIC "-//IETF//DTD HTML 2.0//EN">
+<HTML>
+<HEAD>
+<TITLE>glut/tformColor.c</TITLE>
+</HEAD>
+<BODY BGCOLOR="#FFFFFF" TEXT="#000000" LINK="#1F00FF" ALINK="#FF0000" VLINK="#9900DD">
+<A NAME="top"> </A>
+<A NAME="file1"> </A>
+<H1><a href="tformColor.c">tformColor.c</a></H1>
+
+<PRE>
+<I><FONT COLOR="#B22222">/* -*- Mode:C; Coding:us-ascii-unix; fill-column:132 -*- */</FONT></I>
+<I><FONT COLOR="#B22222">/**********************************************************************************************************************************/</FONT></I>
+<I><FONT COLOR="#B22222">/**
+   @file      tformColor.c
+   @author    Mitch Richling &lt;http://www.mitchr.me/&gt;
+   @Copyright Copyright 1997 by Mitch Richling.  All rights reserved.
+   @brief     Demonstrate how colors mix in openGL.  @EOL
+   @Keywords  color mix opengl glut
+   @Std       C99
+***********************************************************************************************************************************/</FONT></I>
+
+<I><FONT COLOR="#B22222">/**********************************************************************************************************************************/</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;math.h&gt;</FONT></B>               <I><FONT COLOR="#B22222">/* Math stuff      ISOC  */</FONT></I>
+
+<I><FONT COLOR="#B22222">/**********************************************************************************************************************************/</FONT></I>
+<I><FONT COLOR="#B22222">/* Apple puts GLUT into a framework named GLUT, while the rest of the world just sticks GLUT into the GL include directory... */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">ifdef</FONT></B> <FONT COLOR="#B8860B">__APPLE__</FONT>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;GLUT/glut.h&gt;</FONT></B>          <I><FONT COLOR="#B22222">/* Open GL Util    APPLE */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">else</FONT></B>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;GL/glut.h&gt;</FONT></B>            <I><FONT COLOR="#B22222">/* Open GL Util    OpenGL*/</FONT></I>
+#<B><FONT COLOR="#5F9EA0">endif</FONT></B>
+
+<I><FONT COLOR="#B22222">/**********************************************************************************************************************************/</FONT></I>
+<B><FONT COLOR="#228B22">static</FONT></B> <B><FONT COLOR="#228B22">float</FONT></B> angle = 0;
+<B><FONT COLOR="#228B22">static</FONT></B> <B><FONT COLOR="#228B22">float</FONT></B> angleDelta = 0.3;
+<B><FONT COLOR="#228B22">static</FONT></B> <B><FONT COLOR="#228B22">float</FONT></B> eangle = 0.0;
+<B><FONT COLOR="#228B22">static</FONT></B> <B><FONT COLOR="#228B22">float</FONT></B> eangleDelta = 0.1;
+
+<I><FONT COLOR="#B22222">/**********************************************************************************************************************************/</FONT></I>
+<B><FONT COLOR="#228B22">void</FONT></B> <B><FONT COLOR="#0000FF">displayCall</FONT></B>() {
+  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+  glEnable(GL_DEPTH_TEST);
+
+  glMatrixMode(GL_PROJECTION);
+  glLoadIdentity();
+  glOrtho(-2.0, 2.0, -2.0, 2.0, -2.0, 5.0);
+
+  glMatrixMode(GL_MODELVIEW);
+  glLoadIdentity();
+  gluLookAt(2, 2, 2, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0);
+  glRotatef(eangle, 0, 1, 0);
+  glRotatef(angle, 0, 0, 1);
+
+  glBegin(GL_POLYGON);
+  glColor3f(fabs(sin(angle/60)), fabs(sin(angle/60)), fabs(cos(angle/60)));
+  glVertex2f(1.0, 1.0);
+  glColor3f(fabs(sin(angle/60)), fabs(cos(angle/60)), fabs(sin(angle/60)));
+  glVertex2f(-1.0, 1.0);
+  glColor3f(fabs(cos(angle/60)), fabs(sin(angle/60)), fabs(sin(angle/60)));
+  glVertex2f(-1.0, -1.0);
+  glColor3f(fabs(cos(angle/60)), fabs(sin(angle/60)), fabs(cos(angle/60)));
+  glVertex2f(1.0, -1.0);
+  glEnd();
+
+  glMatrixMode(GL_MODELVIEW);
+  glLoadIdentity();
+  gluLookAt(2, 2, 2, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0);
+  glRotatef(eangle, 0, 1, 0);
+
+  glColor3f(1,0,0);
+  glutSolidCube(0.5);
+  glColor3f(0,0,0);
+  glutWireCube(0.5);
+
+  glutSwapBuffers();
+} <I><FONT COLOR="#B22222">/* end func displayCall */</FONT></I>
+
+<I><FONT COLOR="#B22222">/**********************************************************************************************************************************/</FONT></I>
+<B><FONT COLOR="#228B22">void</FONT></B> <B><FONT COLOR="#0000FF">idleCall</FONT></B>() {
+  eangle += eangleDelta;
+  <B><FONT COLOR="#A020F0">if</FONT></B>(eangle &gt;= 360.0)
+    eangle -= 360.0;
+  angle += angleDelta;
+  <B><FONT COLOR="#A020F0">if</FONT></B>(angle &gt;= 360.0)
+    angle -= 360.0;
+  <B><FONT COLOR="#A020F0">if</FONT></B>(angle &lt;= 0)
+    angle += 360.0;
+  glutPostRedisplay();
+} <I><FONT COLOR="#B22222">/* end func idleCall */</FONT></I>
+
+<I><FONT COLOR="#B22222">/**********************************************************************************************************************************/</FONT></I>
+<B><FONT COLOR="#228B22">void</FONT></B> <B><FONT COLOR="#0000FF">processKeyCall</FONT></B>(<B><FONT COLOR="#228B22">unsigned</FONT></B> <B><FONT COLOR="#228B22">char</FONT></B> key, <B><FONT COLOR="#228B22">int</FONT></B> x, <B><FONT COLOR="#228B22">int</FONT></B> y) {
+  angleDelta = -angleDelta;
+} <I><FONT COLOR="#B22222">/* end func processKeyCall */</FONT></I>
+
+<I><FONT COLOR="#B22222">/**********************************************************************************************************************************/</FONT></I>
+<B><FONT COLOR="#228B22">void</FONT></B> <B><FONT COLOR="#0000FF">reshapeCall</FONT></B>(<B><FONT COLOR="#228B22">int</FONT></B> width, <B><FONT COLOR="#228B22">int</FONT></B> height) {
+} <I><FONT COLOR="#B22222">/* end func reshapeCall */</FONT></I>
+
+<I><FONT COLOR="#B22222">/**********************************************************************************************************************************/</FONT></I>
+<B><FONT COLOR="#228B22">int</FONT></B> <B><FONT COLOR="#0000FF">main</FONT></B>(<B><FONT COLOR="#228B22">int</FONT></B> argc, <B><FONT COLOR="#228B22">char</FONT></B> *argv[]) {
+  glutInit(&amp;argc, argv);
+  glutInitDisplayMode(GLUT_RGB | GLUT_DOUBLE | GLUT_DEPTH);
+  glutInitWindowSize(500, 500);
+  glutInitWindowPosition(300, 200);
+  glutCreateWindow(<B><FONT COLOR="#BC8F8F">&quot;Demo Prog&quot;</FONT></B>);
+  glutDisplayFunc(displayCall);
+  glutReshapeFunc(reshapeCall);
+  glutIdleFunc(idleCall);
+  glutKeyboardFunc(processKeyCall);
+  glutMainLoop();
+  <I><FONT COLOR="#B22222">/*return NSApplicationMain(argc, argv); */</FONT></I>
+  <B><FONT COLOR="#A020F0">return</FONT></B> 0;
+} <I><FONT COLOR="#B22222">/* end func main */</FONT></I>
+</PRE>
+<HR \/>
+<ADDRESS>Generated by <A HREF="http://www.iki.fi/~mtr/genscript/">GNU Enscript 1.6.5.90</A>.</ADDRESS>
+</BODY>
+</HTML>

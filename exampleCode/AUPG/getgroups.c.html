@@ -1,0 +1,93 @@
+<!DOCTYPE html PUBLIC "-//IETF//DTD HTML 2.0//EN">
+<HTML>
+<HEAD>
+<TITLE>AUPG/getgroups.c</TITLE>
+</HEAD>
+<BODY BGCOLOR="#FFFFFF" TEXT="#000000" LINK="#1F00FF" ALINK="#FF0000" VLINK="#9900DD">
+<A NAME="top"> </A>
+<A NAME="file1"> </A>
+<H1><a href="getgroups.c">getgroups.c</a></H1>
+
+<PRE>
+<I><FONT COLOR="#B22222">/* -*- Mode:C; Coding:us-ascii-unix; fill-column:132 -*- */</FONT></I>
+<I><FONT COLOR="#B22222">/**********************************************************************************************************************************/</FONT></I>
+<I><FONT COLOR="#B22222">/**
+   @file      getgroups.c
+   @author    Mitch Richling &lt;http://www.mitchr.me/&gt;
+   @Copyright Copyright 1996 by Mitch Richling.  All rights reserved.
+   @brief     UNIX group queries@EOL
+   @Keywords  UNIX group user gid getgroup getgrgid
+   @Std       ISOC BSD4.3 POSIX.1
+   @Tested    
+              - Solaris 2.8
+              - MacOS X.2
+              - Linux (RH 7.3)
+
+   This is an example program intended to illustrate how to use getgroups to query the current user's group set.  The system call
+   getgrgid is also demonstrated.
+***********************************************************************************************************************************/</FONT></I>
+
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;sys/types.h&gt;</FONT></B>          <I><FONT COLOR="#B22222">/* UNIX types      POSIX */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;grp.h&gt;</FONT></B>                <I><FONT COLOR="#B22222">/* UNIX groups     POSIX */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;stdlib.h&gt;</FONT></B>             <I><FONT COLOR="#B22222">/* Standard Lib    C89   */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;unistd.h&gt;</FONT></B>             <I><FONT COLOR="#B22222">/* UNIX std stf    POSIX */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;stdio.h&gt;</FONT></B>              <I><FONT COLOR="#B22222">/* I/O lib         C89   */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;sys/param.h&gt;</FONT></B>          <I><FONT COLOR="#B22222">/* UNIX Params     ????  */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;errno.h&gt;</FONT></B>              <I><FONT COLOR="#B22222">/* error stf       POSIX */</FONT></I>
+
+<I><FONT COLOR="#B22222">/**********************************************************************************************************************************/</FONT></I>
+<B><FONT COLOR="#228B22">int</FONT></B> <B><FONT COLOR="#0000FF">main</FONT></B>(<B><FONT COLOR="#228B22">int</FONT></B> argc, <B><FONT COLOR="#228B22">char</FONT></B> *argv[]) {
+  <B><FONT COLOR="#228B22">int</FONT></B> numGroups, i;
+  <B><FONT COLOR="#228B22">long</FONT></B> ngroups_max; 
+  <I><FONT COLOR="#B22222">/* gid_t gidList[NGROUPS_MAX]; */</FONT></I>
+  gid_t *gidList;
+  <B><FONT COLOR="#228B22">struct</FONT></B> group *grEnt;
+
+  ngroups_max = sysconf(_SC_NGROUPS_MAX);
+  gidList = (gid_t *)malloc(<B><FONT COLOR="#A020F0">sizeof</FONT></B>(gid_t)*ngroups_max);
+
+  <I><FONT COLOR="#B22222">/* How to figure out how many groups the current user is in. */</FONT></I>
+  <B><FONT COLOR="#A020F0">if</FONT></B>( (numGroups = getgroups(0, NULL)) &lt; 0) {
+    printf(<B><FONT COLOR="#BC8F8F">&quot;ERROR: getgroups() failure.\n&quot;</FONT></B>);
+    exit(1);
+  } <I><FONT COLOR="#B22222">/* end if */</FONT></I>
+  printf(<B><FONT COLOR="#BC8F8F">&quot;User is in %d groups.\n&quot;</FONT></B>, numGroups);
+  
+  <I><FONT COLOR="#B22222">/* We could allocate just enough space to hold the group list; however, the number may have changed since we called getgroups() a
+     moment ago!  Also the maximum number is generally quite small (less than 32).  Thus we have no reason not to just use the
+     maximal array required. */</FONT></I>
+  <B><FONT COLOR="#A020F0">if</FONT></B>((numGroups = getgroups(ngroups_max, gidList)) &lt; 0) {
+    printf(<B><FONT COLOR="#BC8F8F">&quot;ERROR: getgroups() failure.\n&quot;</FONT></B>);
+    <B><FONT COLOR="#A020F0">if</FONT></B>(errno == EINVAL) {
+      <I><FONT COLOR="#B22222">/* In the case of EINVAL we know what happened. Many UNIXes provide additional diagnostics -- see your man pages. */</FONT></I>
+      printf(<B><FONT COLOR="#BC8F8F">&quot;ERROR: ngroups_max != 0 &amp;&amp; ngroups_max &lt; # supplementary of groups\n&quot;</FONT></B>);
+    } <I><FONT COLOR="#B22222">/* end if */</FONT></I>
+    exit(2);
+  } <I><FONT COLOR="#B22222">/* end if */</FONT></I>
+
+  <B><FONT COLOR="#A020F0">if</FONT></B>(numGroups &gt;= 0) {
+    <I><FONT COLOR="#B22222">/* Print the GIDs out */</FONT></I>
+    printf(<B><FONT COLOR="#BC8F8F">&quot;The group ID list: &quot;</FONT></B>);
+    <B><FONT COLOR="#A020F0">for</FONT></B>(i=0;i&lt;numGroups;i++) {
+      printf(<B><FONT COLOR="#BC8F8F">&quot;%i &quot;</FONT></B>, gidList[i]);
+    } <I><FONT COLOR="#B22222">/* end for */</FONT></I>
+    printf(<B><FONT COLOR="#BC8F8F">&quot;\n&quot;</FONT></B>);
+    <I><FONT COLOR="#B22222">/* Convert the group IDs into group names. */</FONT></I>
+    printf(<B><FONT COLOR="#BC8F8F">&quot;The group name list: &quot;</FONT></B>);
+    <B><FONT COLOR="#A020F0">for</FONT></B>(i=0;i&lt;numGroups;i++) {
+      <B><FONT COLOR="#A020F0">if</FONT></B>((grEnt = getgrgid(gidList[i])) == NULL) {
+        printf(<B><FONT COLOR="#BC8F8F">&quot;??? &quot;</FONT></B>);
+      } <B><FONT COLOR="#A020F0">else</FONT></B> {
+        printf(<B><FONT COLOR="#BC8F8F">&quot;%s &quot;</FONT></B>, grEnt-&gt;gr_name);
+      } <I><FONT COLOR="#B22222">/* end if/else */</FONT></I>
+    } <I><FONT COLOR="#B22222">/* end for */</FONT></I>
+    printf(<B><FONT COLOR="#BC8F8F">&quot;\n&quot;</FONT></B>);
+  } <I><FONT COLOR="#B22222">/* end if */</FONT></I>
+
+  <B><FONT COLOR="#A020F0">return</FONT></B> 0;
+} <I><FONT COLOR="#B22222">/* end func main */</FONT></I>
+</PRE>
+<HR \/>
+<ADDRESS>Generated by <A HREF="http://www.iki.fi/~mtr/genscript/">GNU Enscript 1.6.5.90</A>.</ADDRESS>
+</BODY>
+</HTML>

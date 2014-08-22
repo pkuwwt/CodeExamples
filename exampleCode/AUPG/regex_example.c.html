@@ -1,0 +1,150 @@
+<!DOCTYPE html PUBLIC "-//IETF//DTD HTML 2.0//EN">
+<HTML>
+<HEAD>
+<TITLE>AUPG/regex_example.c</TITLE>
+</HEAD>
+<BODY BGCOLOR="#FFFFFF" TEXT="#000000" LINK="#1F00FF" ALINK="#FF0000" VLINK="#9900DD">
+<A NAME="top"> </A>
+<A NAME="file1"> </A>
+<H1><a href="regex_example.c">regex_example.c</a></H1>
+
+<PRE>
+<I><FONT COLOR="#B22222">/* -*- Mode:C; Coding:us-ascii-unix; fill-column:132 -*- */</FONT></I>
+<I><FONT COLOR="#B22222">/**********************************************************************************************************************************/</FONT></I>
+<I><FONT COLOR="#B22222">/**
+   @file      regex_example.c
+   @author    Mitch Richling &lt;http://www.mitchr.me/&gt;
+   @Copyright Copyright 1994,2014 by Mitch Richling.  All rights reserved.
+   @brief     UNIX regex tools@EOL
+   @Keywords  UNIX regular expressions regex
+   @Std       ISOC POSIX.2 (IEEE Std 103.2) BSD4.3
+   @Tested    
+              - Solaris 2.8
+              - MacOS X.2
+              - Linux (RH 7.3)
+
+   This is an example program intended to illustrate very basic use of regular expressions.
+  
+   Grumpy programmer note: IEEE Std 1003.2, generally referred to as 'POSIX.2' is a bit vague regarding several details like how
+   back references work.  It also has a couple of errors (like how a single ')' is treated in a regular expression.  Because of
+   this, most actual implementations of the standard will have several minor inconsistencies that one must watch out for.  My best
+   advice is to &quot;read the man page&quot; on the platforms you wish to run on and to avoid exotic things.  For example, avoid things like
+   the BSD REG_NOSPEC and REG_PEND options.  Another option is to simply carry your favorite regular expression library with you.
+   For example, C++11 has very good regex support, and the BOOST library has a very nice regex class for older C++ versions.  PCRE
+   is probably the most popular alternative, FOSS regular expression library available.
+***********************************************************************************************************************************/</FONT></I>
+
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;sys/types.h&gt;</FONT></B>          <I><FONT COLOR="#B22222">/* UNIX types      POSIX */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;regex.h&gt;</FONT></B>              <I><FONT COLOR="#B22222">/* Regular Exp     POSIX */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;stdio.h&gt;</FONT></B>              <I><FONT COLOR="#B22222">/* I/O lib         C89   */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;string.h&gt;</FONT></B>             <I><FONT COLOR="#B22222">/* Strings         C89   */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;stdlib.h&gt;</FONT></B>             <I><FONT COLOR="#B22222">/* Standard Lib    C89   */</FONT></I>
+
+<I><FONT COLOR="#B22222">/**********************************************************************************************************************************/</FONT></I>
+#<B><FONT COLOR="#5F9EA0">define</FONT></B> <FONT COLOR="#B8860B">MAX_SUB_EXPR_CNT</FONT> 256
+#<B><FONT COLOR="#5F9EA0">define</FONT></B> <FONT COLOR="#B8860B">MAX_SUB_EXPR_LEN</FONT> 256
+#<B><FONT COLOR="#5F9EA0">define</FONT></B> <FONT COLOR="#B8860B">MAX_ERR_STR_LEN</FONT>  256
+
+<I><FONT COLOR="#B22222">/**********************************************************************************************************************************/</FONT></I>
+<B><FONT COLOR="#228B22">int</FONT></B> <B><FONT COLOR="#0000FF">main</FONT></B>(<B><FONT COLOR="#228B22">int</FONT></B> argc, <B><FONT COLOR="#228B22">char</FONT></B> *argv[]) {
+  <B><FONT COLOR="#228B22">int</FONT></B> i;                                <I><FONT COLOR="#B22222">/* Loop variable.                          */</FONT></I>
+  <B><FONT COLOR="#228B22">char</FONT></B> p[MAX_SUB_EXPR_LEN];             <I><FONT COLOR="#B22222">/* For string manipulation                 */</FONT></I>
+  regex_t aCmpRegex;                    <I><FONT COLOR="#B22222">/* Pointer to our compiled regex           */</FONT></I>
+  <B><FONT COLOR="#228B22">char</FONT></B> *aStrRegex;                      <I><FONT COLOR="#B22222">/* Pointer to the string holding the regex */</FONT></I>
+  regmatch_t pMatch[MAX_SUB_EXPR_CNT];  <I><FONT COLOR="#B22222">/* Hold partial matches.                   */</FONT></I>
+  <B><FONT COLOR="#228B22">char</FONT></B> **aLineToMatch;                  <I><FONT COLOR="#B22222">/* Holds each line that we wish to match   */</FONT></I>
+  <B><FONT COLOR="#228B22">int</FONT></B> result;                           <I><FONT COLOR="#B22222">/* Return from regcomp() and regexec()     */</FONT></I>
+  <B><FONT COLOR="#228B22">char</FONT></B> outMsgBuf[MAX_ERR_STR_LEN];      <I><FONT COLOR="#B22222">/* Holds error messages from regerror()    */</FONT></I>
+  <B><FONT COLOR="#228B22">char</FONT></B> *testStrings[] = { <B><FONT COLOR="#BC8F8F">&quot;This should match... hello&quot;</FONT></B>,
+                          <B><FONT COLOR="#BC8F8F">&quot;This could match... hello!&quot;</FONT></B>,
+                          <B><FONT COLOR="#BC8F8F">&quot;More than one hello.. hello&quot;</FONT></B>,
+                          <B><FONT COLOR="#BC8F8F">&quot;No chance of a match...&quot;</FONT></B>,
+                          NULL};
+
+  <I><FONT COLOR="#B22222">/* use aStrRegex for readability. */</FONT></I>
+  aStrRegex = <B><FONT COLOR="#BC8F8F">&quot;(.*)(hello)+&quot;</FONT></B>;
+  printf(<B><FONT COLOR="#BC8F8F">&quot;Regex to use: %s\n&quot;</FONT></B>, aStrRegex);
+
+  <I><FONT COLOR="#B22222">/* Compile the regex */</FONT></I>
+  <B><FONT COLOR="#A020F0">if</FONT></B>( (result = regcomp(&amp;aCmpRegex, aStrRegex, REG_EXTENDED)) ) {
+    printf(<B><FONT COLOR="#BC8F8F">&quot;Error compiling regex(%d).\n&quot;</FONT></B>, result);
+    regerror(result, &amp;aCmpRegex, outMsgBuf, <B><FONT COLOR="#A020F0">sizeof</FONT></B>(outMsgBuf));
+    printf(<B><FONT COLOR="#BC8F8F">&quot;Error msg: %s\n&quot;</FONT></B>, outMsgBuf);
+    exit(1);
+  } <I><FONT COLOR="#B22222">/* end if */</FONT></I>
+
+  <I><FONT COLOR="#B22222">/*  Possible last argument to regcomp (||'ed together):
+        REG_EXTENDED  Use extended regular expressions
+        REG_BASIC     Use basic regular expressions
+        REG_NOSPEC    Special character support off (Not POSIX.2)
+        REG_ICASE     Ignore upper/lower case distinctions
+        REG_NOSUB     No sub-strings (just check for match/no match)
+        REG_NEWLINE   Compile for newline-sensitive matching
+        REG_PEND      Specify alternate string ending (Not POSIX.2) */</FONT></I>
+
+
+  <I><FONT COLOR="#B22222">/* Apply our regular expression to some strings. */</FONT></I>
+  <B><FONT COLOR="#A020F0">for</FONT></B>(aLineToMatch=testStrings; *aLineToMatch != NULL; aLineToMatch++) {
+    printf(<B><FONT COLOR="#BC8F8F">&quot;String: %s\n&quot;</FONT></B>, *aLineToMatch);
+    printf(<B><FONT COLOR="#BC8F8F">&quot;        %s\n&quot;</FONT></B>, <B><FONT COLOR="#BC8F8F">&quot;0123456789012345678901234567890123456789&quot;</FONT></B>);
+    printf(<B><FONT COLOR="#BC8F8F">&quot;        %s\n&quot;</FONT></B>, <B><FONT COLOR="#BC8F8F">&quot;0         1         2         3&quot;</FONT></B>);
+    <I><FONT COLOR="#B22222">/* compare and check result (MAX_SUB_EXPR_CNT max sub-expressions).*/</FONT></I>
+    <B><FONT COLOR="#A020F0">if</FONT></B>( !(result = regexec(&amp;aCmpRegex, *aLineToMatch, MAX_SUB_EXPR_CNT, pMatch, 0)) ) {
+      <I><FONT COLOR="#B22222">/* Last argument to regexec (||'ed together):
+         REG_NOTBOL    Start of the string is NOT the start of a line
+         REG_NOTEOL    $ shouldn't match end of string (gotta have a newline)
+         REG_STARTEND  Not POSIX.2 */</FONT></I>
+      printf(<B><FONT COLOR="#BC8F8F">&quot;Result: We have a match!\n&quot;</FONT></B>);
+      <B><FONT COLOR="#A020F0">for</FONT></B>(i=0;i&lt;=(<B><FONT COLOR="#228B22">int</FONT></B>)aCmpRegex.re_nsub;i++) {
+        printf(<B><FONT COLOR="#BC8F8F">&quot;Match(%2d/%2d): (%2d,%2d): &quot;</FONT></B>, 
+               i, 
+               (<B><FONT COLOR="#228B22">int</FONT></B>)(aCmpRegex.re_nsub), 
+               (<B><FONT COLOR="#228B22">int</FONT></B>)(pMatch[i].rm_so), 
+               (<B><FONT COLOR="#228B22">int</FONT></B>)(pMatch[i].rm_eo));
+
+          <B><FONT COLOR="#A020F0">if</FONT></B>( (pMatch[i].rm_so &gt;= 0) &amp;&amp; (pMatch[i].rm_eo &gt;= 1) &amp;&amp; 
+              (pMatch[i].rm_so != pMatch[i].rm_eo) ) {
+            strncpy(p, &amp;((*aLineToMatch)[pMatch[i].rm_so]), pMatch[i].rm_eo-pMatch[i].rm_so);
+            p[pMatch[i].rm_eo-pMatch[i].rm_so] = <B><FONT COLOR="#BC8F8F">'\0'</FONT></B>;
+            printf(<B><FONT COLOR="#BC8F8F">&quot;'%s'&quot;</FONT></B>, p);
+          } <I><FONT COLOR="#B22222">/* end if */</FONT></I>
+          printf(<B><FONT COLOR="#BC8F8F">&quot;\n&quot;</FONT></B>);
+      } <I><FONT COLOR="#B22222">/* end for */</FONT></I>
+      printf(<B><FONT COLOR="#BC8F8F">&quot;\n&quot;</FONT></B>);
+    } <B><FONT COLOR="#A020F0">else</FONT></B> {
+      <B><FONT COLOR="#A020F0">switch</FONT></B>(result) {
+        <B><FONT COLOR="#A020F0">case</FONT></B> <B><FONT COLOR="#5F9EA0">REG_NOMATCH</FONT></B>   : printf(<B><FONT COLOR="#BC8F8F">&quot;String did not match the pattern\n&quot;</FONT></B>);                   <B><FONT COLOR="#A020F0">break</FONT></B>;
+        <I><FONT COLOR="#B22222">////Some typical return codes:
+</FONT></I>        <I><FONT COLOR="#B22222">//case REG_BADPAT    : printf(&quot;invalid regular expression\n&quot;);                         break;
+</FONT></I>        <I><FONT COLOR="#B22222">//case REG_ECOLLATE  : printf(&quot;invalid collating element\n&quot;);                          break;
+</FONT></I>        <I><FONT COLOR="#B22222">//case REG_ECTYPE    : printf(&quot;invalid character class\n&quot;);                            break;
+</FONT></I>        <I><FONT COLOR="#B22222">//case REG_EESCAPE   : printf(&quot;`\' applied to unescapable character\n&quot;);               break;
+</FONT></I>        <I><FONT COLOR="#B22222">//case REG_ESUBREG   : printf(&quot;invalid backreference number\n&quot;);                       break;
+</FONT></I>        <I><FONT COLOR="#B22222">//case REG_EBRACK    : printf(&quot;brackets `[ ]' not balanced\n&quot;);                        break;
+</FONT></I>        <I><FONT COLOR="#B22222">//case REG_EPAREN    : printf(&quot;parentheses `( )' not balanced\n&quot;);                     break;
+</FONT></I>        <I><FONT COLOR="#B22222">//case REG_EBRACE    : printf(&quot;braces `{ }' not balanced\n&quot;);                          break;
+</FONT></I>        <I><FONT COLOR="#B22222">//case REG_BADBR     : printf(&quot;invalid repetition count(s) in `{ }'\n&quot;);               break;
+</FONT></I>        <I><FONT COLOR="#B22222">//case REG_ERANGE    : printf(&quot;invalid character range in `[ ]'\n&quot;);                   break;
+</FONT></I>        <I><FONT COLOR="#B22222">//case REG_ESPACE    : printf(&quot;Ran out of memory\n&quot;);                                  break;
+</FONT></I>        <I><FONT COLOR="#B22222">//case REG_BADRPT    : printf(&quot;`?', `*', or `+' operand invalid\n&quot;);                   break;
+</FONT></I>        <I><FONT COLOR="#B22222">//case REG_EMPTY     : printf(&quot;empty (sub)expression\n&quot;);                              break;
+</FONT></I>        <I><FONT COLOR="#B22222">//case REG_ASSERT    : printf(&quot;can't happen - you found a bug\n&quot;);                     break;
+</FONT></I>        <I><FONT COLOR="#B22222">//case REG_INVARG    : printf(&quot;A bad option was passed\n&quot;);                            break;
+</FONT></I>        <I><FONT COLOR="#B22222">//case REG_ILLSEQ    : printf(&quot;illegal byte sequence\n&quot;);                              break;
+</FONT></I>        <B><FONT COLOR="#A020F0">default</FONT></B>              : printf(<B><FONT COLOR="#BC8F8F">&quot;Unknown error\n&quot;</FONT></B>);                                      <B><FONT COLOR="#A020F0">break</FONT></B>;
+      } <I><FONT COLOR="#B22222">/* end switch */</FONT></I>
+      regerror(result, &amp;aCmpRegex, outMsgBuf, <B><FONT COLOR="#A020F0">sizeof</FONT></B>(outMsgBuf));
+      printf(<B><FONT COLOR="#BC8F8F">&quot;Result: Error msg: %s\n\n&quot;</FONT></B>, outMsgBuf);
+    } <I><FONT COLOR="#B22222">/* end if/else */</FONT></I>
+  } <I><FONT COLOR="#B22222">/* end for */</FONT></I>
+  
+  <I><FONT COLOR="#B22222">/* Free up resources for the regular expression */</FONT></I>
+  regfree(&amp;aCmpRegex);
+
+  exit(0);
+} <I><FONT COLOR="#B22222">/* end func main */</FONT></I>
+</PRE>
+<HR \/>
+<ADDRESS>Generated by <A HREF="http://www.iki.fi/~mtr/genscript/">GNU Enscript 1.6.5.90</A>.</ADDRESS>
+</BODY>
+</HTML>

@@ -1,0 +1,95 @@
+<!DOCTYPE html PUBLIC "-//IETF//DTD HTML 2.0//EN">
+<HTML>
+<HEAD>
+<TITLE>cpp/sort.cpp</TITLE>
+</HEAD>
+<BODY BGCOLOR="#FFFFFF" TEXT="#000000" LINK="#1F00FF" ALINK="#FF0000" VLINK="#9900DD">
+<A NAME="top"> </A>
+<A NAME="file1"> </A>
+<H1><a href="sort.cpp">sort.cpp</a></H1>
+
+<PRE>
+<I><FONT COLOR="#B22222">// -*- Mode:C++; Coding:us-ascii-unix; fill-column:132 -*-
+</FONT></I><I><FONT COLOR="#B22222">/**********************************************************************************************************************************/</FONT></I>
+<I><FONT COLOR="#B22222">/**
+   @file      sort.cpp
+   @author    Mitch Richling &lt;http://www.mitchr.me&gt;
+   @Copyright Copyright 2012 by Mitch Richling.  All rights reserved.
+   @brief     Sort C++11 style.@EOL
+   @Keywords  c++ stl c++11 2011 lambda functor sort algorithm
+   @Std       C++11
+***********************************************************************************************************************************/</FONT></I>
+
+<I><FONT COLOR="#B22222">////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+</FONT></I>#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;iostream&gt;</FONT></B>                <I><FONT COLOR="#B22222">/* C++ iostream            C++98/11 */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;algorithm&gt;</FONT></B>               <I><FONT COLOR="#B22222">/* STL algorithm           C++98/11 */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;vector&gt;</FONT></B>                  <I><FONT COLOR="#B22222">/* STL vector              C++98/11 */</FONT></I> 
+using namespace std;
+
+<I><FONT COLOR="#B22222">////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+</FONT></I><B><FONT COLOR="#228B22">bool</FONT></B> <B><FONT COLOR="#0000FF">cmpFunction</FONT></B> (<B><FONT COLOR="#228B22">int</FONT></B> i,<B><FONT COLOR="#228B22">int</FONT></B> j) { <B><FONT COLOR="#A020F0">return</FONT></B> (i&lt;j); }
+
+<I><FONT COLOR="#B22222">////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+</FONT></I><B><FONT COLOR="#228B22">struct</FONT></B> cmpFunctorC {
+  <B><FONT COLOR="#228B22">bool</FONT></B> <B><FONT COLOR="#A020F0">operator</FONT></B>() (<B><FONT COLOR="#228B22">int</FONT></B> i,<B><FONT COLOR="#228B22">int</FONT></B> j) { <B><FONT COLOR="#A020F0">return</FONT></B> (i&lt;j);}
+} cmpFunctor;
+
+<I><FONT COLOR="#B22222">////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+</FONT></I>vector&lt;<B><FONT COLOR="#228B22">int</FONT></B>&gt; intVect;
+
+<I><FONT COLOR="#B22222">////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+</FONT></I><B><FONT COLOR="#228B22">void</FONT></B> <B><FONT COLOR="#0000FF">printV98</FONT></B>(<B><FONT COLOR="#228B22">void</FONT></B>);
+<B><FONT COLOR="#228B22">void</FONT></B> <B><FONT COLOR="#0000FF">printV11</FONT></B>(<B><FONT COLOR="#228B22">void</FONT></B>);
+
+<I><FONT COLOR="#B22222">////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+</FONT></I><B><FONT COLOR="#228B22">int</FONT></B> <B><FONT COLOR="#0000FF">main</FONT></B> () {
+
+  cout &lt;&lt; endl;
+  intVect = {1,3,5,7,9,8,6,4,2,0};
+  printV98();
+  sort (intVect.begin(), intVect.begin());                                       <I><FONT COLOR="#B22222">// If int were a class with an &lt; operator, that
+</FONT></I>  printV98();                                                                    <I><FONT COLOR="#B22222">// would be used here.
+</FONT></I>
+  cout &lt;&lt; endl;
+  intVect = {1,3,5,7,9,8,6,4,2,0};
+  printV98();
+  sort (intVect.begin(), intVect.end(), cmpFunction);                            <I><FONT COLOR="#B22222">// Use a comparison function
+</FONT></I>  printV98();
+
+  cout &lt;&lt; endl;
+  intVect = {1,3,5,7,9,8,6,4,2,0};
+  printV98();
+  sort (intVect.begin(), intVect.end(), cmpFunctor);                             <I><FONT COLOR="#B22222">// Use a functor
+</FONT></I>  printV98();
+
+  cout &lt;&lt; endl;
+  intVect = {1,3,5,7,9,8,6,4,2,0};
+  printV11();
+  sort (intVect.begin(), intVect.end(), [](<B><FONT COLOR="#228B22">int</FONT></B> i, <B><FONT COLOR="#228B22">int</FONT></B> j) { <B><FONT COLOR="#A020F0">return</FONT></B> (i &lt; j); });   <I><FONT COLOR="#B22222">// Use a lambda (C++ 11)
+</FONT></I>  printV11();
+
+  <B><FONT COLOR="#A020F0">return</FONT></B> 0;
+
+} <I><FONT COLOR="#B22222">// end func main
+</FONT></I>
+<I><FONT COLOR="#B22222">//----------------------------------------------------------------------------------------------------------------------------------
+</FONT></I><I><FONT COLOR="#B22222">// This is the C++ 98 way of traversing a container
+</FONT></I><B><FONT COLOR="#228B22">void</FONT></B> <B><FONT COLOR="#0000FF">printV98</FONT></B>(<B><FONT COLOR="#228B22">void</FONT></B>) {
+  cout &lt;&lt; <B><FONT COLOR="#BC8F8F">&quot;Vector: &quot;</FONT></B>;
+  <B><FONT COLOR="#A020F0">for</FONT></B> (vector&lt;<B><FONT COLOR="#228B22">int</FONT></B>&gt;::iterator it=intVect.begin(); it!=intVect.end(); ++it)
+    cout &lt;&lt; *it &lt;&lt; <B><FONT COLOR="#BC8F8F">&quot; &quot;</FONT></B>;
+  cout &lt;&lt; endl;
+}
+
+<I><FONT COLOR="#B22222">//----------------------------------------------------------------------------------------------------------------------------------
+</FONT></I><I><FONT COLOR="#B22222">// This is the C++ 11 way of traversing a container
+</FONT></I><B><FONT COLOR="#228B22">void</FONT></B> <B><FONT COLOR="#0000FF">printV11</FONT></B>(<B><FONT COLOR="#228B22">void</FONT></B>) {
+  cout &lt;&lt; <B><FONT COLOR="#BC8F8F">&quot;Vector: &quot;</FONT></B>;
+  for_each (intVect.begin(), intVect.end(), [](<B><FONT COLOR="#228B22">int</FONT></B> i) { cout &lt;&lt; i &lt;&lt; <B><FONT COLOR="#BC8F8F">&quot; &quot;</FONT></B>; });
+  cout &lt;&lt; endl;
+}
+</PRE>
+<HR \/>
+<ADDRESS>Generated by <A HREF="http://www.iki.fi/~mtr/genscript/">GNU Enscript 1.6.5.90</A>.</ADDRESS>
+</BODY>
+</HTML>

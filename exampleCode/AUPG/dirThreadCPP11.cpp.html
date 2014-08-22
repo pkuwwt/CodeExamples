@@ -1,0 +1,258 @@
+<!DOCTYPE html PUBLIC "-//IETF//DTD HTML 2.0//EN">
+<HTML>
+<HEAD>
+<TITLE>AUPG/dirThreadCPP11.cpp</TITLE>
+</HEAD>
+<BODY BGCOLOR="#FFFFFF" TEXT="#000000" LINK="#1F00FF" ALINK="#FF0000" VLINK="#9900DD">
+<A NAME="top"> </A>
+<A NAME="file1"> </A>
+<H1><a href="dirThreadCPP11.cpp">dirThreadCPP11.cpp</a></H1>
+
+<PRE>
+<I><FONT COLOR="#B22222">// -*- Mode:C++; Coding:us-ascii-unix; fill-column:132 -*-
+</FONT></I><I><FONT COLOR="#B22222">/**********************************************************************************************************************************/</FONT></I>
+<I><FONT COLOR="#B22222">/**
+   @file      dirThreadCPP11.cpp
+   @author    Mitch Richling &lt;http://www.mitchr.me/&gt;
+   @Copyright Copyright 1998 by Mitch Richling.  All rights reserved.
+   @brief     Threaded traversal of UNIX directory trees@EOL
+   @Keywords  UNIX readdir readdir_r threaded directory traversal
+   @Std       ISOC++11 POSIX UNIX98 BSD4.3 SYSV3
+   @Tested    
+              - Debian 7.4 + gcc (Debian 4.7.2-5) 4.7.2
+              - Ubuntu 10.10 + gcc 4.4.4-14ubuntu5
+              - RHEL 4.8 + gcc 4.5.1              
+
+   This program is a C++11 version of dirThreadCPP98.cpp.  C++11 features replace POSIX ones for threading and timing.  Unlike the
+   CPP98 version, this code is self contained and has a few C++ stylistic changes so as to render the code a bit less offensive to
+   C++ wizards. :)
+***********************************************************************************************************************************/</FONT></I>
+
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;chrono&gt;</FONT></B>                  <I><FONT COLOR="#B22222">/* time                    C++11    */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;thread&gt;</FONT></B>                  <I><FONT COLOR="#B22222">/* threads                 C++11    */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;mutex&gt;</FONT></B>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;condition_variable&gt;</FONT></B>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;list&gt;</FONT></B>                    <I><FONT COLOR="#B22222">/* STL list                C++98/11 */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;vector&gt;</FONT></B>                  <I><FONT COLOR="#B22222">/* STL vector              C++98/11 */</FONT></I> 
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;algorithm&gt;</FONT></B>               <I><FONT COLOR="#B22222">/* STL algorithm           C++98/11 */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;iostream&gt;</FONT></B>                <I><FONT COLOR="#B22222">/* C++ iostream            C++98/11 */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;cstring&gt;</FONT></B>                 <I><FONT COLOR="#B22222">/* C Strings std::         C++98/11 */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;errno.h&gt;</FONT></B>                 <I><FONT COLOR="#B22222">/* error stf               POSIX    */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;dirent.h&gt;</FONT></B>                <I><FONT COLOR="#B22222">/* UNIX dirs               POSIX    */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;sys/stat.h&gt;</FONT></B>              <I><FONT COLOR="#B22222">/* UNIX stat               POSIX    */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;sys/types.h&gt;</FONT></B>             <I><FONT COLOR="#B22222">/* UNIX types              POSIX    */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;unistd.h&gt;</FONT></B>                <I><FONT COLOR="#B22222">/* UNIX std stf            POSIX    */</FONT></I>
+
+<I><FONT COLOR="#B22222">/**********************************************************************************************************************************/</FONT></I>
+<I><FONT COLOR="#B22222">/** Use the absolutely thread-safe readdir_r function, or use the much faster, mostly thread-safe readdir system call */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">define</FONT></B> <FONT COLOR="#B8860B">SAFEREADDIR</FONT> 1
+
+<I><FONT COLOR="#B22222">/**********************************************************************************************************************************/</FONT></I>
+<I><FONT COLOR="#B22222">/** The list of dirs to traverse and related access control variables. */</FONT></I>
+std::list&lt;<B><FONT COLOR="#228B22">char</FONT></B> *&gt;        gblDirList;
+std::mutex               dirList_mutex;
+std::condition_variable  dirList_cond;
+
+<I><FONT COLOR="#B22222">/**********************************************************************************************************************************/</FONT></I>
+<I><FONT COLOR="#B22222">/** Number of threads with nothing to do. We protect this variable with the same mutex we use for the global directory list. */</FONT></I>
+<B><FONT COLOR="#228B22">int</FONT></B> numThreadsWaiting;
+
+<I><FONT COLOR="#B22222">/**********************************************************************************************************************************/</FONT></I>
+<I><FONT COLOR="#B22222">/** Protect screen prints */</FONT></I>
+std::mutex console_mutex;
+
+<I><FONT COLOR="#B22222">/**********************************************************************************************************************************/</FONT></I>
+<I><FONT COLOR="#B22222">/** Designed to be used by a thread. */</FONT></I>
+<B><FONT COLOR="#228B22">void</FONT></B> <B><FONT COLOR="#0000FF">readDir</FONT></B>(<B><FONT COLOR="#228B22">char</FONT></B> *workingDir);
+
+<I><FONT COLOR="#B22222">/**********************************************************************************************************************************/</FONT></I>
+<I><FONT COLOR="#B22222">/** Worker thread function */</FONT></I> 
+<B><FONT COLOR="#228B22">void</FONT></B> <B><FONT COLOR="#0000FF">workerThread</FONT></B>();
+
+<I><FONT COLOR="#B22222">/**********************************************************************************************************************************/</FONT></I>
+<B><FONT COLOR="#228B22">int</FONT></B> <B><FONT COLOR="#0000FF">main</FONT></B>(<B><FONT COLOR="#228B22">int</FONT></B> argc, <B><FONT COLOR="#228B22">char</FONT></B> *argv[]) {
+  <B><FONT COLOR="#228B22">struct</FONT></B> stat s;
+  <B><FONT COLOR="#228B22">char</FONT></B> *wrkBuf;
+  <B><FONT COLOR="#228B22">const</FONT></B> <B><FONT COLOR="#228B22">int</FONT></B> numThreads=55;
+  <B><FONT COLOR="#5F9EA0">std</FONT></B>::thread threadList[numThreads];
+
+  <I><FONT COLOR="#B22222">/* Stat the root of the tree we are to traverse. */</FONT></I>
+  <B><FONT COLOR="#A020F0">if</FONT></B>((argc == 2) &amp;&amp; (lstat(argv[1], &amp;s) &lt; 0)) {
+    { std::lock_guard&lt;std::mutex&gt; console_lock(console_mutex);
+      <B><FONT COLOR="#5F9EA0">std</FONT></B>::cout &lt;&lt; <B><FONT COLOR="#BC8F8F">&quot;ERROR: Bad first argument&quot;</FONT></B> &lt;&lt; std::endl;
+    } <I><FONT COLOR="#B22222">/* end lock console_lock */</FONT></I>
+    exit(1);
+  } <I><FONT COLOR="#B22222">/* end if */</FONT></I>
+  <I><FONT COLOR="#B22222">/* Now that we have stat'ed' the thing, we add it as the list of directories */</FONT></I>
+  wrkBuf = (<B><FONT COLOR="#228B22">char</FONT></B> *)malloc(strlen(argv[1]) + 1);
+  strcpy(wrkBuf, argv[1]);
+  gblDirList.push_back(wrkBuf);
+ 
+  <I><FONT COLOR="#B22222">/* Here we fire off n-threads */</FONT></I>
+  { std::lock_guard&lt;std::mutex&gt; dirList_lock(dirList_mutex);
+    numThreadsWaiting = 0;
+    <B><FONT COLOR="#A020F0">for</FONT></B>(<B><FONT COLOR="#228B22">int</FONT></B> i = 0; i &lt; numThreads; i++) {
+      threadList[i] = std::thread(workerThread);
+      (threadList[i]).detach();
+    } <I><FONT COLOR="#B22222">/* end for */</FONT></I>
+  } <I><FONT COLOR="#B22222">/* end lock dirList */</FONT></I>
+
+  <I><FONT COLOR="#B22222">/* Loop until we have nothing left to do */</FONT></I>
+  <B><FONT COLOR="#228B22">int</FONT></B> mustWait = 1;
+  <B><FONT COLOR="#A020F0">while</FONT></B>(mustWait) {
+    { std::lock_guard&lt;std::mutex&gt; dirList_lock(dirList_mutex);
+      <B><FONT COLOR="#A020F0">if</FONT></B>((gblDirList.empty()) &amp;&amp; (numThreadsWaiting == numThreads)) {
+        mustWait = 0;
+      } <I><FONT COLOR="#B22222">/* end if */</FONT></I>
+    } <I><FONT COLOR="#B22222">/* end lock dirList */</FONT></I>
+    <I><FONT COLOR="#B22222">/* We broadcast here to avoid deadlock. */</FONT></I>
+    dirList_cond.notify_all();
+    <I><FONT COLOR="#B22222">/* We sleep for a bit to reduce broadcast frequency. */</FONT></I>
+    <B><FONT COLOR="#5F9EA0">std</FONT></B>::this_thread::sleep_for(std::chrono::milliseconds(1));
+  } <I><FONT COLOR="#B22222">/* end while */</FONT></I>
+  dirList_mutex.unlock();
+
+  <I><FONT COLOR="#B22222">/* Everything is done now */</FONT></I>
+  <B><FONT COLOR="#A020F0">return</FONT></B> 0;
+} <I><FONT COLOR="#B22222">/* end func main */</FONT></I>
+
+<I><FONT COLOR="#B22222">/**********************************************************************************************************************************/</FONT></I>
+<B><FONT COLOR="#228B22">void</FONT></B> <B><FONT COLOR="#0000FF">workerThread</FONT></B>() {
+  <B><FONT COLOR="#228B22">char</FONT></B> *workingDir;
+
+  <I><FONT COLOR="#B22222">/* Just set here until the master thread unlocks dirList_mutex! */</FONT></I>
+  { std::lock_guard&lt;std::mutex&gt; dirList_lock(dirList_mutex);
+    ;
+  } <I><FONT COLOR="#B22222">/* end lock dirList */</FONT></I>
+
+  <B><FONT COLOR="#A020F0">while</FONT></B>(1) {
+    <B><FONT COLOR="#5F9EA0">std</FONT></B>::unique_lock&lt;std::mutex&gt; dirList_lock(dirList_mutex);
+    <B><FONT COLOR="#A020F0">if</FONT></B>(gblDirList.empty()) {
+      numThreadsWaiting++;
+      <B><FONT COLOR="#A020F0">while</FONT></B>(gblDirList.empty()) {
+        dirList_cond.wait(dirList_lock);
+      } <I><FONT COLOR="#B22222">/* end while */</FONT></I>
+      <I><FONT COLOR="#B22222">/* If we get here, we have dirList_mutex locked. */</FONT></I>
+      numThreadsWaiting--;
+      dirList_lock.unlock();
+    } <B><FONT COLOR="#A020F0">else</FONT></B> {
+      workingDir = gblDirList.back();
+      gblDirList.pop_back();
+      dirList_lock.unlock();
+      readDir(workingDir);
+    } <I><FONT COLOR="#B22222">/* end if/else */</FONT></I>
+  } <I><FONT COLOR="#B22222">/* end while */</FONT></I>
+} <I><FONT COLOR="#B22222">/* end func workerThread */</FONT></I>
+
+<I><FONT COLOR="#B22222">/**********************************************************************************************************************************/</FONT></I>
+<B><FONT COLOR="#228B22">void</FONT></B> <B><FONT COLOR="#0000FF">readDir</FONT></B>(<B><FONT COLOR="#228B22">char</FONT></B> *workingDir) {
+  <B><FONT COLOR="#228B22">const</FONT></B> <B><FONT COLOR="#228B22">int</FONT></B> UPLOADTRIG=10;
+  DIR *dp;
+  <B><FONT COLOR="#228B22">struct</FONT></B> dirent *dep;
+#<B><FONT COLOR="#5F9EA0">if</FONT></B> <FONT COLOR="#B8860B">SAFEREADDIR</FONT>
+  <B><FONT COLOR="#228B22">struct</FONT></B> dirent *depp;
+  <B><FONT COLOR="#228B22">int</FONT></B> readdirRes;
+#<B><FONT COLOR="#5F9EA0">endif</FONT></B>
+  <B><FONT COLOR="#228B22">struct</FONT></B> stat s;
+  <B><FONT COLOR="#228B22">char</FONT></B> *name;                             <I><FONT COLOR="#B22222">/* Working space for string manipulation */</FONT></I>
+  <B><FONT COLOR="#228B22">long</FONT></B> len_d_name, len_workingDirName;    <I><FONT COLOR="#B22222">/* String lengths */</FONT></I>
+  <B><FONT COLOR="#228B22">int</FONT></B> haveMore;
+  <B><FONT COLOR="#228B22">int</FONT></B> localDirListLen=0;
+  <B><FONT COLOR="#5F9EA0">std</FONT></B>::list&lt;<B><FONT COLOR="#228B22">char</FONT></B> *&gt; localDirList;        <I><FONT COLOR="#B22222">/* Local working list of directories */</FONT></I>
+
+  <B><FONT COLOR="#A020F0">if</FONT></B>( (dp = opendir(workingDir)) == NULL) {
+    { std::lock_guard&lt;std::mutex&gt; console_lock(console_mutex);
+      <B><FONT COLOR="#5F9EA0">std</FONT></B>::cout &lt;&lt; <B><FONT COLOR="#BC8F8F">&quot;ERROR(4): dirThreadCPP11: opendir: &quot;</FONT></B> &lt;&lt; workingDir &lt;&lt; <B><FONT COLOR="#BC8F8F">&quot;: Undetermined&quot;</FONT></B> &lt;&lt; std::endl;
+    } <I><FONT COLOR="#B22222">/* end lock console_lock */</FONT></I>
+  } <B><FONT COLOR="#A020F0">else</FONT></B> {
+    <B><FONT COLOR="#228B22">int</FONT></B> name_max=pathconf(workingDir, _PC_NAME_MAX);
+    <B><FONT COLOR="#A020F0">if</FONT></B>(name_max &lt;= 0) {
+      { std::lock_guard&lt;std::mutex&gt; console_lock(console_mutex);
+        <B><FONT COLOR="#5F9EA0">std</FONT></B>::cout &lt;&lt; <B><FONT COLOR="#BC8F8F">&quot;ERROR(7): dirThreadCPP11: pathconf: &quot;</FONT></B> &lt;&lt; workingDir &lt;&lt; <B><FONT COLOR="#BC8F8F">&quot;: Undetermined&quot;</FONT></B> &lt;&lt; std::endl;
+      } <I><FONT COLOR="#B22222">/* end lock console_lock */</FONT></I>
+      exit(1);
+    } <I><FONT COLOR="#B22222">/* end if */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">if</FONT></B> <FONT COLOR="#B8860B">SAFEREADDIR</FONT>
+    <I><FONT COLOR="#B22222">/* Some platforms have large dirent sizes, but most systems have lots of RAM... */</FONT></I>
+    <B><FONT COLOR="#A020F0">if</FONT></B>((dep = (<B><FONT COLOR="#228B22">struct</FONT></B> dirent *)malloc(<B><FONT COLOR="#A020F0">sizeof</FONT></B>(<B><FONT COLOR="#228B22">struct</FONT></B> dirent))) == NULL) {
+    { std::lock_guard&lt;std::mutex&gt; console_lock(console_mutex);
+      <B><FONT COLOR="#5F9EA0">std</FONT></B>::cout &lt;&lt; <B><FONT COLOR="#BC8F8F">&quot;ERROR(8): dirThreadCPP11: malloc: direntBlob: Undetermined&quot;</FONT></B> &lt;&lt; std::endl;
+    } <I><FONT COLOR="#B22222">/* end lock console_lock */</FONT></I>
+      exit(1);
+    } <I><FONT COLOR="#B22222">/* end if */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">endif</FONT></B>
+    len_workingDirName = strlen(workingDir);
+    haveMore = 1;
+    <B><FONT COLOR="#A020F0">while</FONT></B>(haveMore) {
+#<B><FONT COLOR="#5F9EA0">if</FONT></B> <FONT COLOR="#B8860B">SAFEREADDIR</FONT>
+      readdirRes = readdir_r(dp, dep, &amp;depp);
+#<B><FONT COLOR="#5F9EA0">else</FONT></B>
+      dep = readdir(dp);
+#<B><FONT COLOR="#5F9EA0">endif</FONT></B>
+      <B><FONT COLOR="#A020F0">if</FONT></B>(
+#<B><FONT COLOR="#5F9EA0">if</FONT></B> <FONT COLOR="#B8860B">SAFEREADDIR</FONT>
+        <I><FONT COLOR="#B22222">/* Note that we should do something different for errors for readdir_r... */</FONT></I>
+        ((depp == NULL) || (readdirRes != 0))
+#<B><FONT COLOR="#5F9EA0">else</FONT></B>
+        <I><FONT COLOR="#B22222">/* Note that we should check errno for readdir as it might not be EOF but an error... */</FONT></I>
+        (dep == NULL)
+#<B><FONT COLOR="#5F9EA0">endif</FONT></B>
+        ) {
+        haveMore = 0;
+      } <B><FONT COLOR="#A020F0">else</FONT></B> {
+        <B><FONT COLOR="#A020F0">if</FONT></B>((strcmp(dep-&gt;d_name, <B><FONT COLOR="#BC8F8F">&quot;..&quot;</FONT></B>) != 0) &amp;&amp; (strcmp(dep-&gt;d_name, <B><FONT COLOR="#BC8F8F">&quot;.&quot;</FONT></B>) != 0)) {
+          len_d_name = strlen(dep-&gt;d_name);
+          <B><FONT COLOR="#A020F0">if</FONT></B>((name = (<B><FONT COLOR="#228B22">char</FONT></B> *)malloc(len_d_name + len_workingDirName + 2)) == NULL) {
+            { std::lock_guard&lt;std::mutex&gt; console_lock(console_mutex);
+              <B><FONT COLOR="#5F9EA0">std</FONT></B>::cout &lt;&lt; <B><FONT COLOR="#BC8F8F">&quot;ERROR(5): dirThreadCPP11: malloc: Undetermined&quot;</FONT></B> &lt;&lt; std::endl;
+            } <I><FONT COLOR="#B22222">/* end lock console_lock */</FONT></I>
+            exit(1);
+          } <I><FONT COLOR="#B22222">/* end if */</FONT></I>
+          strcpy(name, workingDir);
+          strcat(name, <B><FONT COLOR="#BC8F8F">&quot;/&quot;</FONT></B>);
+          strcat(name, dep-&gt;d_name);
+          <B><FONT COLOR="#A020F0">if</FONT></B>(lstat(name, &amp;s)) {
+            { std::lock_guard&lt;std::mutex&gt; console_lock(console_mutex);
+              <B><FONT COLOR="#5F9EA0">std</FONT></B>::cout &lt;&lt; <B><FONT COLOR="#BC8F8F">&quot;ERROR(6): dirThreadCPP11: lstat: &quot;</FONT></B> &lt;&lt; name &lt;&lt; <B><FONT COLOR="#BC8F8F">&quot;: Undetermined&quot;</FONT></B> &lt;&lt; std::endl;
+            } <I><FONT COLOR="#B22222">/* end lock console_lock */</FONT></I>
+            free(name);
+          } <B><FONT COLOR="#A020F0">else</FONT></B> {
+            <B><FONT COLOR="#A020F0">if</FONT></B>(S_ISDIR(s.st_mode)) {
+              localDirList.push_back(name);
+              localDirListLen++;
+              { std::lock_guard&lt;std::mutex&gt; console_lock(console_mutex);
+                <B><FONT COLOR="#5F9EA0">std</FONT></B>::cout &lt;&lt; <B><FONT COLOR="#BC8F8F">&quot; D: &quot;</FONT></B> &lt;&lt; name &lt;&lt; std::endl;
+              } <I><FONT COLOR="#B22222">/* end lock console_lock */</FONT></I>
+              <I><FONT COLOR="#B22222">/* If we found UPLOADTRIG directories, then put them in the global list. We don't use localDirList.size() as it is
+                 O(n) with some implementations -- which is OK per the C++ standard. */</FONT></I>
+              <B><FONT COLOR="#A020F0">if</FONT></B>(UPLOADTRIG &amp;&amp; (localDirListLen &gt; UPLOADTRIG)) {
+                { std::lock_guard&lt;std::mutex&gt; dirList_lock(dirList_mutex);
+                  gblDirList.splice(gblDirList.end(), localDirList);
+                  dirList_cond.notify_all();
+                } <I><FONT COLOR="#B22222">/* end lock dirList */</FONT></I>
+              } <I><FONT COLOR="#B22222">/* end if */</FONT></I>
+            } <B><FONT COLOR="#A020F0">else</FONT></B> {
+              { std::lock_guard&lt;std::mutex&gt; console_lock(console_mutex);
+                <B><FONT COLOR="#5F9EA0">std</FONT></B>::cout &lt;&lt; <B><FONT COLOR="#BC8F8F">&quot;ND: &quot;</FONT></B> &lt;&lt; name &lt;&lt; std::endl;
+              } <I><FONT COLOR="#B22222">/* end lock console_lock */</FONT></I>
+              free(name);
+            } <I><FONT COLOR="#B22222">/* end if/else */</FONT></I>
+          } <I><FONT COLOR="#B22222">/* end if/else */</FONT></I>
+        } <I><FONT COLOR="#B22222">/* end if */</FONT></I>
+      } <I><FONT COLOR="#B22222">/* end if */</FONT></I>
+    } <I><FONT COLOR="#B22222">/* end while */</FONT></I>
+    closedir(dp);
+    free(dep);
+  } <I><FONT COLOR="#B22222">/* end if/else */</FONT></I>
+  { std::lock_guard&lt;std::mutex&gt; dirList_lock(dirList_mutex);
+    gblDirList.splice(gblDirList.end(), localDirList);
+    dirList_cond.notify_all();
+  } <I><FONT COLOR="#B22222">/* end lock dirList */</FONT></I>
+  <I><FONT COLOR="#B22222">/* Free up the string for this dirent. */</FONT></I>
+  free(workingDir);
+} <I><FONT COLOR="#B22222">/* end func readDir */</FONT></I>
+</PRE>
+<HR \/>
+<ADDRESS>Generated by <A HREF="http://www.iki.fi/~mtr/genscript/">GNU Enscript 1.6.5.90</A>.</ADDRESS>
+</BODY>
+</HTML>

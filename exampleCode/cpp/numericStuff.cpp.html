@@ -1,0 +1,91 @@
+<!DOCTYPE html PUBLIC "-//IETF//DTD HTML 2.0//EN">
+<HTML>
+<HEAD>
+<TITLE>cpp/numericStuff.cpp</TITLE>
+</HEAD>
+<BODY BGCOLOR="#FFFFFF" TEXT="#000000" LINK="#1F00FF" ALINK="#FF0000" VLINK="#9900DD">
+<A NAME="top"> </A>
+<A NAME="file1"> </A>
+<H1><a href="numericStuff.cpp">numericStuff.cpp</a></H1>
+
+<PRE>
+<I><FONT COLOR="#B22222">// -*- Mode:C++; Coding:us-ascii-unix; fill-column:132 -*-
+</FONT></I><I><FONT COLOR="#B22222">/**********************************************************************************************************************************/</FONT></I>
+<I><FONT COLOR="#B22222">/**
+   @file      numericStuff.cpp
+   @author    Mitch Richling &lt;http://www.mitchr.me&gt;
+   @Copyright Copyright 2000,2014 by Mitch Richling.  All rights reserved.
+   @brief     Demo some of the stuff in &lt;numeric&gt;.@EOL
+   @Keywords  none
+   @Std       C++11
+***********************************************************************************************************************************/</FONT></I>
+
+<I><FONT COLOR="#B22222">////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+</FONT></I>#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;iostream&gt;</FONT></B>                <I><FONT COLOR="#B22222">/* C++ iostream            C++98/11 */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;vector&gt;</FONT></B>                  <I><FONT COLOR="#B22222">/* STL vector              C++98/11 */</FONT></I> 
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;numeric&gt;</FONT></B>                 <I><FONT COLOR="#B22222">/* C++ numeric             C++98/11 */</FONT></I>
+
+<I><FONT COLOR="#B22222">////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+</FONT></I>std::ostream&amp; <B><FONT COLOR="#A020F0">operator</FONT></B>&lt;&lt; (std::ostream &amp;out, std::vector&lt;<B><FONT COLOR="#228B22">int</FONT></B>&gt; v) {
+  <B><FONT COLOR="#A020F0">for</FONT></B>(<B><FONT COLOR="#228B22">auto</FONT></B> x : v)
+    <B><FONT COLOR="#5F9EA0">std</FONT></B>::cout &lt;&lt; x &lt;&lt; <B><FONT COLOR="#BC8F8F">&quot; &quot;</FONT></B>;
+  <B><FONT COLOR="#A020F0">return</FONT></B> out;
+} <I><FONT COLOR="#B22222">/* end operator&lt;&lt; std::vector&lt;int&gt; */</FONT></I>
+
+<I><FONT COLOR="#B22222">////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+</FONT></I><B><FONT COLOR="#228B22">int</FONT></B> <B><FONT COLOR="#0000FF">multiply</FONT></B>(<B><FONT COLOR="#228B22">int</FONT></B> x, <B><FONT COLOR="#228B22">int</FONT></B> y) { <B><FONT COLOR="#A020F0">return</FONT></B> x*y; }
+
+<I><FONT COLOR="#B22222">////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+</FONT></I><B><FONT COLOR="#228B22">int</FONT></B> <B><FONT COLOR="#0000FF">add</FONT></B>(<B><FONT COLOR="#228B22">int</FONT></B> x, <B><FONT COLOR="#228B22">int</FONT></B> y)      { <B><FONT COLOR="#A020F0">return</FONT></B> x+y; }
+
+<I><FONT COLOR="#B22222">////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+</FONT></I><B><FONT COLOR="#228B22">int</FONT></B> <B><FONT COLOR="#0000FF">subtract</FONT></B>(<B><FONT COLOR="#228B22">int</FONT></B> x, <B><FONT COLOR="#228B22">int</FONT></B> y) { <B><FONT COLOR="#A020F0">return</FONT></B> x-y; }
+ 
+<I><FONT COLOR="#B22222">////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+</FONT></I><B><FONT COLOR="#228B22">int</FONT></B> <B><FONT COLOR="#0000FF">main</FONT></B>() {
+
+  <B><FONT COLOR="#5F9EA0">std</FONT></B>::vector&lt;<B><FONT COLOR="#228B22">int</FONT></B>&gt; v = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
+  <B><FONT COLOR="#5F9EA0">std</FONT></B>::vector&lt;<B><FONT COLOR="#228B22">int</FONT></B>&gt; u = {10, 9, 8, 7, 6, 5, 4, 3, 2,  1};
+ 
+  { <B><FONT COLOR="#228B22">int</FONT></B> sum = std::accumulate(v.begin(), v.end(), 0);
+    <B><FONT COLOR="#5F9EA0">std</FONT></B>::cout &lt;&lt; <B><FONT COLOR="#BC8F8F">&quot;sum     &quot;</FONT></B> &lt;&lt; sum     &lt;&lt; std::endl;
+  }
+
+  { <B><FONT COLOR="#228B22">int</FONT></B> product = std::accumulate(v.begin(), v.end(), 1, multiply);
+    <B><FONT COLOR="#5F9EA0">std</FONT></B>::cout &lt;&lt; <B><FONT COLOR="#BC8F8F">&quot;product &quot;</FONT></B> &lt;&lt; product &lt;&lt; std::endl;
+  }
+
+  { <B><FONT COLOR="#228B22">int</FONT></B> inProd = std::inner_product(v.begin(), v.end(), u.begin(), 0);
+    <B><FONT COLOR="#5F9EA0">std</FONT></B>::cout &lt;&lt; <B><FONT COLOR="#BC8F8F">&quot;in prod &quot;</FONT></B> &lt;&lt; inProd &lt;&lt; std::endl;
+  }
+
+  { <B><FONT COLOR="#228B22">int</FONT></B> inProd = std::inner_product(v.begin(), v.end(), u.begin(), 0, add, multiply);
+    <B><FONT COLOR="#5F9EA0">std</FONT></B>::cout &lt;&lt; <B><FONT COLOR="#BC8F8F">&quot;in prod &quot;</FONT></B> &lt;&lt; inProd &lt;&lt; std::endl;
+  }
+
+  { std::vector&lt;<B><FONT COLOR="#228B22">int</FONT></B>&gt; r(v.size(),-1); <I><FONT COLOR="#B22222">// Note that r must be big enough!!!
+</FONT></I>    <B><FONT COLOR="#5F9EA0">std</FONT></B>::partial_sum(v.begin(), v.end(), r.begin());
+    <B><FONT COLOR="#5F9EA0">std</FONT></B>::cout &lt;&lt; r &lt;&lt; std::endl;
+  }
+
+  { std::vector&lt;<B><FONT COLOR="#228B22">int</FONT></B>&gt; r(v.size(),-1); <I><FONT COLOR="#B22222">// Note that r must be big enough!!!
+</FONT></I>    <B><FONT COLOR="#5F9EA0">std</FONT></B>::partial_sum(v.begin(), v.end(), r.begin(), add);
+    <B><FONT COLOR="#5F9EA0">std</FONT></B>::cout &lt;&lt; r &lt;&lt; std::endl;
+  }
+
+  { std::vector&lt;<B><FONT COLOR="#228B22">int</FONT></B>&gt; r(v.size(),-1); <I><FONT COLOR="#B22222">// Note that r must be big enough!!!
+</FONT></I>    <B><FONT COLOR="#5F9EA0">std</FONT></B>::adjacent_difference(v.begin(), v.end(), r.begin());
+    <B><FONT COLOR="#5F9EA0">std</FONT></B>::cout &lt;&lt; r &lt;&lt; std::endl;
+  }
+
+  { std::vector&lt;<B><FONT COLOR="#228B22">int</FONT></B>&gt; r(v.size(),-1); <I><FONT COLOR="#B22222">// Note that r must be big enough!!!
+</FONT></I>    <B><FONT COLOR="#5F9EA0">std</FONT></B>::adjacent_difference(v.begin(), v.end(), r.begin(), subtract);
+    <B><FONT COLOR="#5F9EA0">std</FONT></B>::cout &lt;&lt; r &lt;&lt; std::endl;
+  }
+
+} <I><FONT COLOR="#B22222">// end function main
+</FONT></I></PRE>
+<HR \/>
+<ADDRESS>Generated by <A HREF="http://www.iki.fi/~mtr/genscript/">GNU Enscript 1.6.5.90</A>.</ADDRESS>
+</BODY>
+</HTML>

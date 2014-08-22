@@ -1,0 +1,109 @@
+<!DOCTYPE html PUBLIC "-//IETF//DTD HTML 2.0//EN">
+<HTML>
+<HEAD>
+<TITLE>AUPG/fqdns.c</TITLE>
+</HEAD>
+<BODY BGCOLOR="#FFFFFF" TEXT="#000000" LINK="#1F00FF" ALINK="#FF0000" VLINK="#9900DD">
+<A NAME="top"> </A>
+<A NAME="file1"> </A>
+<H1><a href="fqdns.c">fqdns.c</a></H1>
+
+<PRE>
+<I><FONT COLOR="#B22222">/* -*- Mode:C; Coding:us-ascii-unix; fill-column:132 -*- */</FONT></I>
+<I><FONT COLOR="#B22222">/**********************************************************************************************************************************/</FONT></I>
+<I><FONT COLOR="#B22222">/**
+   @file      fqdns.c
+   @author    Mitch Richling &lt;http://www.mitchr.me/&gt;
+   @Copyright Copyright 1998 by Mitch Richling.  All rights reserved.
+   @brief     How to get a UNIX host's FQDNS name @EOL
+   @Keywords  FQDNS hostname
+   @Std       C89 POSIX BSD42
+   @Tested    
+              - Solaris 2.8
+              - MacOS X.2
+              - Linux (RH 7.3)
+
+   Getting the FQDNS from a C program is not as simple as it should be for many UNIX platforms.  The difficulty stems from the fact
+   that many UNIX platforms do not return FQDNS from a gethostbyname() call.  The related system call, gethostbyaddr() will always
+   return the FQDNS, but you must know the host's IP address to use it.  The solution is to first get the IP address associated with
+   a partial host name and then get the FQDNS name associated with it.
+***********************************************************************************************************************************/</FONT></I>
+
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;errno.h&gt;</FONT></B>              <I><FONT COLOR="#B22222">/* error stf       POSIX */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;netdb.h&gt;</FONT></B>              <I><FONT COLOR="#B22222">/* DNS lookup      ????  */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;netinet/in.h&gt;</FONT></B>         <I><FONT COLOR="#B22222">/* Inet socket     POSIX */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;stdio.h&gt;</FONT></B>              <I><FONT COLOR="#B22222">/* I/O lib         C89   */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;stdlib.h&gt;</FONT></B>             <I><FONT COLOR="#B22222">/* Standard Lib    C89   */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;string.h&gt;</FONT></B>             <I><FONT COLOR="#B22222">/* Strings         C89   */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;sys/socket.h&gt;</FONT></B>         <I><FONT COLOR="#B22222">/* UNIX sockets    POSIX */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;sys/stat.h&gt;</FONT></B>           <I><FONT COLOR="#B22222">/* UNIX stat       POSIX */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;sys/types.h&gt;</FONT></B>          <I><FONT COLOR="#B22222">/* UNIX types      POSIX */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;time.h&gt;</FONT></B>               <I><FONT COLOR="#B22222">/* time            C89   */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;unistd.h&gt;</FONT></B>             <I><FONT COLOR="#B22222">/* UNIX std stf    POSIX */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;utime.h&gt;</FONT></B>              <I><FONT COLOR="#B22222">/* utime           POSIX */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;arpa/inet.h&gt;</FONT></B>          <I><FONT COLOR="#B22222">/* inet            ????  */</FONT></I>
+
+<I><FONT COLOR="#B22222">/**********************************************************************************************************************************/</FONT></I>
+#<B><FONT COLOR="#5F9EA0">ifndef</FONT></B> <FONT COLOR="#B8860B">MAXHOSTNAMELEN</FONT>
+#<B><FONT COLOR="#5F9EA0">define</FONT></B> <FONT COLOR="#B8860B">MAXHOSTNAMELEN</FONT> 1024
+#<B><FONT COLOR="#5F9EA0">endif</FONT></B>
+
+<I><FONT COLOR="#B22222">/**********************************************************************************************************************************/</FONT></I>
+<B><FONT COLOR="#228B22">int</FONT></B> <B><FONT COLOR="#0000FF">main</FONT></B>(<B><FONT COLOR="#228B22">int</FONT></B> argc, <B><FONT COLOR="#228B22">const</FONT></B> <B><FONT COLOR="#228B22">char</FONT></B> **argv) {
+  <B><FONT COLOR="#228B22">struct</FONT></B> hostent *hpFrN, *hpFrA;
+  <B><FONT COLOR="#228B22">char</FONT></B> hostName[MAXHOSTNAMELEN];
+  <B><FONT COLOR="#228B22">char</FONT></B> **p;
+  <B><FONT COLOR="#228B22">struct</FONT></B> in_addr inetAdd;
+
+  <B><FONT COLOR="#A020F0">if</FONT></B>(argc &gt; 1) 
+    strcpy(hostName, argv[1]);
+  <B><FONT COLOR="#A020F0">else</FONT></B>
+    <B><FONT COLOR="#A020F0">if</FONT></B>(gethostname(hostName, MAXHOSTNAMELEN)) {
+      printf(<B><FONT COLOR="#BC8F8F">&quot;ERROR: Could not get hostname\n&quot;</FONT></B>);
+      exit(1);
+    } <I><FONT COLOR="#B22222">/* end if */</FONT></I>
+
+  printf(<B><FONT COLOR="#BC8F8F">&quot;host name to start with: %s\n&quot;</FONT></B>, hostName);
+
+  hpFrN = gethostbyname(hostName);
+  <B><FONT COLOR="#A020F0">if</FONT></B>(hpFrN == NULL) {
+    printf(<B><FONT COLOR="#BC8F8F">&quot;ERROR: Could not look up hostname.\n&quot;</FONT></B>);
+    exit(2);
+  } <I><FONT COLOR="#B22222">/* end if */</FONT></I>
+  
+  printf(<B><FONT COLOR="#BC8F8F">&quot;Our host name from gethostbyName: %s\n&quot;</FONT></B>, hpFrN-&gt;h_name);
+  printf(<B><FONT COLOR="#BC8F8F">&quot;Addresses found: \n&quot;</FONT></B>);
+  <B><FONT COLOR="#A020F0">for</FONT></B> (p = hpFrN-&gt;h_addr_list; *p != 0; p++) {
+      memcpy(&amp;inetAdd.s_addr, *p, <B><FONT COLOR="#A020F0">sizeof</FONT></B> (inetAdd.s_addr));
+      printf(<B><FONT COLOR="#BC8F8F">&quot;  %s\n&quot;</FONT></B>, inet_ntoa(inetAdd));
+  } <I><FONT COLOR="#B22222">/* end for */</FONT></I>
+  printf(<B><FONT COLOR="#BC8F8F">&quot;Aliases found: \n&quot;</FONT></B>);
+  <B><FONT COLOR="#A020F0">for</FONT></B> (p = hpFrN-&gt;h_aliases; *p != 0; p++) {
+      printf(<B><FONT COLOR="#BC8F8F">&quot;  %s\n&quot;</FONT></B>, *p);
+  } <I><FONT COLOR="#B22222">/* end for */</FONT></I>
+
+  hpFrA = gethostbyaddr((<B><FONT COLOR="#228B22">char</FONT></B> *)hpFrN-&gt;h_addr_list[0], hpFrN-&gt;h_length, AF_INET);
+  <B><FONT COLOR="#A020F0">if</FONT></B> (hpFrA == NULL) {
+    printf(<B><FONT COLOR="#BC8F8F">&quot;ERROR: Could not lookup host address\n&quot;</FONT></B>);
+    exit (3);
+  } <I><FONT COLOR="#B22222">/* end if */</FONT></I>
+
+  printf(<B><FONT COLOR="#BC8F8F">&quot;Our host name from gethostbyaddr: %s\n&quot;</FONT></B>, hpFrA-&gt;h_name);
+  printf(<B><FONT COLOR="#BC8F8F">&quot;Addresses found: \n&quot;</FONT></B>);
+  <B><FONT COLOR="#A020F0">for</FONT></B> (p = hpFrA-&gt;h_addr_list; *p != 0; p++) {
+      memcpy(&amp;inetAdd.s_addr, *p, <B><FONT COLOR="#A020F0">sizeof</FONT></B> (inetAdd.s_addr));
+      printf(<B><FONT COLOR="#BC8F8F">&quot;  %s\n&quot;</FONT></B>, inet_ntoa(inetAdd));
+  } <I><FONT COLOR="#B22222">/* end for */</FONT></I>
+  printf(<B><FONT COLOR="#BC8F8F">&quot;Aliases found: \n&quot;</FONT></B>);
+  <B><FONT COLOR="#A020F0">for</FONT></B> (p = hpFrA-&gt;h_aliases; *p != 0; p++) {
+      printf(<B><FONT COLOR="#BC8F8F">&quot;  %s\n&quot;</FONT></B>, *p);
+  } <I><FONT COLOR="#B22222">/* end for */</FONT></I>
+
+  <B><FONT COLOR="#A020F0">return</FONT></B> 0;
+} <I><FONT COLOR="#B22222">/* end func main */</FONT></I>
+
+</PRE>
+<HR \/>
+<ADDRESS>Generated by <A HREF="http://www.iki.fi/~mtr/genscript/">GNU Enscript 1.6.5.90</A>.</ADDRESS>
+</BODY>
+</HTML>

@@ -1,0 +1,153 @@
+<!DOCTYPE html PUBLIC "-//IETF//DTD HTML 2.0//EN">
+<HTML>
+<HEAD>
+<TITLE>AUPG/signal.c</TITLE>
+</HEAD>
+<BODY BGCOLOR="#FFFFFF" TEXT="#000000" LINK="#1F00FF" ALINK="#FF0000" VLINK="#9900DD">
+<A NAME="top"> </A>
+<A NAME="file1"> </A>
+<H1><a href="signal.c">signal.c</a></H1>
+
+<PRE>
+<I><FONT COLOR="#B22222">/* -*- Mode:C; Coding:us-ascii-unix; fill-column:132 -*- */</FONT></I>
+<I><FONT COLOR="#B22222">/**********************************************************************************************************************************/</FONT></I>
+<I><FONT COLOR="#B22222">/**
+   @file      signal.c
+   @author    Mitch Richling &lt;http://www.mitchr.me/&gt;
+   @Copyright Copyright 1993 by Mitch Richling.  All rights reserved.
+   @brief     UNIX signals and sleep@EOL
+   @Keywords  UNIX signal handler sleep
+   @Std       ISOC POSIX
+   @Tested    
+              - Solaris 2.8
+              - MacOS X.2
+              - Linux (RH 7.3)
+   
+   This C program is intended to illustrate two basic things: 1) the sleep() system call sleeps until the application receives a
+   signal and 2) some basic signal concepts.  Demonstrated concepts: 1) How to write a signal handler, 2) How to have a signal
+   handler handle more than one signal, 3) How to chain signal handlers, 4) How to set a signal handler, 5) how to ignore signals,
+   6) how to reset signal handlers to the default, and 7) how to set signal handlers back to the last handler.
+   
+   The API used is NOT the POSIX one, but rather the older signal(2) function is the primary work horse here.  Some SRV programmers
+   may recognize the signal(2) function used in this code as part of the so called &quot;unsafe&quot; signal API.  In System V a signal
+   handler is unregistered after a signal is received if this API is used.  So the first thing most signal handlers do is to
+   re-register themselves.  This leaves open a possible race condition as new signals are not blocked.  This behavior is not present
+   in BSD 4.3.  Thus in BSD, this is a safe signal API.
+   
+   To see an example of the POSIX functions, take a look at the example program sigaction.c.
+***********************************************************************************************************************************/</FONT></I>
+
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;signal.h&gt;</FONT></B>             <I><FONT COLOR="#B22222">/* UNIX signals    POSIX */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;stdlib.h&gt;</FONT></B>             <I><FONT COLOR="#B22222">/* Standard Lib    C89   */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;unistd.h&gt;</FONT></B>             <I><FONT COLOR="#B22222">/* UNIX std stf    POSIX */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;stdio.h&gt;</FONT></B>              <I><FONT COLOR="#B22222">/* I/O lib         C89   */</FONT></I>
+
+<I><FONT COLOR="#B22222">/**********************************************************************************************************************************/</FONT></I>
+<B><FONT COLOR="#228B22">void</FONT></B> <B><FONT COLOR="#0000FF">firstUserSignalAction</FONT></B>(<B><FONT COLOR="#228B22">int</FONT></B> sigNum);
+<B><FONT COLOR="#228B22">void</FONT></B> <B><FONT COLOR="#0000FF">secondUserSignalAction</FONT></B>(<B><FONT COLOR="#228B22">int</FONT></B> sigNum);
+
+<I><FONT COLOR="#B22222">/**********************************************************************************************************************************/</FONT></I>
+<I><FONT COLOR="#B22222">/* The following declares a pointer to a function taking an int and returning void */</FONT></I>
+<B><FONT COLOR="#0000FF">void</FONT></B> (*oldUserSignalAction1) (<B><FONT COLOR="#228B22">int</FONT></B>);
+<B><FONT COLOR="#0000FF">void</FONT></B> (*oldUserSignalAction2) (<B><FONT COLOR="#228B22">int</FONT></B>);
+
+<I><FONT COLOR="#B22222">/**********************************************************************************************************************************/</FONT></I>
+<B><FONT COLOR="#228B22">int</FONT></B> <B><FONT COLOR="#0000FF">main</FONT></B>(<B><FONT COLOR="#228B22">int</FONT></B> argc, <B><FONT COLOR="#228B22">char</FONT></B> *argv[]) {
+
+  <I><FONT COLOR="#B22222">/* signal() takes a signal number and a pointer to a signal handler.  It registers that function for that signal, and returns a
+     pointer to the previous signal handler.  SIG_DFL is a pointer to the default signal handler.  SIG_IGN is a pointer to the
+     &quot;ignore&quot; signal handler.  SIG_ERR is a dummy pointer that indicates an error condition.  The function can error for two
+     reasons: 1) errno=EINVAL if the given integer is not a valid signal number or 2) errno=EINVAL if one tries to give a new
+     handler for, or tries to ignore, SIGKILL or SIGSTOP. */</FONT></I>
+
+  oldUserSignalAction1 = signal(SIGUSR1, &amp;firstUserSignalAction);
+
+  <B><FONT COLOR="#A020F0">if</FONT></B>(oldUserSignalAction1 == SIG_ERR) {
+    printf(<B><FONT COLOR="#BC8F8F">&quot;ERROR: signal() call failed.\n&quot;</FONT></B>);
+    <B><FONT COLOR="#A020F0">return</FONT></B> 1;
+  } <I><FONT COLOR="#B22222">/* end if */</FONT></I>
+
+  <I><FONT COLOR="#B22222">/* This is a typical call sequence you might see in real code.  Note that it is common, but not the best.  It doesn't check for
+     previous signal handlers. */</FONT></I>
+  <B><FONT COLOR="#A020F0">if</FONT></B>(SIG_ERR == signal(SIGUSR2, &amp;firstUserSignalAction)) {
+    printf(<B><FONT COLOR="#BC8F8F">&quot;ERROR: signal() call failed.\n&quot;</FONT></B>);
+    <B><FONT COLOR="#A020F0">return</FONT></B> 1;
+  } <I><FONT COLOR="#B22222">/* end if */</FONT></I>
+
+  printf(<B><FONT COLOR="#BC8F8F">&quot;My PID: %ld\n&quot;</FONT></B>, (<B><FONT COLOR="#228B22">long</FONT></B>)getpid());
+
+  printf(<B><FONT COLOR="#BC8F8F">&quot;SIGUSR1,SIGUSR2=First.  Hit me.\n&quot;</FONT></B>);
+  sleep(600);
+  printf(<B><FONT COLOR="#BC8F8F">&quot;SIGUSR1,SIGUSR2=First.  Hit me.\n&quot;</FONT></B>);
+  sleep(600);
+  printf(<B><FONT COLOR="#BC8F8F">&quot;SIGUSR1,SIGUSR2=First.  Hit me.\n&quot;</FONT></B>);
+  sleep(600);
+
+  <I><FONT COLOR="#B22222">/* Note, with the oldUserSignalAction1 value, we can check to see what was the handler before.  This probably should be done in
+     good code because child processes inherit signal handlers.  */</FONT></I>
+  <B><FONT COLOR="#A020F0">if</FONT></B>(oldUserSignalAction1 == SIG_DFL)
+    printf(<B><FONT COLOR="#BC8F8F">&quot;Old signal action was the default.\n&quot;</FONT></B>);
+  <B><FONT COLOR="#A020F0">else</FONT></B> <B><FONT COLOR="#A020F0">if</FONT></B>(oldUserSignalAction1 == SIG_IGN)
+    printf(<B><FONT COLOR="#BC8F8F">&quot;Old signal action was to ignore.\n&quot;</FONT></B>);
+  <B><FONT COLOR="#A020F0">else</FONT></B>
+    printf(<B><FONT COLOR="#BC8F8F">&quot;Old signal action was a custom signal handler.\n&quot;</FONT></B>);
+
+  <I><FONT COLOR="#B22222">/* One common thing to do with old signal handlers is to &quot;chain&quot; them.  For example we redefine the SIGUSR1 handler, but the first
+     thing that the handler does is to call the old handler.  oldUserSignalAction2 is global so that firstUserSignalAction can be
+     used for chaining.  Note that one should NOT chain outside of the handler definition because */</FONT></I>
+  oldUserSignalAction2 = signal(SIGUSR1, &amp;secondUserSignalAction);
+
+  printf(<B><FONT COLOR="#BC8F8F">&quot;SIGUSR1=Second,SIGUSR2=First.  Hit me.\n&quot;</FONT></B>);
+  sleep(600);
+  printf(<B><FONT COLOR="#BC8F8F">&quot;SIGUSR1=Second,SIGUSR2=First.  Hit me.\n&quot;</FONT></B>);
+  sleep(600);
+  printf(<B><FONT COLOR="#BC8F8F">&quot;SIGUSR1=Second,SIGUSR2=First.  Hit me.\n&quot;</FONT></B>);
+  sleep(600);
+
+  <I><FONT COLOR="#B22222">/* One common thing to do with the return of signal() is to set the signal handler back to what it was before you mucked with it.
+     This is the method used inside the sleep() system call.  Here we set SIGUSR1 back to what it was before we set it the second
+     time. */</FONT></I>
+  signal(SIGUSR1, oldUserSignalAction2);
+
+  printf(<B><FONT COLOR="#BC8F8F">&quot;SIGUSR1,SIGUSR2=First.  Hit me.\n&quot;</FONT></B>);
+  sleep(600);
+  printf(<B><FONT COLOR="#BC8F8F">&quot;SIGUSR1,SIGUSR2=First.  Hit me.\n&quot;</FONT></B>);
+  sleep(600);
+  printf(<B><FONT COLOR="#BC8F8F">&quot;SIGUSR1,SIGUSR2=First.  Hit me.\n&quot;</FONT></B>);
+  sleep(600);
+
+  <I><FONT COLOR="#B22222">/* We now set SIGUSR1 to the default and SIGUSR2 to ignore. */</FONT></I>
+  signal(SIGUSR1, SIG_DFL);
+  signal(SIGUSR2, SIG_IGN);
+
+  printf(<B><FONT COLOR="#BC8F8F">&quot;SIGUSR1=deflt, SIGUSR2=ignore.  Hit me.\n&quot;</FONT></B>);
+  sleep(600);
+  printf(<B><FONT COLOR="#BC8F8F">&quot;SIGUSR1=deflt, SIGUSR2=ignore.  Hit me.\n&quot;</FONT></B>);
+  sleep(600);
+  printf(<B><FONT COLOR="#BC8F8F">&quot;SIGUSR1=deflt, SIGUSR2=ignore.  Hit me.\n&quot;</FONT></B>);
+  sleep(600);
+
+  <B><FONT COLOR="#A020F0">return</FONT></B> 0;
+} <I><FONT COLOR="#B22222">/* end func main */</FONT></I>
+
+<I><FONT COLOR="#B22222">/**********************************************************************************************************************************/</FONT></I>
+<I><FONT COLOR="#B22222">/* All signal handlers take a single integer argument and return void.  The integer argument has the signal number.  This lets one
+   handler handle multiple signals as demonstrated here. */</FONT></I>
+<B><FONT COLOR="#228B22">void</FONT></B> <B><FONT COLOR="#0000FF">firstUserSignalAction</FONT></B>(<B><FONT COLOR="#228B22">int</FONT></B> sigNum) {
+  <I><FONT COLOR="#B22222">/* We make SIGUSR1 &amp; SIGUSR2 both handled by this function.  We can tell what signal we got from the argument. */</FONT></I>
+  <B><FONT COLOR="#A020F0">if</FONT></B>(sigNum == SIGUSR1)
+    printf(<B><FONT COLOR="#BC8F8F">&quot;First handler. This is sigusr1(%d)\n&quot;</FONT></B>, sigNum);
+  <B><FONT COLOR="#A020F0">else</FONT></B>
+    printf(<B><FONT COLOR="#BC8F8F">&quot;First handler. This is sigusr2(%d)\n&quot;</FONT></B>, sigNum);
+} <I><FONT COLOR="#B22222">/* end func firstUserSignalAction */</FONT></I>
+
+<I><FONT COLOR="#B22222">/**********************************************************************************************************************************/</FONT></I>
+<B><FONT COLOR="#228B22">void</FONT></B> <B><FONT COLOR="#0000FF">secondUserSignalAction</FONT></B>(<B><FONT COLOR="#228B22">int</FONT></B> sigNum) {
+  (*oldUserSignalAction2) (sigNum);
+  printf(<B><FONT COLOR="#BC8F8F">&quot;Second handler.  We got signal: %d\n&quot;</FONT></B>, sigNum);
+} <I><FONT COLOR="#B22222">/* end func secondUserSignalAction */</FONT></I>
+</PRE>
+<HR \/>
+<ADDRESS>Generated by <A HREF="http://www.iki.fi/~mtr/genscript/">GNU Enscript 1.6.5.90</A>.</ADDRESS>
+</BODY>
+</HTML>

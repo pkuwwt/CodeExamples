@@ -1,0 +1,320 @@
+<!DOCTYPE html PUBLIC "-//IETF//DTD HTML 2.0//EN">
+<HTML>
+<HEAD>
+<TITLE>glut/interact.c</TITLE>
+</HEAD>
+<BODY BGCOLOR="#FFFFFF" TEXT="#000000" LINK="#1F00FF" ALINK="#FF0000" VLINK="#9900DD">
+<A NAME="top"> </A>
+<A NAME="file1"> </A>
+<H1><a href="interact.c">interact.c</a></H1>
+
+<PRE>
+<I><FONT COLOR="#B22222">/* -*- Mode:C; Coding:us-ascii-unix; fill-column:132 -*- */</FONT></I>
+<I><FONT COLOR="#B22222">/**********************************************************************************************************************************/</FONT></I>
+<I><FONT COLOR="#B22222">/**
+   @file      interact.c
+   @author    Mitch Richling &lt;http://www.mitchr.me/&gt;
+   @Copyright Copyright 1997 by Mitch Richling.  All rights reserved.
+   @brief     How to get input and process it with GLUT.@EOL
+   @Keywords  input mouse keyboard glut
+   @Std       C99
+
+   This little program demonstrates how to get input from the keyboard and detect various mouse events.  Also demonstrated are
+   several callbacks: display callback, timer callbacks, and the idle callback.
+***********************************************************************************************************************************/</FONT></I>
+
+<I><FONT COLOR="#B22222">/**********************************************************************************************************************************/</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;stdio.h&gt;</FONT></B>              <I><FONT COLOR="#B22222">/* I/O lib         ISOC  */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;stdlib.h&gt;</FONT></B>             <I><FONT COLOR="#B22222">/* Standard Lib    ISOC  */</FONT></I>
+
+<I><FONT COLOR="#B22222">/**********************************************************************************************************************************/</FONT></I>
+<I><FONT COLOR="#B22222">/* Apple puts GLUT into a framework named GLUT, while the rest of the world just sticks GLUT into the GL include directory... */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">ifdef</FONT></B> <FONT COLOR="#B8860B">__APPLE__</FONT>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;GLUT/glut.h&gt;</FONT></B>          <I><FONT COLOR="#B22222">/* Open GL Util    APPLE */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">else</FONT></B>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;GL/glut.h&gt;</FONT></B>            <I><FONT COLOR="#B22222">/* Open GL Util    OpenGL*/</FONT></I>
+#<B><FONT COLOR="#5F9EA0">endif</FONT></B>
+
+<I><FONT COLOR="#B22222">/**********************************************************************************************************************************/</FONT></I>
+<B><FONT COLOR="#228B22">static</FONT></B> <B><FONT COLOR="#228B22">float</FONT></B> eangle = 0.0;
+<B><FONT COLOR="#228B22">static</FONT></B> <B><FONT COLOR="#228B22">float</FONT></B> eangleDelta = 0.5;
+<B><FONT COLOR="#228B22">int</FONT></B> mainWindow;
+
+<I><FONT COLOR="#B22222">/**********************************************************************************************************************************/</FONT></I>
+<B><FONT COLOR="#228B22">void</FONT></B> <B><FONT COLOR="#0000FF">displayCall</FONT></B>() {
+  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+  glEnable(GL_DEPTH_TEST);
+
+  glMatrixMode(GL_PROJECTION);
+  glLoadIdentity();
+  glOrtho(-2.0, 2.0, -2.0, 2.0, -2.0, 500.0);
+
+  glMatrixMode(GL_MODELVIEW);
+  glLoadIdentity();
+  gluLookAt(2, 2, 2, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0);
+  glScalef(.005,.005,.005);
+  glRotatef(eangle, 0, 1, 0);
+  glTranslatef(-300, 0, 0);
+    
+  glColor3f(1,1,1);
+  glutStrokeCharacter(GLUT_STROKE_ROMAN, <B><FONT COLOR="#BC8F8F">'H'</FONT></B>);
+  glutStrokeCharacter(GLUT_STROKE_ROMAN, <B><FONT COLOR="#BC8F8F">'e'</FONT></B>);
+  glutStrokeCharacter(GLUT_STROKE_ROMAN, <B><FONT COLOR="#BC8F8F">'l'</FONT></B>);
+  glutStrokeCharacter(GLUT_STROKE_ROMAN, <B><FONT COLOR="#BC8F8F">'l'</FONT></B>);
+  glutStrokeCharacter(GLUT_STROKE_ROMAN, <B><FONT COLOR="#BC8F8F">'o'</FONT></B>);
+
+  glutStrokeCharacter(GLUT_STROKE_ROMAN, <B><FONT COLOR="#BC8F8F">'W'</FONT></B>);
+  glutStrokeCharacter(GLUT_STROKE_ROMAN, <B><FONT COLOR="#BC8F8F">'o'</FONT></B>);
+  glutStrokeCharacter(GLUT_STROKE_ROMAN, <B><FONT COLOR="#BC8F8F">'r'</FONT></B>);
+  glutStrokeCharacter(GLUT_STROKE_ROMAN, <B><FONT COLOR="#BC8F8F">'l'</FONT></B>);
+  glutStrokeCharacter(GLUT_STROKE_ROMAN, <B><FONT COLOR="#BC8F8F">'d'</FONT></B>);
+  glutStrokeCharacter(GLUT_STROKE_ROMAN, <B><FONT COLOR="#BC8F8F">'!'</FONT></B>);
+        
+  glutSwapBuffers();
+} <I><FONT COLOR="#B22222">/* end func displayCall */</FONT></I>
+
+<I><FONT COLOR="#B22222">/**********************************************************************************************************************************/</FONT></I>
+<I><FONT COLOR="#B22222">/* Called when a key is released... */</FONT></I>
+<B><FONT COLOR="#228B22">void</FONT></B> <B><FONT COLOR="#0000FF">keyboardUpCall</FONT></B>(<B><FONT COLOR="#228B22">unsigned</FONT></B> <B><FONT COLOR="#228B22">char</FONT></B> key, <B><FONT COLOR="#228B22">int</FONT></B> x, <B><FONT COLOR="#228B22">int</FONT></B> y) {
+} <I><FONT COLOR="#B22222">/* end func keyboardUpCall */</FONT></I>
+
+<I><FONT COLOR="#B22222">/**********************************************************************************************************************************/</FONT></I>
+<I><FONT COLOR="#B22222">/* Key presses */</FONT></I>
+<B><FONT COLOR="#228B22">void</FONT></B> <B><FONT COLOR="#0000FF">keyboardCall</FONT></B>(<B><FONT COLOR="#228B22">unsigned</FONT></B> <B><FONT COLOR="#228B22">char</FONT></B> key, <B><FONT COLOR="#228B22">int</FONT></B> x, <B><FONT COLOR="#228B22">int</FONT></B> y) {
+  <B><FONT COLOR="#228B22">char</FONT></B> *m;
+  <B><FONT COLOR="#228B22">int</FONT></B> kbMod;
+  <I><FONT COLOR="#B22222">/* Can only be called during mouse callback or kbd callback. */</FONT></I>
+  kbMod = glutGetModifiers();
+  <B><FONT COLOR="#A020F0">if</FONT></B>(kbMod == GLUT_ACTIVE_SHIFT) {
+    m = <B><FONT COLOR="#BC8F8F">&quot;SHIFT&quot;</FONT></B>;
+  } <B><FONT COLOR="#A020F0">else</FONT></B> <B><FONT COLOR="#A020F0">if</FONT></B>(kbMod == GLUT_ACTIVE_CTRL) {
+    m = <B><FONT COLOR="#BC8F8F">&quot;CTRL&quot;</FONT></B>;
+  } <B><FONT COLOR="#A020F0">else</FONT></B> <B><FONT COLOR="#A020F0">if</FONT></B>(kbMod == GLUT_ACTIVE_ALT) {
+    m = <B><FONT COLOR="#BC8F8F">&quot;ALR&quot;</FONT></B>;
+  } <B><FONT COLOR="#A020F0">else</FONT></B> {
+    m = <B><FONT COLOR="#BC8F8F">&quot;NONE&quot;</FONT></B>;
+  } <I><FONT COLOR="#B22222">/* end if */</FONT></I>
+  printf(<B><FONT COLOR="#BC8F8F">&quot;KEY: %c with mod: %s\n&quot;</FONT></B>, key, m);
+} <I><FONT COLOR="#B22222">/* end func keyboardCall */</FONT></I>
+
+<I><FONT COLOR="#B22222">/**********************************************************************************************************************************/</FONT></I>
+<I><FONT COLOR="#B22222">/* Special Key presses */</FONT></I>
+<B><FONT COLOR="#228B22">void</FONT></B> <B><FONT COLOR="#0000FF">specialCall</FONT></B>(<B><FONT COLOR="#228B22">int</FONT></B> key, <B><FONT COLOR="#228B22">int</FONT></B> x, <B><FONT COLOR="#228B22">int</FONT></B> y) {
+  <B><FONT COLOR="#A020F0">if</FONT></B>       (key == GLUT_KEY_F1       ) { printf(<B><FONT COLOR="#BC8F8F">&quot;KEY: F1        &quot;</FONT></B>);
+  } <B><FONT COLOR="#A020F0">else</FONT></B> <B><FONT COLOR="#A020F0">if</FONT></B>(key == GLUT_KEY_F2       ) { printf(<B><FONT COLOR="#BC8F8F">&quot;KEY: F2        &quot;</FONT></B>);
+  } <B><FONT COLOR="#A020F0">else</FONT></B> <B><FONT COLOR="#A020F0">if</FONT></B>(key == GLUT_KEY_F3       ) { printf(<B><FONT COLOR="#BC8F8F">&quot;KEY: F3        &quot;</FONT></B>);
+  } <B><FONT COLOR="#A020F0">else</FONT></B> <B><FONT COLOR="#A020F0">if</FONT></B>(key == GLUT_KEY_F4       ) { printf(<B><FONT COLOR="#BC8F8F">&quot;KEY: F4        &quot;</FONT></B>);
+  } <B><FONT COLOR="#A020F0">else</FONT></B> <B><FONT COLOR="#A020F0">if</FONT></B>(key == GLUT_KEY_F5       ) { printf(<B><FONT COLOR="#BC8F8F">&quot;KEY: F5        &quot;</FONT></B>);
+  } <B><FONT COLOR="#A020F0">else</FONT></B> <B><FONT COLOR="#A020F0">if</FONT></B>(key == GLUT_KEY_F6       ) { printf(<B><FONT COLOR="#BC8F8F">&quot;KEY: F6        &quot;</FONT></B>);
+  } <B><FONT COLOR="#A020F0">else</FONT></B> <B><FONT COLOR="#A020F0">if</FONT></B>(key == GLUT_KEY_F7       ) { printf(<B><FONT COLOR="#BC8F8F">&quot;KEY: F7        &quot;</FONT></B>);
+  } <B><FONT COLOR="#A020F0">else</FONT></B> <B><FONT COLOR="#A020F0">if</FONT></B>(key == GLUT_KEY_F8       ) { printf(<B><FONT COLOR="#BC8F8F">&quot;KEY: F8        &quot;</FONT></B>);
+  } <B><FONT COLOR="#A020F0">else</FONT></B> <B><FONT COLOR="#A020F0">if</FONT></B>(key == GLUT_KEY_F9       ) { printf(<B><FONT COLOR="#BC8F8F">&quot;KEY: F9        &quot;</FONT></B>);
+  } <B><FONT COLOR="#A020F0">else</FONT></B> <B><FONT COLOR="#A020F0">if</FONT></B>(key == GLUT_KEY_F10      ) { printf(<B><FONT COLOR="#BC8F8F">&quot;KEY: F10       &quot;</FONT></B>);
+  } <B><FONT COLOR="#A020F0">else</FONT></B> <B><FONT COLOR="#A020F0">if</FONT></B>(key == GLUT_KEY_F11      ) { printf(<B><FONT COLOR="#BC8F8F">&quot;KEY: F11       &quot;</FONT></B>);
+  } <B><FONT COLOR="#A020F0">else</FONT></B> <B><FONT COLOR="#A020F0">if</FONT></B>(key == GLUT_KEY_F12      ) { printf(<B><FONT COLOR="#BC8F8F">&quot;KEY: F12       &quot;</FONT></B>);
+  } <B><FONT COLOR="#A020F0">else</FONT></B> <B><FONT COLOR="#A020F0">if</FONT></B>(key == GLUT_KEY_LEFT     ) { printf(<B><FONT COLOR="#BC8F8F">&quot;KEY: LEFT      &quot;</FONT></B>);
+  } <B><FONT COLOR="#A020F0">else</FONT></B> <B><FONT COLOR="#A020F0">if</FONT></B>(key == GLUT_KEY_UP       ) { printf(<B><FONT COLOR="#BC8F8F">&quot;KEY: UP        &quot;</FONT></B>);
+  } <B><FONT COLOR="#A020F0">else</FONT></B> <B><FONT COLOR="#A020F0">if</FONT></B>(key == GLUT_KEY_RIGHT    ) { printf(<B><FONT COLOR="#BC8F8F">&quot;KEY: RIGHT     &quot;</FONT></B>);
+  } <B><FONT COLOR="#A020F0">else</FONT></B> <B><FONT COLOR="#A020F0">if</FONT></B>(key == GLUT_KEY_DOWN     ) { printf(<B><FONT COLOR="#BC8F8F">&quot;KEY: DOWN      &quot;</FONT></B>);
+  } <B><FONT COLOR="#A020F0">else</FONT></B> <B><FONT COLOR="#A020F0">if</FONT></B>(key == GLUT_KEY_PAGE_UP  ) { printf(<B><FONT COLOR="#BC8F8F">&quot;KEY: PAGE_UP   &quot;</FONT></B>);
+  } <B><FONT COLOR="#A020F0">else</FONT></B> <B><FONT COLOR="#A020F0">if</FONT></B>(key == GLUT_KEY_PAGE_DOWN) { printf(<B><FONT COLOR="#BC8F8F">&quot;KEY: PAGE_DOWN &quot;</FONT></B>);
+  } <B><FONT COLOR="#A020F0">else</FONT></B> <B><FONT COLOR="#A020F0">if</FONT></B>(key == GLUT_KEY_HOME     ) { printf(<B><FONT COLOR="#BC8F8F">&quot;KEY: HOME      &quot;</FONT></B>);
+  } <B><FONT COLOR="#A020F0">else</FONT></B> <B><FONT COLOR="#A020F0">if</FONT></B>(key == GLUT_KEY_END      ) { printf(<B><FONT COLOR="#BC8F8F">&quot;KEY: END       &quot;</FONT></B>);
+  } <B><FONT COLOR="#A020F0">else</FONT></B> <B><FONT COLOR="#A020F0">if</FONT></B>(key == GLUT_KEY_INSERT   ) { printf(<B><FONT COLOR="#BC8F8F">&quot;KEY: INSERT    &quot;</FONT></B>);
+  } <B><FONT COLOR="#A020F0">else</FONT></B>                               { printf(<B><FONT COLOR="#BC8F8F">&quot;KEY: UNKNOWN   &quot;</FONT></B>);
+  }
+  printf(<B><FONT COLOR="#BC8F8F">&quot;AT: (%d,%d)\n&quot;</FONT></B>, x, y);
+} <I><FONT COLOR="#B22222">/* end func specialCall */</FONT></I>
+
+<I><FONT COLOR="#B22222">/**********************************************************************************************************************************/</FONT></I>
+<I><FONT COLOR="#B22222">/* Mouse clicks */</FONT></I>
+<B><FONT COLOR="#228B22">void</FONT></B> <B><FONT COLOR="#0000FF">mouseCall</FONT></B>(<B><FONT COLOR="#228B22">int</FONT></B> button, <B><FONT COLOR="#228B22">int</FONT></B> state, <B><FONT COLOR="#228B22">int</FONT></B> x, <B><FONT COLOR="#228B22">int</FONT></B> y) {
+  <B><FONT COLOR="#228B22">char</FONT></B> *b, *m;
+  <B><FONT COLOR="#228B22">int</FONT></B> kbMod;
+
+  <B><FONT COLOR="#A020F0">if</FONT></B>       (button == GLUT_LEFT_BUTTON)   {  <I><FONT COLOR="#B22222">/* MacOS X: Ctr-Click */</FONT></I>
+    b = <B><FONT COLOR="#BC8F8F">&quot;left button&quot;</FONT></B>;
+  } <B><FONT COLOR="#A020F0">else</FONT></B> <B><FONT COLOR="#A020F0">if</FONT></B>(button == GLUT_MIDDLE_BUTTON) {  <I><FONT COLOR="#B22222">/* MacOS X: Opt-Click */</FONT></I>
+    b = <B><FONT COLOR="#BC8F8F">&quot;middle button&quot;</FONT></B>;
+  } <B><FONT COLOR="#A020F0">else</FONT></B> <B><FONT COLOR="#A020F0">if</FONT></B>(button == GLUT_RIGHT_BUTTON)  {  <I><FONT COLOR="#B22222">/* MacOS X: Click */</FONT></I>
+    b = <B><FONT COLOR="#BC8F8F">&quot;right button&quot;</FONT></B>;
+  } <B><FONT COLOR="#A020F0">else</FONT></B> {
+    b = <B><FONT COLOR="#BC8F8F">&quot;unknown&quot;</FONT></B>;
+  } <I><FONT COLOR="#B22222">/* end if/else */</FONT></I>
+
+  <I><FONT COLOR="#B22222">/* Can only be called during mouse callback or kbd callback.  Note that menu binding will capture clicks before they get here.
+     Also note that on some platforms, MacOS X, mouse buttons may be emulated with various combinations of keys and the single mouse
+     button -- so ctrl-click and alt-click may not be possible.  Shift-click is almost always possible.*/</FONT></I>
+  kbMod = glutGetModifiers();
+  <B><FONT COLOR="#A020F0">if</FONT></B>(kbMod == GLUT_ACTIVE_SHIFT) {
+    m = <B><FONT COLOR="#BC8F8F">&quot;SHIFT&quot;</FONT></B>;
+  } <B><FONT COLOR="#A020F0">else</FONT></B> <B><FONT COLOR="#A020F0">if</FONT></B>(kbMod == GLUT_ACTIVE_CTRL) {
+    m = <B><FONT COLOR="#BC8F8F">&quot;CTRL&quot;</FONT></B>;
+  } <B><FONT COLOR="#A020F0">else</FONT></B> <B><FONT COLOR="#A020F0">if</FONT></B>(kbMod == GLUT_ACTIVE_ALT) {
+    m = <B><FONT COLOR="#BC8F8F">&quot;ALR&quot;</FONT></B>;
+  } <B><FONT COLOR="#A020F0">else</FONT></B> {
+    m = <B><FONT COLOR="#BC8F8F">&quot;NONE&quot;</FONT></B>;
+  } <I><FONT COLOR="#B22222">/* end if/else */</FONT></I>
+
+  <B><FONT COLOR="#A020F0">if</FONT></B>(state == GLUT_DOWN) {
+    printf(<B><FONT COLOR="#BC8F8F">&quot;Mouse Depress: b(%s/%d/%s)@(%d,%d)\n&quot;</FONT></B>, b, button, m, x, y);
+  } <B><FONT COLOR="#A020F0">else</FONT></B> <B><FONT COLOR="#A020F0">if</FONT></B>(state == GLUT_UP) {
+    printf(<B><FONT COLOR="#BC8F8F">&quot;Mouse Release: b(%s/%d/%s)@(%d,%d)\n&quot;</FONT></B>, b, button, m, x, y);
+  } <B><FONT COLOR="#A020F0">else</FONT></B> {
+    printf(<B><FONT COLOR="#BC8F8F">&quot;Unknown Mouse Click Event: b(%d/%s)@(%d,%d)\n&quot;</FONT></B>, button, m, x, y);
+  } <I><FONT COLOR="#B22222">/* end if/else */</FONT></I>
+}  <I><FONT COLOR="#B22222">/* end func mouseCall */</FONT></I>
+
+<I><FONT COLOR="#B22222">/**********************************************************************************************************************************/</FONT></I>
+<I><FONT COLOR="#B22222">/* Mouse move with button press */</FONT></I>
+<B><FONT COLOR="#228B22">void</FONT></B> <B><FONT COLOR="#0000FF">motionCall</FONT></B>(<B><FONT COLOR="#228B22">int</FONT></B> x, <B><FONT COLOR="#228B22">int</FONT></B> y) {
+  <B><FONT COLOR="#228B22">static</FONT></B> <B><FONT COLOR="#228B22">int</FONT></B> notInit;
+  <B><FONT COLOR="#228B22">static</FONT></B> <B><FONT COLOR="#228B22">int</FONT></B> oldX;
+  <B><FONT COLOR="#228B22">static</FONT></B> <B><FONT COLOR="#228B22">int</FONT></B> oldY;
+  <B><FONT COLOR="#A020F0">if</FONT></B>(notInit) {
+    printf(<B><FONT COLOR="#BC8F8F">&quot;MOTION: (%d,%d) -&gt; (%d,%d)\n&quot;</FONT></B>, oldX, oldY, x, y);  
+    oldX = x;
+    oldY = y;
+  } <B><FONT COLOR="#A020F0">else</FONT></B> {
+    printf(<B><FONT COLOR="#BC8F8F">&quot;MOTION: (%d,%d)\n&quot;</FONT></B>, x, y);  
+    oldX = x;
+    oldY = y;
+    notInit = 1;
+  } <I><FONT COLOR="#B22222">/* end if/else */</FONT></I>
+} <I><FONT COLOR="#B22222">/* end func motionCall */</FONT></I>
+
+<I><FONT COLOR="#B22222">/* Mouse move with button press */</FONT></I>
+<B><FONT COLOR="#228B22">void</FONT></B> <B><FONT COLOR="#0000FF">joystickCall</FONT></B>(<B><FONT COLOR="#228B22">unsigned</FONT></B> <B><FONT COLOR="#228B22">int</FONT></B> buttonMask, <B><FONT COLOR="#228B22">int</FONT></B> x, <B><FONT COLOR="#228B22">int</FONT></B> y, <B><FONT COLOR="#228B22">int</FONT></B> z) {
+  printf(<B><FONT COLOR="#BC8F8F">&quot;JOYSTICK: %ud @ (%d,%d,%d)\n&quot;</FONT></B>, buttonMask, x, y, z);
+} <I><FONT COLOR="#B22222">/* end func joystickCall */</FONT></I>
+
+<I><FONT COLOR="#B22222">/*  Spaceball translation.. Passive. x, y, and z are normalized to [-1000,1000]*/</FONT></I>
+<B><FONT COLOR="#228B22">void</FONT></B> <B><FONT COLOR="#0000FF">spaceballMotionCall</FONT></B>(<B><FONT COLOR="#228B22">int</FONT></B> x, <B><FONT COLOR="#228B22">int</FONT></B> y, <B><FONT COLOR="#228B22">int</FONT></B> z) {
+  printf(<B><FONT COLOR="#BC8F8F">&quot;SPACEBALL TRN: (%d,%d,%d)\n&quot;</FONT></B>, x, y, z);
+} <I><FONT COLOR="#B22222">/* end func spaceballMotionCall */</FONT></I>
+
+<I><FONT COLOR="#B22222">/*  Spaceball translation.. Passive. x, y, and z are normalized to [-1000,1000]*/</FONT></I>
+<B><FONT COLOR="#228B22">void</FONT></B> <B><FONT COLOR="#0000FF">spaceballRotateFunc</FONT></B>(<B><FONT COLOR="#228B22">int</FONT></B> x, <B><FONT COLOR="#228B22">int</FONT></B> y, <B><FONT COLOR="#228B22">int</FONT></B> z) {
+  printf(<B><FONT COLOR="#BC8F8F">&quot;SPACEBALL ROT: (%d,%d,%d)\n&quot;</FONT></B>, x, y, z);
+} <I><FONT COLOR="#B22222">/* end func spaceballRotateFunc */</FONT></I>
+
+<I><FONT COLOR="#B22222">/**********************************************************************************************************************************/</FONT></I>
+<I><FONT COLOR="#B22222">/*  What to do for spaceball buttons.. */</FONT></I>
+<B><FONT COLOR="#228B22">void</FONT></B> <B><FONT COLOR="#0000FF">spaceballButtonFunc</FONT></B>(<B><FONT COLOR="#228B22">int</FONT></B> button, <B><FONT COLOR="#228B22">int</FONT></B> state) {
+  printf(<B><FONT COLOR="#BC8F8F">&quot;SPACEBALL BUTTONS:  Button: %d    State: %d\n&quot;</FONT></B>, button, state);
+} <I><FONT COLOR="#B22222">/* end func spaceballButtonFunc */</FONT></I>
+
+<I><FONT COLOR="#B22222">/**********************************************************************************************************************************/</FONT></I>
+<B><FONT COLOR="#228B22">void</FONT></B> <B><FONT COLOR="#0000FF">menuCall</FONT></B>(<B><FONT COLOR="#228B22">int</FONT></B> value) {
+  printf(<B><FONT COLOR="#BC8F8F">&quot;MENU: %d\n&quot;</FONT></B>, value);
+  <B><FONT COLOR="#A020F0">if</FONT></B>       (value == 20) {
+    eangle = 0;
+  } <B><FONT COLOR="#A020F0">else</FONT></B> <B><FONT COLOR="#A020F0">if</FONT></B>(value == 21) {
+  } <B><FONT COLOR="#A020F0">else</FONT></B> <B><FONT COLOR="#A020F0">if</FONT></B>(value == 10) {
+    glutPostRedisplay();
+  } <B><FONT COLOR="#A020F0">else</FONT></B> <B><FONT COLOR="#A020F0">if</FONT></B>(value == 11) {
+    glutDestroyWindow(mainWindow);
+    exit(0);
+  } <B><FONT COLOR="#A020F0">else</FONT></B> <B><FONT COLOR="#A020F0">if</FONT></B>(value == 0) {
+    printf(<B><FONT COLOR="#BC8F8F">&quot;Hello to you too!!&quot;</FONT></B>);
+  } <I><FONT COLOR="#B22222">/* end if/else */</FONT></I>
+} <I><FONT COLOR="#B22222">/* end func menuCall */</FONT></I>
+
+<I><FONT COLOR="#B22222">/**********************************************************************************************************************************/</FONT></I>
+<B><FONT COLOR="#228B22">void</FONT></B> <B><FONT COLOR="#0000FF">passiveMotionCall</FONT></B>(<B><FONT COLOR="#228B22">int</FONT></B> x, <B><FONT COLOR="#228B22">int</FONT></B> y) { 
+  printf(<B><FONT COLOR="#BC8F8F">&quot;PASSIVE MOTION: (%d,%d)\n&quot;</FONT></B>, x, y);  
+} <I><FONT COLOR="#B22222">/* end func passiveMotionCall */</FONT></I>
+
+<I><FONT COLOR="#B22222">/**********************************************************************************************************************************/</FONT></I>
+<B><FONT COLOR="#228B22">void</FONT></B> <B><FONT COLOR="#0000FF">entryCall</FONT></B>(<B><FONT COLOR="#228B22">int</FONT></B> state) {
+  <B><FONT COLOR="#A020F0">if</FONT></B>(state == GLUT_LEFT) {
+    printf(<B><FONT COLOR="#BC8F8F">&quot;ENTRY/EXIT EVENT: LEFT\n&quot;</FONT></B>);
+  } <B><FONT COLOR="#A020F0">else</FONT></B> <B><FONT COLOR="#A020F0">if</FONT></B>(state == GLUT_ENTERED) {
+    printf(<B><FONT COLOR="#BC8F8F">&quot;ENTRY/EXIT EVENT: ENTERED\n&quot;</FONT></B>);
+  } <B><FONT COLOR="#A020F0">else</FONT></B> {
+    printf(<B><FONT COLOR="#BC8F8F">&quot;UNKNOWN ERROR: glutEntryFunc\n&quot;</FONT></B>);
+  } <I><FONT COLOR="#B22222">/* end if/else */</FONT></I>
+} <I><FONT COLOR="#B22222">/* end func entryCall */</FONT></I>
+
+<I><FONT COLOR="#B22222">/**********************************************************************************************************************************/</FONT></I>
+<B><FONT COLOR="#228B22">void</FONT></B> <B><FONT COLOR="#0000FF">buildMenu</FONT></B>() {
+  <B><FONT COLOR="#228B22">int</FONT></B> subMenu1, subMenu2;
+  <B><FONT COLOR="#228B22">int</FONT></B> mainMenu;
+
+  subMenu1 = glutCreateMenu(menuCall);
+  glutAddMenuEntry(<B><FONT COLOR="#BC8F8F">&quot;Redraw&quot;</FONT></B>, 10);
+  glutAddMenuEntry(<B><FONT COLOR="#BC8F8F">&quot;Quit&quot;</FONT></B>,   11);
+
+  subMenu2 = glutCreateMenu(menuCall);
+  glutAddMenuEntry(<B><FONT COLOR="#BC8F8F">&quot;Reset Angle&quot;</FONT></B>, 20);
+  glutAddMenuEntry(<B><FONT COLOR="#BC8F8F">&quot;Reset Size&quot;</FONT></B>,  21);
+
+  mainMenu = glutCreateMenu(menuCall);
+  glutAddMenuEntry(<B><FONT COLOR="#BC8F8F">&quot;Hello&quot;</FONT></B>, 0);
+  glutAddSubMenu(<B><FONT COLOR="#BC8F8F">&quot;Reset&quot;</FONT></B>, subMenu2);
+  glutAddSubMenu(<B><FONT COLOR="#BC8F8F">&quot;System&quot;</FONT></B>, subMenu1);
+  glutAttachMenu(GLUT_RIGHT_BUTTON);
+
+} <I><FONT COLOR="#B22222">/* end func buildMenu */</FONT></I>
+
+<I><FONT COLOR="#B22222">/**********************************************************************************************************************************/</FONT></I>
+<I><FONT COLOR="#B22222">/* Call when we do nothing...  Don't do too much in this function.  It is best to use the timerFunction to do things like rotate as
+ that gives precise control over call rate..*/</FONT></I>
+<B><FONT COLOR="#228B22">void</FONT></B> <B><FONT COLOR="#0000FF">idleCall</FONT></B>() {
+  <I><FONT COLOR="#B22222">/* 
+  eangle += eangleDelta;
+  if(eangle &gt;= 360.0)
+    eangle -= 360.0;
+   glutPostRedisplay();
+  */</FONT></I>
+} <I><FONT COLOR="#B22222">/* end func idleCall */</FONT></I>
+
+<I><FONT COLOR="#B22222">/**********************************************************************************************************************************/</FONT></I>
+<I><FONT COLOR="#B22222">/* call periodically called -- can have lots of them, and they must be re-registered each time they are called.  Using a timer for
+   animation, instead of glutIdleFunc, makes the animation uniform across platforms and will use MUCH less CPU on higher performance
+   platforms... */</FONT></I>
+<B><FONT COLOR="#228B22">void</FONT></B> <B><FONT COLOR="#0000FF">timerCall</FONT></B>(<B><FONT COLOR="#228B22">int</FONT></B> value) {
+  eangle += eangleDelta;
+  <B><FONT COLOR="#A020F0">if</FONT></B>(eangle &gt;= 360.0)
+    eangle -= 360.0;
+   glutPostRedisplay();
+   <I><FONT COLOR="#B22222">/* Note we have to start the timer up again after it fires. */</FONT></I>
+   glutTimerFunc(50 <I><FONT COLOR="#B22222">/*msecs*/</FONT></I>, timerCall, 0 <I><FONT COLOR="#B22222">/*value to pass*/</FONT></I>);
+   <I><FONT COLOR="#B22222">/*printf(&quot;TIMER CALL\n&quot;);*/</FONT></I>
+} <I><FONT COLOR="#B22222">/* end func timerCall */</FONT></I>
+
+<I><FONT COLOR="#B22222">/**********************************************************************************************************************************/</FONT></I>
+<B><FONT COLOR="#228B22">int</FONT></B> <B><FONT COLOR="#0000FF">main</FONT></B>(<B><FONT COLOR="#228B22">int</FONT></B> argc, <B><FONT COLOR="#228B22">char</FONT></B> *argv[]) {
+  glutInit(&amp;argc, argv);
+  glutInitDisplayMode(GLUT_RGB | GLUT_DOUBLE | GLUT_DEPTH);
+  glutInitWindowSize(500, 500);
+  glutInitWindowPosition(300, 200);
+  mainWindow = glutCreateWindow(<B><FONT COLOR="#BC8F8F">&quot;User Interaction Demo&quot;</FONT></B>);
+  glutDisplayFunc(displayCall);
+<I><FONT COLOR="#B22222">/*  glutIdleFunc(idleCall); */</FONT></I>
+  glutTimerFunc(50 <I><FONT COLOR="#B22222">/*msecs*/</FONT></I>, timerCall, 0 <I><FONT COLOR="#B22222">/*value to pass*/</FONT></I>);
+  glutKeyboardFunc(keyboardCall);
+
+<I><FONT COLOR="#B22222">/* Use the following to detect key releases
+  glutSetKeyRepeat(GLUT_KEY_REPEAT_OFF);
+  glutKeyboardUpFunc(keyboardUpCall);
+*/</FONT></I>
+
+  glutSpecialFunc(specialCall);
+  glutMotionFunc(motionCall);
+<I><FONT COLOR="#B22222">/*  glutPassiveMotionFunc(passiveMotionCall); */</FONT></I>
+  glutMouseFunc(mouseCall);
+  glutEntryFunc(entryCall);
+<I><FONT COLOR="#B22222">/*  glutJoystickFunc(joystickCall, 1000); */</FONT></I>
+  glutSpaceballMotionFunc(spaceballMotionCall);
+  glutSpaceballRotateFunc(spaceballRotateFunc);
+  glutSpaceballButtonFunc(spaceballButtonFunc);
+  buildMenu();
+  glutMainLoop();
+  <B><FONT COLOR="#A020F0">return</FONT></B> 0;
+} <I><FONT COLOR="#B22222">/* end func main */</FONT></I>
+</PRE>
+<HR \/>
+<ADDRESS>Generated by <A HREF="http://www.iki.fi/~mtr/genscript/">GNU Enscript 1.6.5.90</A>.</ADDRESS>
+</BODY>
+</HTML>

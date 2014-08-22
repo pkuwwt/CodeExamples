@@ -1,0 +1,110 @@
+<!DOCTYPE html PUBLIC "-//IETF//DTD HTML 2.0//EN">
+<HTML>
+<HEAD>
+<TITLE>glut/lightedSphere.c</TITLE>
+</HEAD>
+<BODY BGCOLOR="#FFFFFF" TEXT="#000000" LINK="#1F00FF" ALINK="#FF0000" VLINK="#9900DD">
+<A NAME="top"> </A>
+<A NAME="file1"> </A>
+<H1><a href="lightedSphere.c">lightedSphere.c</a></H1>
+
+<PRE>
+<I><FONT COLOR="#B22222">/* -*- Mode:C; Coding:us-ascii-unix; fill-column:132 -*- */</FONT></I>
+<I><FONT COLOR="#B22222">/**********************************************************************************************************************************/</FONT></I>
+<I><FONT COLOR="#B22222">/**
+   @file      lightedSphere.c
+   @author    Mitch Richling &lt;http://www.mitchr.me/&gt;
+   @Copyright Copyright 1997 by Mitch Richling.  All rights reserved.
+   @brief     lighted poly shadeing   @EOL
+   @Keywords  none
+   @Std       C99
+
+   Demonstrates how to draw filled polygons and how to place a light.
+***********************************************************************************************************************************/</FONT></I>
+
+<I><FONT COLOR="#B22222">/**********************************************************************************************************************************/</FONT></I>
+<I><FONT COLOR="#B22222">/* Apple puts GLUT into a framework named GLUT, while the rest of the world just sticks GLUT into the GL include directory... */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">ifdef</FONT></B> <FONT COLOR="#B8860B">__APPLE__</FONT>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;GLUT/glut.h&gt;</FONT></B>          <I><FONT COLOR="#B22222">/* Open GL Util    APPLE */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">else</FONT></B>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;GL/glut.h&gt;</FONT></B>            <I><FONT COLOR="#B22222">/* Open GL Util    OpenGL*/</FONT></I>
+#<B><FONT COLOR="#5F9EA0">endif</FONT></B>
+
+<I><FONT COLOR="#B22222">/**********************************************************************************************************************************/</FONT></I>
+<B><FONT COLOR="#228B22">static</FONT></B> <B><FONT COLOR="#228B22">float</FONT></B> angle = 0;
+<B><FONT COLOR="#228B22">static</FONT></B> <B><FONT COLOR="#228B22">float</FONT></B> angleDelta = 0.3;
+<B><FONT COLOR="#228B22">static</FONT></B> <B><FONT COLOR="#228B22">float</FONT></B> eangle = 0.0;
+<B><FONT COLOR="#228B22">static</FONT></B> <B><FONT COLOR="#228B22">float</FONT></B> eangleDelta = 0.1;
+
+<I><FONT COLOR="#B22222">/**********************************************************************************************************************************/</FONT></I>
+<B><FONT COLOR="#228B22">void</FONT></B> <B><FONT COLOR="#0000FF">displayCall</FONT></B>() {
+  GLfloat specMat[] = {1,1,1,1};
+  GLfloat shnyMat[] = { 50 };
+  GLfloat lightPos[] = {2, 2, 2, 0};
+  GLfloat whiteLight[] = { 1, 1, 1, 1};
+  GLfloat ambLight[] = { 0.51, 0.51, 0.51, 1.0};
+
+  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+  glEnable(GL_DEPTH_TEST);
+
+  glMaterialfv(GL_FRONT, GL_SPECULAR, specMat);
+  glMaterialfv(GL_FRONT, GL_SHININESS, shnyMat);
+  glLightfv(GL_LIGHT0, GL_POSITION, lightPos);
+  glLightfv(GL_LIGHT0, GL_SPECULAR, whiteLight);
+  glLightfv(GL_LIGHT0, GL_DIFFUSE, whiteLight);
+  glLightModelfv(GL_LIGHT_MODEL_AMBIENT, ambLight);
+  glEnable(GL_LIGHTING);
+  glEnable(GL_LIGHT0);
+
+  glMatrixMode(GL_PROJECTION);
+  glLoadIdentity();
+  glOrtho(-2.0, 2.0, -2.0, 2.0, -2.0, 5.0);
+
+  glMatrixMode(GL_MODELVIEW);
+  glLoadIdentity();
+  gluLookAt(2, 2, 2, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0);
+  glRotatef(eangle, 0, 1, 0);
+  glRotatef(angle, 0, 0, 1);
+
+  glColor3f(1,0,0);
+  glutSolidSphere(1.0, 20, 20);
+    
+  glutSwapBuffers();
+} <I><FONT COLOR="#B22222">/* end func displayCall */</FONT></I>
+
+<I><FONT COLOR="#B22222">/**********************************************************************************************************************************/</FONT></I>
+<B><FONT COLOR="#228B22">void</FONT></B> <B><FONT COLOR="#0000FF">idleCall</FONT></B>() {
+  eangle += eangleDelta;
+  <B><FONT COLOR="#A020F0">if</FONT></B>(eangle &gt;= 360.0)
+    eangle -= 360.0;
+  angle += angleDelta;
+  <B><FONT COLOR="#A020F0">if</FONT></B>(angle &gt;= 360.0)
+    angle -= 360.0;
+  <B><FONT COLOR="#A020F0">if</FONT></B>(angle &lt;= 0)
+    angle += 360.0;
+  glutPostRedisplay();
+} <I><FONT COLOR="#B22222">/* end func idleCall */</FONT></I>
+
+<I><FONT COLOR="#B22222">/**********************************************************************************************************************************/</FONT></I>
+<B><FONT COLOR="#228B22">void</FONT></B> <B><FONT COLOR="#0000FF">processKeyCall</FONT></B>(<B><FONT COLOR="#228B22">unsigned</FONT></B> <B><FONT COLOR="#228B22">char</FONT></B> key, <B><FONT COLOR="#228B22">int</FONT></B> x, <B><FONT COLOR="#228B22">int</FONT></B> y) {
+  angleDelta = -angleDelta;
+} <I><FONT COLOR="#B22222">/* end func processKeyCall */</FONT></I>
+
+<I><FONT COLOR="#B22222">/**********************************************************************************************************************************/</FONT></I>
+<B><FONT COLOR="#228B22">int</FONT></B> <B><FONT COLOR="#0000FF">main</FONT></B>(<B><FONT COLOR="#228B22">int</FONT></B> argc, <B><FONT COLOR="#228B22">char</FONT></B> *argv[]) {
+  glutInit(&amp;argc, argv);
+  glutInitDisplayMode(GLUT_RGB | GLUT_DOUBLE | GLUT_DEPTH);
+  glutInitWindowSize(500, 500);
+  glutInitWindowPosition(300, 200);
+  glutCreateWindow(<B><FONT COLOR="#BC8F8F">&quot;Demo Prog&quot;</FONT></B>);
+  glutDisplayFunc(displayCall);
+  glutIdleFunc(idleCall);
+  glutKeyboardFunc(processKeyCall);
+  glutMainLoop();
+  <B><FONT COLOR="#A020F0">return</FONT></B> 0;
+} <I><FONT COLOR="#B22222">/* end func main */</FONT></I>
+</PRE>
+<HR \/>
+<ADDRESS>Generated by <A HREF="http://www.iki.fi/~mtr/genscript/">GNU Enscript 1.6.5.90</A>.</ADDRESS>
+</BODY>
+</HTML>

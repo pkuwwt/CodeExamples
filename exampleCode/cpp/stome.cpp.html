@@ -1,0 +1,299 @@
+<!DOCTYPE html PUBLIC "-//IETF//DTD HTML 2.0//EN">
+<HTML>
+<HEAD>
+<TITLE>cpp/stome.cpp</TITLE>
+</HEAD>
+<BODY BGCOLOR="#FFFFFF" TEXT="#000000" LINK="#1F00FF" ALINK="#FF0000" VLINK="#9900DD">
+<A NAME="top"> </A>
+<A NAME="file1"> </A>
+<H1><a href="stome.cpp">stome.cpp</a></H1>
+
+<PRE>
+<I><FONT COLOR="#B22222">// -*- Mode:C++; Coding:us-ascii-unix; fill-column:132 -*-
+</FONT></I><I><FONT COLOR="#B22222">/**********************************************************************************************************************************/</FONT></I>
+<I><FONT COLOR="#B22222">/**
+   @file      stome.cpp
+   @author    Mitch Richling &lt;http://www.mitchr.me&gt;
+   @Copyright Copyright 2013 by Mitch Richling.  All rights reserved.
+   @brief     Well behaved class for use with STL containers and algorithms.@EOL
+   @Keywords  STL
+   @Std       C++11
+
+   Notes:
+
+     (1) Copy constructor
+
+     (2) The move constructor (new in C++11).  NOTES: Essential for good performance of some algorithms like std::sort, and object
+         must still support assignment (both move and traditional) after any 'move' operation.
+
+     (3) The default, no-arg, constructor is required for arrays  &amp; preallocated vectors -- make it efficient!
+
+     (4) Destructor.  Required for STL containers, and must not throw exceptions.
+
+     (5) Assignment operator.  Required for STL containers, and must deal well with self assignment.
+
+     (6) The move assignment (new in C++11).  See notes item 2 &amp; 5.
+
+     (7) Less Than operator used for things like std::sort and std::map, std::lower_bound
+
+     (8) == operator used for things like std::find
+
+     (9) The 'setter/seter method' is a common idiom -- perhaps more popular in Java than C++.
+
+    (10) This is a common idiom.  i.e. a constructor that sets everything coupled with a 'set' method taking the same arguments.
+
+    (11) Standard for container-like things allowing lvalue access to a member, but frequently considered evil.
+
+    (12) Not really a part of IVec2, but a common thing to do so that objects may be 'printed'.  Note that this is a more common
+         idiom in C++ than item 14 below.
+
+    (13) Construct with C++11 list
+
+    (14) A 'to_s' member is not required, and the name is not standardized ('toString' is another common name).
+
+***********************************************************************************************************************************/</FONT></I>
+
+<I><FONT COLOR="#B22222">////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+</FONT></I>#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;iostream&gt;</FONT></B>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;iomanip&gt;</FONT></B>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;locale&gt;</FONT></B>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;sstream&gt;</FONT></B>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;string&gt;</FONT></B>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;algorithm&gt;</FONT></B>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;vector&gt;</FONT></B>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;initializer_list&gt;</FONT></B>
+
+<I><FONT COLOR="#B22222">////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+</FONT></I>#<B><FONT COLOR="#5F9EA0">define</FONT></B> <FONT COLOR="#B8860B">DOMOVEO</FONT>
+#<B><FONT COLOR="#5F9EA0">define</FONT></B> <FONT COLOR="#B8860B">DOMOVEC</FONT>
+<I><FONT COLOR="#B22222">//#define DOBAKLESS
+</FONT></I>
+<I><FONT COLOR="#B22222">////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+</FONT></I><B><FONT COLOR="#228B22">int</FONT></B> constructSerial = 0;
+
+<I><FONT COLOR="#B22222">////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+</FONT></I><B><FONT COLOR="#228B22">class</FONT></B> IVec2 {
+<B><FONT COLOR="#228B22">private</FONT></B>:
+    <B><FONT COLOR="#228B22">int</FONT></B>* vecData;
+    <B><FONT COLOR="#228B22">int</FONT></B> serial;
+<B><FONT COLOR="#228B22">public</FONT></B>:
+    IVec2(std::initializer_list&lt;<B><FONT COLOR="#228B22">int</FONT></B>&gt; lst);   <I><FONT COLOR="#B22222">// Construct with C++11 list (13)
+</FONT></I>    IVec2();                                 <I><FONT COLOR="#B22222">// Default constructor (3)
+</FONT></I>    IVec2(IVec2 <B><FONT COLOR="#228B22">const</FONT></B>&amp; iv);                  <I><FONT COLOR="#B22222">// Copy constructor (1)
+</FONT></I>#<B><FONT COLOR="#5F9EA0">ifdef</FONT></B> <FONT COLOR="#B8860B">DOMOVEC</FONT>                               
+    IVec2(IVec2&amp;&amp; iv);                       <I><FONT COLOR="#B22222">// Move constructor C++11 (2)
+</FONT></I>#<B><FONT COLOR="#5F9EA0">endif</FONT></B>                                       
+                                             
+    IVec2(<B><FONT COLOR="#228B22">int</FONT></B> x, <B><FONT COLOR="#228B22">int</FONT></B> y);                     <I><FONT COLOR="#B22222">// Extra constructor (10)
+</FONT></I>    ~IVec2();                                <I><FONT COLOR="#B22222">// destructor (4)
+</FONT></I>                                             
+    IVec2&amp; <B><FONT COLOR="#A020F0">operator</FONT></B>= (IVec2 <B><FONT COLOR="#228B22">const</FONT></B>&amp; iv);      <I><FONT COLOR="#B22222">// Assignment operator (5)
+</FONT></I>#<B><FONT COLOR="#5F9EA0">ifdef</FONT></B> <FONT COLOR="#B8860B">DOMOVEO</FONT>                               
+    IVec2&amp; <B><FONT COLOR="#A020F0">operator</FONT></B>= (IVec2&amp;&amp; iv);           <I><FONT COLOR="#B22222">// Move Assignment operator C++11 (6)
+</FONT></I>#<B><FONT COLOR="#5F9EA0">endif</FONT></B>
+
+    <B><FONT COLOR="#228B22">bool</FONT></B> <B><FONT COLOR="#A020F0">operator</FONT></B>==(IVec2 <B><FONT COLOR="#228B22">const</FONT></B>&amp; iv) <B><FONT COLOR="#228B22">const</FONT></B>;  <I><FONT COLOR="#B22222">// equality operator (8)
+</FONT></I>    <B><FONT COLOR="#228B22">bool</FONT></B> <B><FONT COLOR="#A020F0">operator</FONT></B>&lt;(IVec2 <B><FONT COLOR="#228B22">const</FONT></B>&amp; iv) <B><FONT COLOR="#228B22">const</FONT></B>;   <I><FONT COLOR="#B22222">// Less Than operator (7)
+</FONT></I>
+    <B><FONT COLOR="#228B22">void</FONT></B> set(<B><FONT COLOR="#228B22">int</FONT></B> xi, <B><FONT COLOR="#228B22">int</FONT></B> yi);                <I><FONT COLOR="#B22222">// setter method (9)
+</FONT></I>    <B><FONT COLOR="#228B22">int</FONT></B>&amp; setX(<B><FONT COLOR="#228B22">int</FONT></B> newX);                     <I><FONT COLOR="#B22222">// setter method (9)
+</FONT></I>    <B><FONT COLOR="#228B22">int</FONT></B>&amp; setY(<B><FONT COLOR="#228B22">int</FONT></B> newY);                     <I><FONT COLOR="#B22222">// setter method (9)
+</FONT></I>    <B><FONT COLOR="#228B22">int</FONT></B> getX() <B><FONT COLOR="#228B22">const</FONT></B>;                        <I><FONT COLOR="#B22222">// getter method (9)
+</FONT></I>    <B><FONT COLOR="#228B22">int</FONT></B> getY() <B><FONT COLOR="#228B22">const</FONT></B>;                        <I><FONT COLOR="#B22222">// getter method (9)
+</FONT></I>    <B><FONT COLOR="#228B22">int</FONT></B>&amp; first();                            <I><FONT COLOR="#B22222">// setf-able access to first element (11)
+</FONT></I>    <B><FONT COLOR="#228B22">int</FONT></B>&amp; second();                           <I><FONT COLOR="#B22222">// setf-able access to first element (11)
+</FONT></I>    <B><FONT COLOR="#5F9EA0">std</FONT></B>::string to_s();                      <I><FONT COLOR="#B22222">// Serialize (14)
+</FONT></I>};
+
+<I><FONT COLOR="#B22222">////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+</FONT></I><B><FONT COLOR="#0000FF">IVec2::IVec2</FONT></B>(std::initializer_list&lt;<B><FONT COLOR="#228B22">int</FONT></B>&gt; lst) {
+  serial = ++constructSerial;
+  <B><FONT COLOR="#5F9EA0">std</FONT></B>::cout &lt;&lt; <B><FONT COLOR="#BC8F8F">&quot;LIST CONSTRUCTOR &quot;</FONT></B> &lt;&lt; serial &lt;&lt; std::endl;  
+  vecData = <B><FONT COLOR="#A020F0">new</FONT></B> <B><FONT COLOR="#228B22">int</FONT></B>[2];
+  <B><FONT COLOR="#A020F0">if</FONT></B>(lst.size() == 2) {
+    vecData[0] = *lst.begin();
+    vecData[1] = *(1+lst.begin());
+  } <B><FONT COLOR="#A020F0">else</FONT></B> {
+    <I><FONT COLOR="#B22222">// This is an error!!
+</FONT></I>  }
+}
+
+<I><FONT COLOR="#B22222">////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+</FONT></I><B><FONT COLOR="#0000FF">IVec2::IVec2</FONT></B>() {
+  serial = ++constructSerial;
+  <B><FONT COLOR="#5F9EA0">std</FONT></B>::cout &lt;&lt; <B><FONT COLOR="#BC8F8F">&quot;NOARG CONSTRUCTOR &quot;</FONT></B> &lt;&lt; serial &lt;&lt; std::endl;
+  vecData = <B><FONT COLOR="#A020F0">new</FONT></B> <B><FONT COLOR="#228B22">int</FONT></B>[2];
+  vecData[0] = 0;
+  vecData[1] = 0;
+}
+
+<I><FONT COLOR="#B22222">////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+</FONT></I><B><FONT COLOR="#0000FF">IVec2::IVec2</FONT></B>(IVec2 <B><FONT COLOR="#228B22">const</FONT></B>&amp; iv) {
+  serial = ++constructSerial;
+  <B><FONT COLOR="#5F9EA0">std</FONT></B>::cout &lt;&lt; <B><FONT COLOR="#BC8F8F">&quot;COPY CONSTRUCTOR &quot;</FONT></B> &lt;&lt; serial &lt;&lt; <B><FONT COLOR="#BC8F8F">&quot; &lt;- &quot;</FONT></B> &lt;&lt; iv.serial &lt;&lt; std::endl;
+  vecData = <B><FONT COLOR="#A020F0">new</FONT></B> <B><FONT COLOR="#228B22">int</FONT></B>[2];
+  vecData[0] = iv.getX();
+  vecData[1] = iv.getY();
+}  
+
+<I><FONT COLOR="#B22222">////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+</FONT></I>#<B><FONT COLOR="#5F9EA0">ifdef</FONT></B> <FONT COLOR="#B8860B">DOMOVEC</FONT>
+<B><FONT COLOR="#0000FF">IVec2::IVec2</FONT></B>(IVec2&amp;&amp; iv) {
+  serial = ++constructSerial;
+  <B><FONT COLOR="#5F9EA0">std</FONT></B>::cout &lt;&lt; <B><FONT COLOR="#BC8F8F">&quot;MOVE CONSTRUCTOR &quot;</FONT></B> &lt;&lt; serial &lt;&lt; <B><FONT COLOR="#BC8F8F">&quot; &lt;- &quot;</FONT></B> &lt;&lt; iv.serial &lt;&lt; std::endl;
+  vecData = <B><FONT COLOR="#A020F0">new</FONT></B> <B><FONT COLOR="#228B22">int</FONT></B>[2];
+  vecData = iv.vecData;
+  iv.vecData = <B><FONT COLOR="#A020F0">new</FONT></B> <B><FONT COLOR="#228B22">int</FONT></B>[2];   <I><FONT COLOR="#B22222">// We do this to preserve the invariant that no IVec2 object has a nullptr for vecData!!
+</FONT></I>}  
+#<B><FONT COLOR="#5F9EA0">endif</FONT></B>
+
+<I><FONT COLOR="#B22222">////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+</FONT></I><B><FONT COLOR="#0000FF">IVec2::IVec2</FONT></B>(<B><FONT COLOR="#228B22">int</FONT></B> x, <B><FONT COLOR="#228B22">int</FONT></B> y) {
+  serial = ++constructSerial;
+  <B><FONT COLOR="#5F9EA0">std</FONT></B>::cout &lt;&lt; <B><FONT COLOR="#BC8F8F">&quot;TWO ARG CONSTRUCTOR &quot;</FONT></B> &lt;&lt; serial &lt;&lt; std::endl;
+  vecData = <B><FONT COLOR="#A020F0">new</FONT></B> <B><FONT COLOR="#228B22">int</FONT></B>[2];
+  vecData[0] = x;
+  vecData[1] = y;
+}
+
+<I><FONT COLOR="#B22222">////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+</FONT></I><B><FONT COLOR="#0000FF">IVec2::~IVec2</FONT></B>() {
+  <B><FONT COLOR="#5F9EA0">std</FONT></B>::cout &lt;&lt; <B><FONT COLOR="#BC8F8F">&quot;DESTRUCTOR &quot;</FONT></B> &lt;&lt; serial &lt;&lt; std::endl;
+  <I><FONT COLOR="#B22222">// NOTE: The only way vecData== nullptr, is if we have a move constructor.
+</FONT></I>  <B><FONT COLOR="#A020F0">if</FONT></B>(vecData != nullptr)
+    <B><FONT COLOR="#A020F0">delete</FONT></B>[] vecData;
+}  
+
+<I><FONT COLOR="#B22222">////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+</FONT></I>IVec2&amp; IVec2::<B><FONT COLOR="#A020F0">operator</FONT></B>= (IVec2 <B><FONT COLOR="#228B22">const</FONT></B>&amp; iv) {
+  <B><FONT COLOR="#5F9EA0">std</FONT></B>::cout &lt;&lt; <B><FONT COLOR="#BC8F8F">&quot;ASSIGNMENT (COPY) OPERATOR &quot;</FONT></B> &lt;&lt; serial &lt;&lt; <B><FONT COLOR="#BC8F8F">&quot; &lt;- &quot;</FONT></B> &lt;&lt; iv.serial &lt;&lt; std::endl;
+  <B><FONT COLOR="#A020F0">if</FONT></B>(<B><FONT COLOR="#A020F0">this</FONT></B> != &amp;iv) {
+    vecData[0] = iv.getX();
+    vecData[1] = iv.getY();
+  }
+  <B><FONT COLOR="#A020F0">return</FONT></B> *<B><FONT COLOR="#A020F0">this</FONT></B>;  
+}
+
+<I><FONT COLOR="#B22222">////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+</FONT></I>#<B><FONT COLOR="#5F9EA0">ifdef</FONT></B> <FONT COLOR="#B8860B">DOMOVEO</FONT>
+IVec2&amp; IVec2::<B><FONT COLOR="#A020F0">operator</FONT></B>=(IVec2&amp;&amp; iv) {
+  <B><FONT COLOR="#5F9EA0">std</FONT></B>::cout &lt;&lt; <B><FONT COLOR="#BC8F8F">&quot;ASSIGNMENT (MOVE) OPERATOR &quot;</FONT></B> &lt;&lt; serial &lt;&lt; <B><FONT COLOR="#BC8F8F">&quot; &lt;- &quot;</FONT></B> &lt;&lt; iv.serial &lt;&lt; std::endl;
+  <B><FONT COLOR="#A020F0">if</FONT></B>(<B><FONT COLOR="#A020F0">this</FONT></B> != &amp;iv) {
+    <B><FONT COLOR="#228B22">int</FONT></B>* tmp = vecData;
+    vecData = iv.vecData;
+    iv.vecData = tmp;     <I><FONT COLOR="#B22222">// We do this to preserve the invariant that no IVec2 object has a nullptr for vecData!!
+</FONT></I>  }
+  <B><FONT COLOR="#A020F0">return</FONT></B> *<B><FONT COLOR="#A020F0">this</FONT></B>;  
+}
+#<B><FONT COLOR="#5F9EA0">endif</FONT></B>
+
+<I><FONT COLOR="#B22222">////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+</FONT></I><B><FONT COLOR="#228B22">bool</FONT></B> IVec2::<B><FONT COLOR="#A020F0">operator</FONT></B>==(IVec2 <B><FONT COLOR="#228B22">const</FONT></B>&amp; iv) <B><FONT COLOR="#228B22">const</FONT></B> {
+  <B><FONT COLOR="#5F9EA0">std</FONT></B>::cout &lt;&lt; <B><FONT COLOR="#BC8F8F">&quot;EQUALITY OPERATOR &quot;</FONT></B> &lt;&lt; serial &lt;&lt; <B><FONT COLOR="#BC8F8F">&quot; == &quot;</FONT></B> &lt;&lt; iv.serial &lt;&lt; std::endl;
+  <B><FONT COLOR="#A020F0">return</FONT></B> ((getX()==iv.getX()) &amp;&amp;
+          (getY()==iv.getY()));
+}
+
+<I><FONT COLOR="#B22222">////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+</FONT></I><B><FONT COLOR="#228B22">bool</FONT></B> IVec2::<B><FONT COLOR="#A020F0">operator</FONT></B>&lt;(IVec2 <B><FONT COLOR="#228B22">const</FONT></B>&amp; iv) <B><FONT COLOR="#228B22">const</FONT></B> {
+  <B><FONT COLOR="#5F9EA0">std</FONT></B>::cout &lt;&lt; <B><FONT COLOR="#BC8F8F">&quot;LESS OPERATOR &quot;</FONT></B> &lt;&lt; serial &lt;&lt; <B><FONT COLOR="#BC8F8F">&quot; &lt; &quot;</FONT></B> &lt;&lt; iv.serial &lt;&lt; std::endl;
+#<B><FONT COLOR="#5F9EA0">ifdef</FONT></B> <FONT COLOR="#B8860B">DOBAKLESS</FONT>
+  <B><FONT COLOR="#A020F0">return</FONT></B> ((getX()&gt;iv.getX()) ||
+          ((getX()==iv.getX()) &amp;&amp;
+           (getY()&gt;iv.getY())));
+#<B><FONT COLOR="#5F9EA0">else</FONT></B>
+  <B><FONT COLOR="#A020F0">return</FONT></B> ((getX()&lt;iv.getX()) ||
+          ((getX()==iv.getX()) &amp;&amp;
+           (getY()&lt;iv.getY())));
+#<B><FONT COLOR="#5F9EA0">endif</FONT></B>
+}
+
+<I><FONT COLOR="#B22222">////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+</FONT></I><B><FONT COLOR="#228B22">int</FONT></B> <B><FONT COLOR="#0000FF">IVec2::getX</FONT></B>() <B><FONT COLOR="#228B22">const</FONT></B> {
+  <B><FONT COLOR="#A020F0">return</FONT></B>(vecData[0]);
+}
+
+<I><FONT COLOR="#B22222">////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+</FONT></I><B><FONT COLOR="#228B22">int</FONT></B> <B><FONT COLOR="#0000FF">IVec2::getY</FONT></B>() <B><FONT COLOR="#228B22">const</FONT></B> {
+  <B><FONT COLOR="#A020F0">return</FONT></B>(vecData[1]);
+}
+
+<I><FONT COLOR="#B22222">////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+</FONT></I><B><FONT COLOR="#228B22">int</FONT></B>&amp; <B><FONT COLOR="#0000FF">IVec2::first</FONT></B>() {
+  <B><FONT COLOR="#A020F0">return</FONT></B>(vecData[0]);
+}
+
+<I><FONT COLOR="#B22222">////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+</FONT></I><B><FONT COLOR="#228B22">int</FONT></B>&amp; <B><FONT COLOR="#0000FF">IVec2::second</FONT></B>() {
+  <B><FONT COLOR="#A020F0">return</FONT></B>(vecData[1]);
+}
+
+<I><FONT COLOR="#B22222">////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+</FONT></I><B><FONT COLOR="#228B22">int</FONT></B>&amp; <B><FONT COLOR="#0000FF">IVec2::setX</FONT></B>(<B><FONT COLOR="#228B22">int</FONT></B> newX) {
+  vecData[0]=newX;
+  <B><FONT COLOR="#A020F0">return</FONT></B> vecData[0];
+}
+
+<I><FONT COLOR="#B22222">////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+</FONT></I><B><FONT COLOR="#228B22">int</FONT></B>&amp; <B><FONT COLOR="#0000FF">IVec2::setY</FONT></B>(<B><FONT COLOR="#228B22">int</FONT></B> newY) {
+  vecData[1]=newY;
+  <B><FONT COLOR="#A020F0">return</FONT></B> vecData[1];
+}
+
+<I><FONT COLOR="#B22222">////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+</FONT></I><B><FONT COLOR="#228B22">void</FONT></B> <B><FONT COLOR="#0000FF">IVec2::set</FONT></B>(<B><FONT COLOR="#228B22">int</FONT></B> xi, <B><FONT COLOR="#228B22">int</FONT></B> yi) {
+  vecData[0] = xi;
+  vecData[1] = yi;
+}
+
+<I><FONT COLOR="#B22222">////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+</FONT></I>std::string IVec2::to_s() {
+  <B><FONT COLOR="#5F9EA0">std</FONT></B>::ostringstream convert;
+  convert &lt;&lt; <B><FONT COLOR="#BC8F8F">&quot;(&quot;</FONT></B> &lt;&lt; vecData[0] &lt;&lt; <B><FONT COLOR="#BC8F8F">&quot;,&quot;</FONT></B> &lt;&lt; vecData[1] &lt;&lt; <B><FONT COLOR="#BC8F8F">&quot;)&quot;</FONT></B>;
+  <B><FONT COLOR="#A020F0">return</FONT></B>(convert.str());                                            
+}
+
+<I><FONT COLOR="#B22222">////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+</FONT></I><I><FONT COLOR="#B22222">// Add ostream support for our object. (12)
+</FONT></I>std::ostream&amp; <B><FONT COLOR="#A020F0">operator</FONT></B>&lt;&lt; (std::ostream &amp;out, IVec2 &amp;iv) {   
+  out &lt;&lt; iv.to_s();
+  <B><FONT COLOR="#A020F0">return</FONT></B> out;
+}
+
+<I><FONT COLOR="#B22222">////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+</FONT></I><B><FONT COLOR="#228B22">int</FONT></B> <B><FONT COLOR="#0000FF">main</FONT></B> () {
+  IVec2 aVecA[3];                                       <I><FONT COLOR="#B22222">// no-arg constructor x3!
+</FONT></I>  <I><FONT COLOR="#B22222">//std::vector&lt;IVec2&gt; aVecA(3);
+</FONT></I>  IVec2 a(1,2);                                         <I><FONT COLOR="#B22222">// 2 arg constructor
+</FONT></I>  IVec2 b = IVec2(3,4);                                 <I><FONT COLOR="#B22222">// 2 arg constructor &amp; assignment constructor (no zero-arg)
+</FONT></I>  IVec2 c;                                              <I><FONT COLOR="#B22222">// no-arg constructor
+</FONT></I>  IVec2 d(b);                                           <I><FONT COLOR="#B22222">// Copy constructor
+</FONT></I>  IVec2 aVecB[3] = {{2,1}, {1,2}, {1,3}};               <I><FONT COLOR="#B22222">// Construct via an init list (uses 2 arg constructor if list one is missing)
+</FONT></I>
+  <B><FONT COLOR="#5F9EA0">std</FONT></B>::cout &lt;&lt; <B><FONT COLOR="#BC8F8F">&quot;a: &quot;</FONT></B> &lt;&lt; a &lt;&lt; std::endl;
+  <B><FONT COLOR="#5F9EA0">std</FONT></B>::cout &lt;&lt; <B><FONT COLOR="#BC8F8F">&quot;b: &quot;</FONT></B> &lt;&lt; b &lt;&lt; std::endl;
+  <B><FONT COLOR="#5F9EA0">std</FONT></B>::cout &lt;&lt; <B><FONT COLOR="#BC8F8F">&quot;c: &quot;</FONT></B> &lt;&lt; c &lt;&lt; std::endl;
+  a = b;                                                <I><FONT COLOR="#B22222">// assignment operator
+</FONT></I>  c.set(5,6);                                           <I><FONT COLOR="#B22222">// 2 arg set
+</FONT></I>  <B><FONT COLOR="#5F9EA0">std</FONT></B>::cout &lt;&lt; <B><FONT COLOR="#BC8F8F">&quot;a: &quot;</FONT></B> &lt;&lt; a &lt;&lt; std::endl;
+  <B><FONT COLOR="#5F9EA0">std</FONT></B>::cout &lt;&lt; <B><FONT COLOR="#BC8F8F">&quot;c: &quot;</FONT></B> &lt;&lt; c &lt;&lt; std::endl;
+  <B><FONT COLOR="#5F9EA0">std</FONT></B>::cout &lt;&lt; <B><FONT COLOR="#BC8F8F">&quot;d: &quot;</FONT></B> &lt;&lt; d &lt;&lt; std::endl;
+
+  <B><FONT COLOR="#5F9EA0">std</FONT></B>::cout &lt;&lt; <B><FONT COLOR="#BC8F8F">&quot;aVecA: &quot;</FONT></B> &lt;&lt; aVecA[0].to_s() &lt;&lt; <B><FONT COLOR="#BC8F8F">&quot; &quot;</FONT></B> &lt;&lt; aVecA[1].to_s() &lt;&lt; <B><FONT COLOR="#BC8F8F">&quot; &quot;</FONT></B> &lt;&lt; aVecA[2].to_s() &lt;&lt; std::endl;
+  aVecA[0]=b;                                                       <I><FONT COLOR="#B22222">// assignment operator
+</FONT></I>  aVecA[1]=IVec2(5,6);                                              <I><FONT COLOR="#B22222">// 2 arg constructor &amp; assignment constructor
+</FONT></I>  aVecA[2].set(7,8);                                                <I><FONT COLOR="#B22222">// 2 arg set
+</FONT></I>  <B><FONT COLOR="#5F9EA0">std</FONT></B>::cout &lt;&lt; <B><FONT COLOR="#BC8F8F">&quot;aVecA: &quot;</FONT></B> &lt;&lt; aVecA[0].to_s() &lt;&lt; <B><FONT COLOR="#BC8F8F">&quot; &quot;</FONT></B> &lt;&lt; aVecA[1].to_s() &lt;&lt; <B><FONT COLOR="#BC8F8F">&quot; &quot;</FONT></B> &lt;&lt; aVecA[2].to_s() &lt;&lt; std::endl;
+
+  <B><FONT COLOR="#5F9EA0">std</FONT></B>::cout &lt;&lt; <B><FONT COLOR="#BC8F8F">&quot;aVecB: &quot;</FONT></B> &lt;&lt; aVecB[0]        &lt;&lt; <B><FONT COLOR="#BC8F8F">&quot; &quot;</FONT></B> &lt;&lt; aVecB[1]        &lt;&lt; <B><FONT COLOR="#BC8F8F">&quot; &quot;</FONT></B> &lt;&lt; aVecB[2]        &lt;&lt; std::endl;  <I><FONT COLOR="#B22222">// This time we use the &lt;&lt; operator
+</FONT></I>  <B><FONT COLOR="#5F9EA0">std</FONT></B>::sort(std::begin(aVecB), std::end(aVecB));
+  <B><FONT COLOR="#5F9EA0">std</FONT></B>::cout &lt;&lt; <B><FONT COLOR="#BC8F8F">&quot;aVecB: &quot;</FONT></B> &lt;&lt; aVecB[0] &lt;&lt; <B><FONT COLOR="#BC8F8F">&quot; &quot;</FONT></B> &lt;&lt; aVecB[1] &lt;&lt; <B><FONT COLOR="#BC8F8F">&quot; &quot;</FONT></B> &lt;&lt; aVecB[2] &lt;&lt; std::endl;
+
+  <B><FONT COLOR="#A020F0">return</FONT></B> 0;
+ } <I><FONT COLOR="#B22222">// end func main
+</FONT></I>                                                                              
+</PRE>
+<HR \/>
+<ADDRESS>Generated by <A HREF="http://www.iki.fi/~mtr/genscript/">GNU Enscript 1.6.5.90</A>.</ADDRESS>
+</BODY>
+</HTML>

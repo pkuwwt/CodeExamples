@@ -1,0 +1,118 @@
+<!DOCTYPE html PUBLIC "-//IETF//DTD HTML 2.0//EN">
+<HTML>
+<HEAD>
+<TITLE>AUPG/termSizeWatch.c</TITLE>
+</HEAD>
+<BODY BGCOLOR="#FFFFFF" TEXT="#000000" LINK="#1F00FF" ALINK="#FF0000" VLINK="#9900DD">
+<A NAME="top"> </A>
+<A NAME="file1"> </A>
+<H1><a href="termSizeWatch.c">termSizeWatch.c</a></H1>
+
+<PRE>
+<I><FONT COLOR="#B22222">/* -*- Mode:C; Coding:us-ascii-unix; fill-column:132 -*- */</FONT></I>
+<I><FONT COLOR="#B22222">/**********************************************************************************************************************************/</FONT></I>
+<I><FONT COLOR="#B22222">/**
+   @file      termSizeWatch.c
+   @author    Mitch Richling &lt;http://www.mitchr.me/&gt;
+   @Copyright Copyright 1998 by Mitch Richling.  All rights reserved.
+   @brief     How to monitor terminal size@EOL
+   @Keywords  termios terminal tty window
+   @Std       C89
+
+   Demonstrates how to monitor the changing size of a terminal window via the SIGWINCH signal mechanism.  In addition, various other
+   terminal operations are demonstrated: how to determine if a process is connected to a terminal, getting the current terminal's
+   name, and getting the size of the current terminal.
+
+   A note for budding curses and ncurses programmers.  The &quot;standard&quot; way to make curses work when the terminal may be resized, is
+   to install a signal handler, like the one demonstrated below, that will update things if the window is resized (an endwin &amp;
+   refresh). Alternately, ncurses provides a hook called resizeterm to help automate this process..
+***********************************************************************************************************************************/</FONT></I>
+
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;termios.h&gt;</FONT></B>            <I><FONT COLOR="#B22222">/* terminal I/O    POSIX */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;sys/ioctl.h&gt;</FONT></B>          <I><FONT COLOR="#B22222">/* for ioctl()           */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;unistd.h&gt;</FONT></B>             <I><FONT COLOR="#B22222">/* UNIX std stf    POSIX */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;stdio.h&gt;</FONT></B>              <I><FONT COLOR="#B22222">/* I/O lib         C89   */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;signal.h&gt;</FONT></B>             <I><FONT COLOR="#B22222">/* UNIX signals    POSIX */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;string.h&gt;</FONT></B>             <I><FONT COLOR="#B22222">/* Strings         C89   */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;stdlib.h&gt;</FONT></B>             <I><FONT COLOR="#B22222">/* Standard Lib    C89   */</FONT></I>
+
+<I><FONT COLOR="#B22222">/**********************************************************************************************************************************/</FONT></I>
+<B><FONT COLOR="#228B22">static</FONT></B> <B><FONT COLOR="#228B22">void</FONT></B> <B><FONT COLOR="#0000FF">winWatch</FONT></B>(<B><FONT COLOR="#228B22">int</FONT></B> sigNo);
+
+<I><FONT COLOR="#B22222">/**********************************************************************************************************************************/</FONT></I>
+<B><FONT COLOR="#228B22">int</FONT></B> <B><FONT COLOR="#0000FF">main</FONT></B>() {
+  <B><FONT COLOR="#228B22">struct</FONT></B> winsize termSize;
+  <B><FONT COLOR="#228B22">char</FONT></B> *termNameTTY;
+  <B><FONT COLOR="#228B22">int</FONT></B> termIsTTY;
+  <B><FONT COLOR="#228B22">struct</FONT></B> sigaction newSigAction;
+  <B><FONT COLOR="#228B22">struct</FONT></B> sigaction oldSigAction;
+
+  <I><FONT COLOR="#B22222">/* Report the current STDIN file descriptor. */</FONT></I>
+  printf(<B><FONT COLOR="#BC8F8F">&quot;Current STDIN FD: %d\n&quot;</FONT></B>, (<B><FONT COLOR="#228B22">int</FONT></B>)STDIN_FILENO);
+
+  <I><FONT COLOR="#B22222">/* Figure out if we are attached to a TTY. */</FONT></I>
+  termIsTTY = isatty(STDIN_FILENO);
+  <B><FONT COLOR="#A020F0">if</FONT></B>(termIsTTY) {
+    printf(<B><FONT COLOR="#BC8F8F">&quot;We are on a TTY!\n&quot;</FONT></B>);
+  } <B><FONT COLOR="#A020F0">else</FONT></B> {
+    printf(<B><FONT COLOR="#BC8F8F">&quot;We are NOT on a TTY!\n&quot;</FONT></B>);
+    printf(<B><FONT COLOR="#BC8F8F">&quot;ERROR: We must be connected to a TTY.\n&quot;</FONT></B>);
+    exit(1);
+  } <I><FONT COLOR="#B22222">/* end if */</FONT></I>
+
+  <I><FONT COLOR="#B22222">/* Get our TTY name -- just because we can. */</FONT></I>
+  termNameTTY = ttyname(STDIN_FILENO);
+  <B><FONT COLOR="#A020F0">if</FONT></B>(termNameTTY == NULL) {
+    printf(<B><FONT COLOR="#BC8F8F">&quot;ERROR: Could not get the name of our TTY.\n&quot;</FONT></B>);
+    exit(1);
+  } <I><FONT COLOR="#B22222">/* end if */</FONT></I>
+  printf(<B><FONT COLOR="#BC8F8F">&quot;Current TTY name: %s\n&quot;</FONT></B>, termNameTTY);
+
+  <I><FONT COLOR="#B22222">/* Get an initial window size. */</FONT></I>
+  <B><FONT COLOR="#A020F0">if</FONT></B>(ioctl(STDIN_FILENO, TIOCGWINSZ, (<B><FONT COLOR="#228B22">char</FONT></B> *) &amp;termSize) &lt; 0) {
+    printf(<B><FONT COLOR="#BC8F8F">&quot;ERROR: We ioctl failure for our TTY.\n&quot;</FONT></B>);
+    exit(1);
+  } <I><FONT COLOR="#B22222">/* end if */</FONT></I>
+  printf(<B><FONT COLOR="#BC8F8F">&quot;Term Size: (%d,%d)\n&quot;</FONT></B>, (<B><FONT COLOR="#228B22">int</FONT></B>)termSize.ws_row, (<B><FONT COLOR="#228B22">int</FONT></B>)termSize.ws_col);
+
+  <I><FONT COLOR="#B22222">/* Set a signal handler to catch SIGWINCH */</FONT></I>
+  memset(&amp;newSigAction.sa_mask, 0, <B><FONT COLOR="#A020F0">sizeof</FONT></B>(newSigAction.sa_mask)); 
+  newSigAction.sa_flags = 0;
+  newSigAction.sa_handler = winWatch;
+  <B><FONT COLOR="#A020F0">if</FONT></B>(sigaction(SIGWINCH, &amp;newSigAction, &amp;oldSigAction) &lt; 0) {
+    printf(<B><FONT COLOR="#BC8F8F">&quot;ERROR: Unable to install signal handler\n&quot;</FONT></B>);
+    exit(1);
+  } <I><FONT COLOR="#B22222">/* end if */</FONT></I>
+
+  <I><FONT COLOR="#B22222">/* Sleep forever, catching signals as required. */</FONT></I>
+  <B><FONT COLOR="#A020F0">while</FONT></B>(1) {
+    printf(<B><FONT COLOR="#BC8F8F">&quot;Sleeping...\n&quot;</FONT></B>);
+    sleep(10);
+  } <I><FONT COLOR="#B22222">/* end while */</FONT></I>
+
+} <I><FONT COLOR="#B22222">/* end func main */</FONT></I>
+
+<I><FONT COLOR="#B22222">/**********************************************************************************************************************************/</FONT></I>
+<I><FONT COLOR="#B22222">/* Signal handler function intended to catch a SIGWINCH signal.  It just prints the window size. See the main function for more
+   information regarding how to use isatty() and ioctl(). */</FONT></I>
+<B><FONT COLOR="#228B22">static</FONT></B> <B><FONT COLOR="#228B22">void</FONT></B> <B><FONT COLOR="#0000FF">winWatch</FONT></B>(<B><FONT COLOR="#228B22">int</FONT></B> sigNo) {
+  <B><FONT COLOR="#228B22">struct</FONT></B> winsize termSize;
+  <B><FONT COLOR="#A020F0">if</FONT></B>(sigNo == SIGWINCH) {
+    <B><FONT COLOR="#A020F0">if</FONT></B>(isatty(STDIN_FILENO)) {
+      <B><FONT COLOR="#A020F0">if</FONT></B>(ioctl(STDIN_FILENO, TIOCGWINSZ, (<B><FONT COLOR="#228B22">char</FONT></B> *) &amp;termSize) &gt;= 0) {
+        printf(<B><FONT COLOR="#BC8F8F">&quot;NEW Term Size: (%d,%d)\n&quot;</FONT></B>, (<B><FONT COLOR="#228B22">int</FONT></B>)termSize.ws_row, (<B><FONT COLOR="#228B22">int</FONT></B>)termSize.ws_col);   
+      } <B><FONT COLOR="#A020F0">else</FONT></B> {
+        printf(<B><FONT COLOR="#BC8F8F">&quot;ERROR: We ioctl failure for our TTY.\n&quot;</FONT></B>);
+      } <I><FONT COLOR="#B22222">/* end if */</FONT></I>
+    } <B><FONT COLOR="#A020F0">else</FONT></B> {
+      printf(<B><FONT COLOR="#BC8F8F">&quot;ERROR: We isatty failure for our TTY.\n&quot;</FONT></B>);
+    } <I><FONT COLOR="#B22222">/* end if */</FONT></I>
+  } <B><FONT COLOR="#A020F0">else</FONT></B> {
+    printf(<B><FONT COLOR="#BC8F8F">&quot;ERROR: We got the wrong signal directed to winWatch (%d).\n&quot;</FONT></B>, (<B><FONT COLOR="#228B22">int</FONT></B>)sigNo);
+  } <I><FONT COLOR="#B22222">/* end if */</FONT></I>
+} <I><FONT COLOR="#B22222">/* end func winWatch */</FONT></I>
+</PRE>
+<HR \/>
+<ADDRESS>Generated by <A HREF="http://www.iki.fi/~mtr/genscript/">GNU Enscript 1.6.5.90</A>.</ADDRESS>
+</BODY>
+</HTML>

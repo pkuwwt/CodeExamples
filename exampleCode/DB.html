@@ -1,0 +1,167 @@
+<?xml version="1.0"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head id="tmplKeepHead">
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <meta id="tmplMetaContent" name="Description" content="Mitch Richling: Example DB Programs" />
+    
+    <link href="../CSS/main4.css" rel="stylesheet" type="text/css" />
+    
+    <title id="tmplPageTitle">Mitch Richling: Example DB Programs</title>
+  </head>
+  <body id="tmplKeepBody">
+    <div class="snippet" id="topLink"><body><div class="snippet" id="topLink">
+     <a id="topHomeLink" href="http://www.mitchr.me/" title="Jump to my homepage"><img alt="Link: Mitch Richling's Home Page" src="../pics/mr_blue.gif" /></a>
+</div></body></div>
+    <div class="snippet" id="topCopy"><body><div class="snippet" id="topCopy">
+  <p id="topCopyRight">&#xA9;&#xA0;2009&#xA0;Mitch&#xA0;Richling</p>
+</div></body></div>
+    <h1 id="tmplDocTitle">Example DB Programs</h1>
+    <div class="snippet" id="BrowserGrump"><body><div class="snippet" id="BrowserGrump">
+      <!--[if lt IE 7]><br><br><br><br>
+      <p>WARNING: Your copy of Internet  Explorer is very old - from before
+      2001!!!  It is by far too old to properly work with this site, and
+      many others all across the internet.  For a dramatically better
+      browsing experience you should
+      <a href="../browser.html">upgrade to a more modern browser</a>.
+      </p><br><br><![endif]-->
+      
+      <!--[if IE 7]><br /><br /><br /><br />
+      <p>WARNING: Your copy of Internet Explorer (version 7 from 2006)
+      is not compatible with the many web standards in common
+      use today. While you will be able to read much of the content on 
+      this site, it may be very strangely formatted.  For a better
+      browsing experience you should
+      <a href="../browser.html">upgrade to a more modern browser</a>.
+      </p><br /><br /><![endif]-->
+    </div></body></div>
+    <div class="minMar">
+      <div class="threeBearWidthAndCenter">
+        <div id="tmplDocContent">
+      <div class="exCodeList">
+        <p>You will find several simple examples of programs to get you started with the traditional UNIX database libraries
+          NDBM, GDBM or Berkeley DB.  See the notes below for background information. The makefile
+          is <a href="DB/makefile.html">here</a>.</p>
+        <h2>NDBM (dbm)</h2>
+        <dl>
+          <dt><a href="DB/mkNDBM.c.html">mkNDBM.c</a></dt>              <dd>Create a simple NDBM database  (Works with GDBM in compatibility mode too)</dd>
+          <dt><a href="DB/rdNDBM.c.html">rdNDBM.c</a></dt>              <dd>Read in and display the NDBM database created by <tt><a href="DB/mkNDBM.c.html">mkNDBM.c</a></tt>.</dd>
+        </dl>
+        <h2>GDBM (GNU DBM)</h2>
+        <dl>
+          <dt><a href="DB/mkGDBM.c.html">mkGDBM.c</a></dt>              <dd>Create a simple GDBM database.</dd>
+          <dt><a href="DB/rdGDBM.c.html">rdGDBM.c</a></dt>              <dd>Read in and display the GDBM database created by <tt><a href="DB/mkGDBM.c.html">mkGDBM.c</a></tt>.</dd>
+        </dl>
+        <h2>Berkeley DB</h2>
+        <dl>
+          <dt><a href="DB/mkBerkeleyDB.c.html">mkBerkeleyDB.c</a></dt>  <dd>Create a simple Berkeley DB (BTREE)</dd>
+          <dt><a href="DB/rdBerkeleyDB.c.html">rdBerkeleyDB.c</a></dt>  <dd>Read in and display the Berkeley DB created by <tt><a href="DB/mkBerkeleyDB.c.html">mkBerkeleyDB.c</a></tt>.</dd>
+        </dl>
+      </div>
+
+      <br />
+      <h2>Notes &amp; FAQ</h2>
+
+      <p>DBM, originally developed at UC Berkeley, is a VERY high performance, key-value pair database library. Modern
+        programmers might think of the key-value pair database as an associative container backed with a persistent disk
+        store. DBM doesn't support transactional operations, any form of concurrency, or general query (SQL) capabilities. DBM
+        only allows a program to have ONE database open at any time, and data payloads are limited to 1K (i.e. the key and value
+        must each be less than 1K).  Later, NDBM, which stands for New-DBD, was developed as an improved version including
+        simple access to multiple databases at the same time. Later versions of NDBM removed the limits on the size of key and
+        value data.  Unfortunately, NDBM uses a different file format than DBM. While DBM and NDBM are BSDisms, the interfaces
+        are widely available on modern System V derived systems like Solaris and Linux.  NDBM appeared in the Single UNIX
+        Specification version 2, and is thus available on a wide array of systems.</p>
+
+      <p>Even with NDBM widely available, an improved GNU-DBM, called GDBM, was has been developed. As part of the GNU project,
+        GDBM is even more widely available and may be a useful option if portability to odd hardware or software platforms is a
+        must. GDBM has many improvements, but it uses yet another file format. GDBM has compatibility modes for both DBM/NDBM
+        file formats and source code.  While it is tempting to use the compatibility modes and simply stick with the older
+        interfaces, it is important to note that the compatibility modes provide compatibility with the limitations of the older
+        libraries too!  GDMB has several notable improvements over standard NDBM. It supports multiple readers into a DB, has no
+        size limits on records, much better tuning options, and better error reporting. GDBM provides all of this while still
+        providing an almost identical API -- an NDBM program can be converted into GDBM mostly via search and replace. The
+        removal of size limitations on what can be stored has come at a cost. This cost is increased memory allocation and
+        deallocation overhead, and a requirement for users of GDBM to free up memory allocated by the library. This is one of
+        the most common sources of memory leaks in newly converted GDBM programs -- one must free the memory allocated by
+        functions like <tt>gdbm_fetch()</tt>. I highly recommend stepping up to the better capabilities of GDBM if you are going
+        to use it -- why not, GDBM compiles on most any platform worth using!</p>
+
+      <p>An even more sophisticated library called Berkeley DB is commercially available. An older version of Berkeley DB,
+        around v1.85, is included with many BSD variants and the NDBM interface is implemented using this version of Berkeley
+        DB.  As a result, the NDBM implementations on BSD systems have no size limitations on what can be stored and no user
+        required memory management!  Modern versions of Berkeley DB support concurrency, transactions, and a variety of
+        sophisticated features.  All of this wonderful stuff is implemented while still supporting the same design principles of
+        the other DBMs -- simple, clean, and easy to use.  The API is quite different from the other DBMs -- more consistent and
+        less difficult to use in my opinion.  I HIGHLY recommend the Berkeley DB package if you are looking for uncompromising
+        performance, ease of use, and powerful features! (Hmm, that sounded like a commercial.  I represent Sleepycat in no way,
+        I just really like the product)</p>
+
+      <dl class="faqList">
+        <dt>Can XDBM store things other than null terminated strings?</dt>
+
+        <dd>YES!  In fact, they all store the specified number of bytes of the binary glob of data is pointed to by the
+          structure handed to them.  They do NOT store strings!  The example programs simply tell them,
+          via <tt>strlen(foo)+1</tt>, to store everything pointed to by the data pointers including the NULL.  This is done
+          simply to make printing out the stuff stored in the DB a simple matter in C.  The complete ignorance of what is stored
+          in a XDBM database is one of the most powerful aspects of the libraries presented here.  You can put whatever you want
+          in them: C++ objects, strings, built in types like <tt>int</tt>s, or just globs of binary data.</dd>
+
+        <dt>Will XDBM null terminate data I put into it?</dt>
+
+        <dd>NO!  None of the libraries will do anything to the data you stuff into them.  This is a feature.  See Q1.</dd>
+
+        <dt>Which libraries have size limitations for objects I store</dt>
+
+        <dd>DBM is limited to 1024.  Many NDBMs are too, but some are not -- BSD implementations for example.  GDBM has no
+          limitations if you don't use the compatibility functions.  Berkeley DB has no limitations -- or at least none you are
+          likely to hit.</dd>
+
+        <dt>How "free" is Berkeley DB?</dt>
+
+        <dd>Check out the license at Sleepycat!  Last time I looked you could use it for free on a GPL project, but you had to
+          pay for it if you wanted to make money of of something you used it for.  BTW, IANAL (I am not a lawyer).</dd>
+
+        <dt>I don't have a "key" but I want to store things in a DB!  What do I do?</dt>
+
+        <dd>Invent a string key -- from an integer.  You can also use Berkeley DB and have it generate record numbers for you.
+          This is a handy feature of Berkeley DB.</dd>
+
+        <dt>Do the DBs use hashes, btrees, or what?</dt>
+
+        <dd>They all use hashes, but Berkeley DB can also use a BTREE structure.</dd>
+
+        <dt>I am worried about leaving the DB in a bad state if my program crashes.</dt>
+
+        <dd>You can sync with GDBM and minimize this problem.  With Berkeley DB you can use transactions to solve this
+          problem.</dd>
+
+        <dt>What kind of server should I run my database on?</dt>
+
+        <dd>If you are asking this question, then you probably don't understand what kinds of DBs we are talking about.  The
+          databases discussed here are embedded and don't require a server -- they are not like Oracle, mySQL, or
+          PostgreSQL.</dd>
+
+        <dt>How can I interact with my database with SQL?</dt>
+
+        <dd>People asking this question are usually already using an SQL database and getting less than enough performance.
+          Somebody told them that GDBM or Sleepycat was the fastest DB on the planet and they should use that instead of the RDB
+          they are currently using.  Unfortunately, the DBs discussed here are not SQL DBs and are not drop in replacements for
+          such applications.  You can implement SQL databases using the tools discussed here as an underlying system (like mySQL
+          uses Berkeley DB under the hood); however, it is difficult to switch a nontrivial relational DB application over to
+          any of the DBs we are talking about here.  Sorry.  If you were just curious, then the short answer is: "you
+          can't" -- SQL would not be too much use for a key-value pair DB anyhow...</dd>
+
+        <dt>Can you help me with my DB problem?</dt>
+
+        <dd>Sure.  Be prepared to send me money if the problem is not a fun one or something I don't really have time for.</dd>
+      </dl>
+    </div>
+      </div>
+    </div>
+    <div class="snippet" id="botCopy"><body><div class="snippet" id="botCopy">
+    <div id="botPadAndCopyRight">
+      &#xA9;&#xA0;2009&#xA0;Mitch&#xA0;Richling
+    </div>
+</div></body></div>
+  </body>
+</html>

@@ -1,0 +1,97 @@
+<!DOCTYPE html PUBLIC "-//IETF//DTD HTML 2.0//EN">
+<HTML>
+<HEAD>
+<TITLE>AUPG/rlEXH.c</TITLE>
+</HEAD>
+<BODY BGCOLOR="#FFFFFF" TEXT="#000000" LINK="#1F00FF" ALINK="#FF0000" VLINK="#9900DD">
+<A NAME="top"> </A>
+<A NAME="file1"> </A>
+<H1><a href="rlEXH.c">rlEXH.c</a></H1>
+
+<PRE>
+<I><FONT COLOR="#B22222">/* -*- Mode:C; Coding:us-ascii-unix; fill-column:132 -*- */</FONT></I>
+<I><FONT COLOR="#B22222">/**********************************************************************************************************************************/</FONT></I>
+<I><FONT COLOR="#B22222">/**
+   @file      rlEXH.c
+   @author    Mitch Richling &lt;http://www.mitchr.me/&gt;
+   @Copyright Copyright 1998 by Mitch Richling.  All rights reserved.
+   @brief     Simple use of readline@EOL
+   @Keywords  readline
+   @Std       C89
+
+   Adds more history functionality to the rlEX.c example.  In particular, supports history files and expansion of things like '!!'.
+***********************************************************************************************************************************/</FONT></I>
+
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;stdio.h&gt;</FONT></B>              <I><FONT COLOR="#B22222">/* I/O lib         C89   */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;stdlib.h&gt;</FONT></B>             <I><FONT COLOR="#B22222">/* Standard Lib    C89   */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;string.h&gt;</FONT></B>             <I><FONT COLOR="#B22222">/* Strings         C89   */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;readline/readline.h&gt;</FONT></B>  <I><FONT COLOR="#B22222">/* readline              */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;readline/history.h&gt;</FONT></B>   <I><FONT COLOR="#B22222">/* readline history      */</FONT></I>
+
+<I><FONT COLOR="#B22222">/**********************************************************************************************************************************/</FONT></I>
+<B><FONT COLOR="#228B22">int</FONT></B> <B><FONT COLOR="#0000FF">main</FONT></B>(<B><FONT COLOR="#228B22">int</FONT></B> argc, <B><FONT COLOR="#228B22">char</FONT></B> *argv[]) {
+  <B><FONT COLOR="#228B22">char</FONT></B> *rLine, goodCmd[1024];
+  <B><FONT COLOR="#228B22">int</FONT></B> i;
+  <B><FONT COLOR="#228B22">int</FONT></B> historyExpandResult;
+  <B><FONT COLOR="#228B22">char</FONT></B> promptString[1024];
+  <B><FONT COLOR="#228B22">char</FONT></B> *rLineExpand;
+
+  <I><FONT COLOR="#B22222">/* Set our name so users can configure .inputrc to have special behavior just for this program... */</FONT></I>
+  rl_readline_name = <B><FONT COLOR="#BC8F8F">&quot;rlEX&quot;</FONT></B>;
+
+  <I><FONT COLOR="#B22222">/* Initialize the history system. */</FONT></I>
+  using_history();
+
+  <I><FONT COLOR="#B22222">/* Read in some history from a history file -- omit if support for a history file is not required. */</FONT></I>
+  <B><FONT COLOR="#A020F0">if</FONT></B>(read_history(<B><FONT COLOR="#BC8F8F">&quot;rlEX_history&quot;</FONT></B>)) 
+    printf(<B><FONT COLOR="#BC8F8F">&quot;WARNING: Could not read history file (rlEX_history)\n&quot;</FONT></B>);
+
+  <I><FONT COLOR="#B22222">/* Get rid of the default tab completion of file names -- no need to do this if file name tab completion is appropriate for your
+     application. */</FONT></I>
+  rl_bind_key (<B><FONT COLOR="#BC8F8F">'\t'</FONT></B>, rl_insert);
+
+  <I><FONT COLOR="#B22222">/* Loop for for input.  A prompt will be displayed with the current line number for the input, and that input will be echoed back.
+     All this with the various readline magic -- up arrow history, etc... */</FONT></I>
+  <B><FONT COLOR="#A020F0">for</FONT></B>(i=1; ;i++) {
+    sprintf(promptString, <B><FONT COLOR="#BC8F8F">&quot;Give me some text(%d): &quot;</FONT></B>, i);
+    rLine = readline(promptString);
+    <I><FONT COLOR="#B22222">/* Now we expand history substitutions (stuff like '!!') in the input string. */</FONT></I>
+    historyExpandResult = history_expand(rLine, &amp;rLineExpand);
+    goodCmd[0] = <B><FONT COLOR="#BC8F8F">'\0'</FONT></B>;
+    <B><FONT COLOR="#A020F0">switch</FONT></B>(historyExpandResult) {
+      <B><FONT COLOR="#A020F0">case</FONT></B> <B><FONT COLOR="#5F9EA0">0</FONT></B> : <I><FONT COLOR="#B22222">// No useful expansion
+</FONT></I>        add_history(rLine);
+        printf(<B><FONT COLOR="#BC8F8F">&quot;Line input(%d): '%s'\n&quot;</FONT></B>, i, rLine);
+        strncpy(goodCmd, rLine, 1000);
+        <B><FONT COLOR="#A020F0">break</FONT></B>;
+      <B><FONT COLOR="#A020F0">case</FONT></B> <B><FONT COLOR="#5F9EA0">1</FONT></B> : <I><FONT COLOR="#B22222">// Had an expansion
+</FONT></I>        printf(<B><FONT COLOR="#BC8F8F">&quot;Line input(%d): '%s' =&gt; '%s'\n&quot;</FONT></B>, i, rLine, rLineExpand);
+        strncpy(goodCmd, rLineExpand, 1000);
+        <B><FONT COLOR="#A020F0">break</FONT></B>;
+      <B><FONT COLOR="#A020F0">case</FONT></B> <B><FONT COLOR="#5F9EA0">-1</FONT></B> : <I><FONT COLOR="#B22222">// ERROR of some sort -- error message is in rLineExpand
+</FONT></I>        printf(<B><FONT COLOR="#BC8F8F">&quot;ERROR: %s\n&quot;</FONT></B>, rLineExpand);
+        <B><FONT COLOR="#A020F0">break</FONT></B>;
+      <B><FONT COLOR="#A020F0">case</FONT></B> <B><FONT COLOR="#5F9EA0">2</FONT></B> : <I><FONT COLOR="#B22222">// Expand, but don't RUN (just print like with :p)
+</FONT></I>        printf(<B><FONT COLOR="#BC8F8F">&quot;Line input(%d): '%s' =&gt; PRT: '%s'\n&quot;</FONT></B>, i, rLine, rLineExpand);
+        <B><FONT COLOR="#A020F0">break</FONT></B>;
+    } <I><FONT COLOR="#B22222">/* end switch */</FONT></I>
+
+    <I><FONT COLOR="#B22222">/* You MUST free up the strings that readline() and history_expand() return! */</FONT></I>
+    free(rLineExpand);
+    free(rLine);
+
+    <I><FONT COLOR="#B22222">/* Check for recognized commands. */</FONT></I>
+    <B><FONT COLOR="#A020F0">if</FONT></B>( !(strcmp(goodCmd, <B><FONT COLOR="#BC8F8F">&quot;quit&quot;</FONT></B>))) {
+      <I><FONT COLOR="#B22222">/* Write out our history file -- omit if history file support is not needed.  See also append_history,
+         history_truncate_file, */</FONT></I>
+      <B><FONT COLOR="#A020F0">if</FONT></B>(write_history(<B><FONT COLOR="#BC8F8F">&quot;rlEX_history&quot;</FONT></B>)) 
+        printf(<B><FONT COLOR="#BC8F8F">&quot;WARNING: Could not write history file\n&quot;</FONT></B>);
+      <B><FONT COLOR="#A020F0">return</FONT></B> 0;
+    } <I><FONT COLOR="#B22222">/* end if */</FONT></I>
+  } <I><FONT COLOR="#B22222">/* end for */</FONT></I>
+} <I><FONT COLOR="#B22222">/* end func main */</FONT></I>
+</PRE>
+<HR \/>
+<ADDRESS>Generated by <A HREF="http://www.iki.fi/~mtr/genscript/">GNU Enscript 1.6.5.90</A>.</ADDRESS>
+</BODY>
+</HTML>

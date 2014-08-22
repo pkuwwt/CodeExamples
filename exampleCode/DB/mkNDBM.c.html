@@ -1,0 +1,104 @@
+<!DOCTYPE html PUBLIC "-//IETF//DTD HTML 2.0//EN">
+<HTML>
+<HEAD>
+<TITLE>DB/mkNDBM.c</TITLE>
+</HEAD>
+<BODY BGCOLOR="#FFFFFF" TEXT="#000000" LINK="#1F00FF" ALINK="#FF0000" VLINK="#9900DD">
+<A NAME="top"> </A>
+<A NAME="file1"> </A>
+<H1><a href="mkNDBM.c">mkNDBM.c</a></H1>
+
+<PRE>
+<I><FONT COLOR="#B22222">/**
+   @file      mkNDBM.c
+   @author    Mitch Richling &lt;http://www.mitchr.me/&gt;
+   @Copyright Copyright 1997 by Mitch Richling.  All rights reserved.
+   @brief     How to create and populate an NDBM DB@EOL
+   @Keywords  UNIX database dbm ndbm gdbm 
+   @Std       ISOC POSIX UNIX98 BSD4.3 SYSV3
+
+   @Tested    
+              - Solaris 2.8
+              - MacOS X.2
+*/</FONT></I>
+
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;fcntl.h&gt;</FONT></B>              <I><FONT COLOR="#B22222">/* UNIX file ctrl  UNIX  */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;ndbm.h&gt;</FONT></B>               <I><FONT COLOR="#B22222">/* ndbm header     BSD   */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;string.h&gt;</FONT></B>             <I><FONT COLOR="#B22222">/* Strings         ISOC  */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;stdlib.h&gt;</FONT></B>             <I><FONT COLOR="#B22222">/* Standard Lib    ISOC  */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;stdio.h&gt;</FONT></B>              <I><FONT COLOR="#B22222">/* I/O lib         ISOC  */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;unistd.h&gt;</FONT></B>             <I><FONT COLOR="#B22222">/* UNIX std stf    POSIX */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;errno.h&gt;</FONT></B>              <I><FONT COLOR="#B22222">/* error stf       POSIX */</FONT></I>
+
+#<B><FONT COLOR="#5F9EA0">define</FONT></B> <FONT COLOR="#B8860B">NUMELE</FONT> 4
+
+<B><FONT COLOR="#228B22">int</FONT></B> <B><FONT COLOR="#0000FF">main</FONT></B>(<B><FONT COLOR="#228B22">int</FONT></B> argc, <B><FONT COLOR="#228B22">char</FONT></B> *argv[]);
+
+<B><FONT COLOR="#228B22">int</FONT></B> <B><FONT COLOR="#0000FF">main</FONT></B>(<B><FONT COLOR="#228B22">int</FONT></B> argc, <B><FONT COLOR="#228B22">char</FONT></B> *argv[]) {
+  <B><FONT COLOR="#228B22">int</FONT></B> i, dbRet;
+  DBM *myDB;
+  datum daKey, daVal;
+  <B><FONT COLOR="#228B22">char</FONT></B> *keys[NUMELE] = {<B><FONT COLOR="#BC8F8F">&quot;foo&quot;</FONT></B>, <B><FONT COLOR="#BC8F8F">&quot;bar&quot;</FONT></B>, <B><FONT COLOR="#BC8F8F">&quot;foobar&quot;</FONT></B>, <B><FONT COLOR="#BC8F8F">&quot;foo&quot;</FONT></B>};
+  <B><FONT COLOR="#228B22">char</FONT></B> *vals[NUMELE] = {<B><FONT COLOR="#BC8F8F">&quot;FOO&quot;</FONT></B>, <B><FONT COLOR="#BC8F8F">&quot;BAR&quot;</FONT></B>, <B><FONT COLOR="#BC8F8F">&quot;FOOBAR&quot;</FONT></B>, <B><FONT COLOR="#BC8F8F">&quot;FOOZAM&quot;</FONT></B>};
+
+  <I><FONT COLOR="#B22222">/* Open the database (create) */</FONT></I>
+  myDB = dbm_open(<B><FONT COLOR="#BC8F8F">&quot;ndbmTest&quot;</FONT></B>, O_RDWR | O_CREAT, 0660);
+  <B><FONT COLOR="#A020F0">if</FONT></B>(myDB == NULL) {
+    printf(<B><FONT COLOR="#BC8F8F">&quot;ERROR: Could not open the DB file.  Error number: %d.\n&quot;</FONT></B>, errno);
+    exit(1);
+  } <B><FONT COLOR="#A020F0">else</FONT></B> {
+    printf(<B><FONT COLOR="#BC8F8F">&quot;DB created.\n&quot;</FONT></B>);
+    printf(<B><FONT COLOR="#BC8F8F">&quot;DB opened.\n&quot;</FONT></B>);
+  }
+    
+  <I><FONT COLOR="#B22222">/* Put stuff in the DB... */</FONT></I>
+  <B><FONT COLOR="#A020F0">for</FONT></B>(i=0; i&lt;NUMELE; i++) {
+    daKey.dptr = keys[i];
+    daKey.dsize = strlen(keys[i])+1;
+    daVal.dptr = vals[i];
+    daVal.dsize = strlen(vals[i])+1;
+    dbRet = dbm_store(myDB, daKey, daVal, DBM_INSERT);  <I><FONT COLOR="#B22222">// DBM_REPLACE for replace behaviour
+</FONT></I>    <B><FONT COLOR="#A020F0">switch</FONT></B>(dbRet) {
+    <B><FONT COLOR="#A020F0">case</FONT></B> <B><FONT COLOR="#5F9EA0">0</FONT></B>:
+      printf(<B><FONT COLOR="#BC8F8F">&quot;Store: '%s' ==&gt; '%s'\n&quot;</FONT></B>, (<B><FONT COLOR="#228B22">char</FONT></B> *)daKey.dptr, (<B><FONT COLOR="#228B22">char</FONT></B> *)daVal.dptr); 
+      <B><FONT COLOR="#A020F0">break</FONT></B>;
+    <B><FONT COLOR="#A020F0">case</FONT></B> <B><FONT COLOR="#5F9EA0">1</FONT></B>: <I><FONT COLOR="#B22222">// Only can happen with DBM_INSERT 
+</FONT></I>      printf(<B><FONT COLOR="#BC8F8F">&quot;Could not store '%s' because it was already in the DB\n&quot;</FONT></B>, (<B><FONT COLOR="#228B22">char</FONT></B> *)daKey.dptr); 
+      <B><FONT COLOR="#A020F0">break</FONT></B>;
+    <B><FONT COLOR="#5F9EA0">default</FONT></B>:
+      printf(<B><FONT COLOR="#BC8F8F">&quot;ERROR: Could not insert item (%s,%s). \n&quot;</FONT></B>, (<B><FONT COLOR="#228B22">char</FONT></B> *)daKey.dptr, (<B><FONT COLOR="#228B22">char</FONT></B> *)daVal.dptr);
+      exit(1);
+    } <I><FONT COLOR="#B22222">/* end switch */</FONT></I>
+  } <I><FONT COLOR="#B22222">/* end for */</FONT></I>
+
+
+  <I><FONT COLOR="#B22222">/* Lookup the second one.. */</FONT></I>
+  daKey.dptr = keys[1];
+  daKey.dsize = strlen(keys[1])+1;
+  daVal = dbm_fetch(myDB, daKey);
+  <B><FONT COLOR="#A020F0">if</FONT></B>(daVal.dptr == NULL) {
+    printf(<B><FONT COLOR="#BC8F8F">&quot;ERROR: Could not look up %s\n&quot;</FONT></B>, (<B><FONT COLOR="#228B22">char</FONT></B> *)daKey.dptr);
+  } <B><FONT COLOR="#A020F0">else</FONT></B> {
+    printf(<B><FONT COLOR="#BC8F8F">&quot;Got record: '%s' ==&gt; '%s'\n&quot;</FONT></B>, (<B><FONT COLOR="#228B22">char</FONT></B> *)daKey.dptr, (<B><FONT COLOR="#228B22">char</FONT></B> *)daVal.dptr);
+  }
+
+  <I><FONT COLOR="#B22222">/* Delete an element */</FONT></I>
+  daKey.dptr = keys[1];
+  daKey.dsize = strlen(keys[1])+1;
+  <B><FONT COLOR="#A020F0">if</FONT></B>(dbm_delete(myDB, daKey) &lt; 0) {
+    printf(<B><FONT COLOR="#BC8F8F">&quot;ERROR: Could not delete item with key %s\n&quot;</FONT></B>, daKey.dptr);
+  } <B><FONT COLOR="#A020F0">else</FONT></B> {
+    printf(<B><FONT COLOR="#BC8F8F">&quot;Deleted: '%s'\n&quot;</FONT></B>, (<B><FONT COLOR="#228B22">char</FONT></B> *)daKey.dptr);
+  }<I><FONT COLOR="#B22222">/* end if */</FONT></I>
+
+  <I><FONT COLOR="#B22222">/* Close the DB (flush everything to the file) */</FONT></I>
+  dbm_close(myDB);
+  printf(<B><FONT COLOR="#BC8F8F">&quot;DB closed... Bye!\n&quot;</FONT></B>);
+
+  <B><FONT COLOR="#A020F0">return</FONT></B> 0;
+} <I><FONT COLOR="#B22222">/* end func main */</FONT></I>
+</PRE>
+<HR \/>
+<ADDRESS>Generated by <A HREF="http://www.iki.fi/~mtr/genscript/">GNU Enscript 1.6.5.2</A>.</ADDRESS>
+</BODY>
+</HTML>

@@ -1,0 +1,126 @@
+<!DOCTYPE html PUBLIC "-//IETF//DTD HTML 2.0//EN">
+<HTML>
+<HEAD>
+<TITLE>ruby/fileIO.rb</TITLE>
+</HEAD>
+<BODY BGCOLOR="#FFFFFF" TEXT="#000000" LINK="#1F00FF" ALINK="#FF0000" VLINK="#9900DD">
+<A NAME="top"> </A>
+<A NAME="file1"> </A>
+<H1><a href="fileIO.rb">fileIO.rb</a></H1>
+
+<PRE>
+<I><FONT COLOR="#B22222">#!/usr/local/bin/ruby
+</FONT></I>
+<I><FONT COLOR="#B22222">##
+</FONT></I><I><FONT COLOR="#B22222"># @file      fileIO.rb
+</FONT></I><I><FONT COLOR="#B22222"># @author    Mitch Richling &lt;http://www.mitchr.me/&gt;
+</FONT></I><I><FONT COLOR="#B22222"># @Copyright Copyright 2006 by Mitch Richling.  All rights reserved.
+</FONT></I><I><FONT COLOR="#B22222"># @brief     Simple file I/O in ruby.@EOL
+</FONT></I><I><FONT COLOR="#B22222"># @Keywords  example ruby file open IO
+</FONT></I><I><FONT COLOR="#B22222"># @Std       Ruby 1.8
+</FONT></I>
+
+<I><FONT COLOR="#B22222"># Ruby has the lisp-like ability to pass an open file to a code block,
+</FONT></I><I><FONT COLOR="#B22222"># and automatically close the file upon exit of the block.  Use a
+</FONT></I><I><FONT COLOR="#B22222"># begin/rescue to catch I/O errors.  YAHOOO!
+</FONT></I>
+open(<B><FONT COLOR="#BC8F8F">&quot;foo.txt&quot;</FONT></B>, <B><FONT COLOR="#BC8F8F">&quot;w&quot;</FONT></B>) <B><FONT COLOR="#A020F0">do</FONT></B> |file|
+  file.puts(<B><FONT COLOR="#BC8F8F">&quot;Hello&quot;</FONT></B>)
+  file.puts(<B><FONT COLOR="#BC8F8F">&quot;World!&quot;</FONT></B>)
+<B><FONT COLOR="#A020F0">end</FONT></B>
+
+puts(<B><FONT COLOR="#BC8F8F">&quot;Read it one byte at a time:&quot;</FONT></B>)
+open(<B><FONT COLOR="#BC8F8F">&quot;foo.txt&quot;</FONT></B>, <B><FONT COLOR="#BC8F8F">&quot;r&quot;</FONT></B>) <B><FONT COLOR="#A020F0">do</FONT></B> |file|
+  file.each_byte <B><FONT COLOR="#A020F0">do</FONT></B> |byte|
+    <I><FONT COLOR="#B22222"># putc knows about chars.  Like: print byte.chr
+</FONT></I>    putc byte
+  <B><FONT COLOR="#A020F0">end</FONT></B>
+<B><FONT COLOR="#A020F0">end</FONT></B>
+
+puts(<B><FONT COLOR="#BC8F8F">&quot;Read it one line at a time:&quot;</FONT></B>)
+open(<B><FONT COLOR="#BC8F8F">&quot;foo.txt&quot;</FONT></B>, <B><FONT COLOR="#BC8F8F">&quot;r&quot;</FONT></B>) <B><FONT COLOR="#A020F0">do</FONT></B> |file|
+  file.each_line <B><FONT COLOR="#A020F0">do</FONT></B> |line|
+    puts(line)
+  <B><FONT COLOR="#A020F0">end</FONT></B>
+<B><FONT COLOR="#A020F0">end</FONT></B>
+
+<I><FONT COLOR="#B22222"># One common way to do things is to slurp up the file all at once, and
+</FONT></I><I><FONT COLOR="#B22222"># then manipulate it using Ruby's rich String methods.
+</FONT></I>puts(<B><FONT COLOR="#BC8F8F">&quot;Read it all at one time into a string!&quot;</FONT></B>)
+open(<B><FONT COLOR="#BC8F8F">&quot;foo.txt&quot;</FONT></B>, <B><FONT COLOR="#BC8F8F">&quot;r&quot;</FONT></B>) <B><FONT COLOR="#A020F0">do</FONT></B> |file|
+  puts(file.read())
+<B><FONT COLOR="#A020F0">end</FONT></B>
+
+<I><FONT COLOR="#B22222"># Another common thing to do is slurp up the file all at once such
+</FONT></I><I><FONT COLOR="#B22222"># that each line of the file is placed into an array.  Then we
+</FONT></I><I><FONT COLOR="#B22222"># manipulate the array of lines (strings)
+</FONT></I>puts(<B><FONT COLOR="#BC8F8F">&quot;Read it all at one time into an array!&quot;</FONT></B>)
+open(<B><FONT COLOR="#BC8F8F">&quot;foo.txt&quot;</FONT></B>, <B><FONT COLOR="#BC8F8F">&quot;r&quot;</FONT></B>) <B><FONT COLOR="#A020F0">do</FONT></B> |file|
+  lineArray = file.readlines()
+  lineArray.each <B><FONT COLOR="#A020F0">do</FONT></B> |line|
+    puts(line)
+  <B><FONT COLOR="#A020F0">end</FONT></B>
+<B><FONT COLOR="#A020F0">end</FONT></B>
+
+<I><FONT COLOR="#B22222"># If all you want to do is slurp up a file into a string or into an
+</FONT></I><I><FONT COLOR="#B22222"># array of lines, you can do it like this:
+</FONT></I><I><FONT COLOR="#B22222">#
+</FONT></I><I><FONT COLOR="#B22222"># aString = IO::read(&quot;fileName&quot;);
+</FONT></I><I><FONT COLOR="#B22222"># anArray = IO::readlines(&quot;fileName&quot;);
+</FONT></I>
+<I><FONT COLOR="#B22222"># We have used a block to automatically close the file up till this
+</FONT></I><I><FONT COLOR="#B22222"># point; however, more traditional (C/C++ style) methods may be
+</FONT></I><I><FONT COLOR="#B22222"># used. When the &quot;processing&quot; block for the file is large or complex,
+</FONT></I><I><FONT COLOR="#B22222"># this syntax can lead to cleaner code and finer error management.
+</FONT></I>
+<I><FONT COLOR="#B22222"># Sorta C/Perl-like syntax:
+</FONT></I>puts(<B><FONT COLOR="#BC8F8F">&quot;Open it the old fashioned way, and dump it:&quot;</FONT></B>)
+<B><FONT COLOR="#A020F0">if</FONT></B>(file = open(<B><FONT COLOR="#BC8F8F">&quot;foo.txt&quot;</FONT></B>, <B><FONT COLOR="#BC8F8F">&quot;r&quot;</FONT></B>))
+  puts(file.read())
+  file.close
+<B><FONT COLOR="#A020F0">else</FONT></B>
+ <I><FONT COLOR="#B22222"># Error code here
+</FONT></I><B><FONT COLOR="#A020F0">end</FONT></B>
+
+<I><FONT COLOR="#B22222"># Sorta C++-like syntax:
+</FONT></I>puts(<B><FONT COLOR="#BC8F8F">&quot;Get the file with C++-like syntax, and dump it:&quot;</FONT></B>)
+<B><FONT COLOR="#A020F0">if</FONT></B>(file = File.new(<B><FONT COLOR="#BC8F8F">&quot;foo.txt&quot;</FONT></B>, <B><FONT COLOR="#BC8F8F">&quot;r&quot;</FONT></B>))
+  puts(file.read())
+  file.close
+<B><FONT COLOR="#A020F0">else</FONT></B>
+ <I><FONT COLOR="#B22222"># Error code here
+</FONT></I><B><FONT COLOR="#A020F0">end</FONT></B>
+
+<I><FONT COLOR="#B22222"># Not only can we open the old fashioned way, but we can read the file
+</FONT></I><I><FONT COLOR="#B22222"># the old fashioned way too -- i.e. read till we get an EOF.  Here we
+</FONT></I><I><FONT COLOR="#B22222"># read it one line at a time.
+</FONT></I>puts(<B><FONT COLOR="#BC8F8F">&quot;Open and read (one line at a time) the old fashioned way:&quot;</FONT></B>)
+<B><FONT COLOR="#A020F0">if</FONT></B>(file = open(<B><FONT COLOR="#BC8F8F">&quot;foo.txt&quot;</FONT></B>, <B><FONT COLOR="#BC8F8F">&quot;r&quot;</FONT></B>))
+  <B><FONT COLOR="#A020F0">until</FONT></B> file.eof
+	line = file.readline
+    puts(line)
+  <B><FONT COLOR="#A020F0">end</FONT></B>
+  file.close
+<B><FONT COLOR="#A020F0">else</FONT></B>
+ <I><FONT COLOR="#B22222"># Error code here
+</FONT></I><B><FONT COLOR="#A020F0">end</FONT></B>
+
+<I><FONT COLOR="#B22222"># Finally, we take a nostalgic trip. Below we replicate one of the
+</FONT></I><I><FONT COLOR="#B22222"># first file I/O programs found in K&amp;R.  Here we open the file the
+</FONT></I><I><FONT COLOR="#B22222"># C-like way, read it one byte at a time, and print out the bytes as
+</FONT></I><I><FONT COLOR="#B22222"># we pull them from the file.  So quaint!
+</FONT></I>puts(<B><FONT COLOR="#BC8F8F">&quot;Open and read (one byte at a time) the old fashioned way:&quot;</FONT></B>)
+<B><FONT COLOR="#A020F0">if</FONT></B>(file = open(<B><FONT COLOR="#BC8F8F">&quot;foo.txt&quot;</FONT></B>, <B><FONT COLOR="#BC8F8F">&quot;r&quot;</FONT></B>))
+  <B><FONT COLOR="#A020F0">until</FONT></B> file.eof
+	byte = file.readchar
+    putc byte
+  <B><FONT COLOR="#A020F0">end</FONT></B>
+  file.close
+<B><FONT COLOR="#A020F0">else</FONT></B>
+ <I><FONT COLOR="#B22222"># Error code here
+</FONT></I><B><FONT COLOR="#A020F0">end</FONT></B>
+</PRE>
+<HR \/>
+<ADDRESS>Generated by <A HREF="http://www.iki.fi/~mtr/genscript/">GNU Enscript 1.6.5.2</A>.</ADDRESS>
+</BODY>
+</HTML>

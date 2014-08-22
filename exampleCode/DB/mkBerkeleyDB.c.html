@@ -1,0 +1,157 @@
+<!DOCTYPE html PUBLIC "-//IETF//DTD HTML 2.0//EN">
+<HTML>
+<HEAD>
+<TITLE>DB/mkBerkeleyDB.c</TITLE>
+</HEAD>
+<BODY BGCOLOR="#FFFFFF" TEXT="#000000" LINK="#1F00FF" ALINK="#FF0000" VLINK="#9900DD">
+<A NAME="top"> </A>
+<A NAME="file1"> </A>
+<H1><a href="mkBerkeleyDB.c">mkBerkeleyDB.c</a></H1>
+
+<PRE>
+<I><FONT COLOR="#B22222">/**
+   @file      mkBerkeleyDB.c
+   @author    Mitch Richling &lt;http://www.mitchr.me/&gt;
+   @Copyright Copyright 1998 by Mitch Richling.  All rights reserved.
+   @brief     How to create and populate a Berkeley DB@EOL
+   @Keywords  dbm ndbm berkeley db gdbm
+   @Std       C99
+
+   @Tested    
+              - Solaris 2.8
+              - MacOS X.2
+              - Linux (RHEL 3.0)
+*/</FONT></I>
+
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;sys/types.h&gt;</FONT></B>          <I><FONT COLOR="#B22222">/* UNIX types      POSIX */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;stdio.h&gt;</FONT></B>              <I><FONT COLOR="#B22222">/* I/O lib         ISOC  */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;stdlib.h&gt;</FONT></B>             <I><FONT COLOR="#B22222">/* Standard Lib    ISOC  */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;string.h&gt;</FONT></B>             <I><FONT COLOR="#B22222">/* Strings         ISOC  */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;db.h&gt;</FONT></B>                 <I><FONT COLOR="#B22222">/* dbm header      ????  */</FONT></I>
+
+#<B><FONT COLOR="#5F9EA0">define</FONT></B> <FONT COLOR="#B8860B">DATABASE</FONT> <B><FONT COLOR="#BC8F8F">&quot;access.db&quot;</FONT></B>
+
+<B><FONT COLOR="#228B22">void</FONT></B> <B><FONT COLOR="#0000FF">zeroDBT</FONT></B>(DBT *dbt);
+<B><FONT COLOR="#228B22">void</FONT></B> <B><FONT COLOR="#0000FF">loadDBT</FONT></B>(DBT *dbt, <B><FONT COLOR="#228B22">void</FONT></B> *data, <B><FONT COLOR="#228B22">int</FONT></B> length);
+<B><FONT COLOR="#228B22">void</FONT></B> <B><FONT COLOR="#0000FF">closeDB</FONT></B>(DB *dbp);
+
+#<B><FONT COLOR="#5F9EA0">define</FONT></B> <FONT COLOR="#B8860B">NUMELE</FONT> 4
+
+<B><FONT COLOR="#228B22">int</FONT></B> <B><FONT COLOR="#0000FF">main</FONT></B>() { 
+  DB *myDB; 
+  <B><FONT COLOR="#228B22">int</FONT></B> dbRet, i;
+  DBT key, value;
+  <B><FONT COLOR="#228B22">char</FONT></B> *keys[NUMELE] = {<B><FONT COLOR="#BC8F8F">&quot;foo&quot;</FONT></B>, <B><FONT COLOR="#BC8F8F">&quot;bar&quot;</FONT></B>, <B><FONT COLOR="#BC8F8F">&quot;foobar&quot;</FONT></B>, <B><FONT COLOR="#BC8F8F">&quot;foo&quot;</FONT></B>};
+  <B><FONT COLOR="#228B22">char</FONT></B> *vals[NUMELE] = {<B><FONT COLOR="#BC8F8F">&quot;FOO&quot;</FONT></B>, <B><FONT COLOR="#BC8F8F">&quot;BAR&quot;</FONT></B>, <B><FONT COLOR="#BC8F8F">&quot;FOOBAR&quot;</FONT></B>, <B><FONT COLOR="#BC8F8F">&quot;FOOZAM&quot;</FONT></B>};
+
+  <I><FONT COLOR="#B22222">/* Create the DB */</FONT></I>
+  <B><FONT COLOR="#A020F0">if</FONT></B> ((dbRet = db_create(&amp;myDB, NULL, 0)) != 0) { <I><FONT COLOR="#B22222">// Open failure
+</FONT></I>    fprintf(stderr, <B><FONT COLOR="#BC8F8F">&quot;db_create: %s\n&quot;</FONT></B>, db_strerror(dbRet)); 
+    exit (1); 
+  } <B><FONT COLOR="#A020F0">else</FONT></B> {
+    printf(<B><FONT COLOR="#BC8F8F">&quot;DB created.\n&quot;</FONT></B>);
+  } <I><FONT COLOR="#B22222">/* end if */</FONT></I>
+
+  <I><FONT COLOR="#B22222">/* Associate DB with a file (create a btree)*/</FONT></I>
+  <B><FONT COLOR="#A020F0">if</FONT></B> ((dbRet = myDB-&gt;open(myDB, NULL, <B><FONT COLOR="#BC8F8F">&quot;berkeleydbTest.db&quot;</FONT></B>, NULL, DB_BTREE, DB_CREATE, 0664)) != 0) { 
+    myDB-&gt;err(myDB, dbRet, <B><FONT COLOR="#BC8F8F">&quot;berkeleydbTest.db&quot;</FONT></B>); 
+    closeDB(myDB);
+    exit(1);
+  } <B><FONT COLOR="#A020F0">else</FONT></B> {
+    printf(<B><FONT COLOR="#BC8F8F">&quot;DB opened.\n&quot;</FONT></B>);
+  } <I><FONT COLOR="#B22222">/* end if */</FONT></I>
+
+  <I><FONT COLOR="#B22222">/* Note we store null terminated strings.  They don't have to be null
+     terminated -- or even arrays of chars.  I just do this to make this
+     example simple -- this is also a VERY common use pattern in C. */</FONT></I>
+  <B><FONT COLOR="#A020F0">for</FONT></B>(i=0; i&lt;NUMELE; i++) {
+    <I><FONT COLOR="#B22222">/* Zero out and load up our key/value DBTs */</FONT></I>
+    loadDBT(&amp;key,   keys[i], strlen(keys[i])+1);
+    loadDBT(&amp;value, vals[i], strlen(vals[i])+1);
+    <I><FONT COLOR="#B22222">/* Store our key value pair now... */</FONT></I>
+    dbRet = myDB-&gt;put(myDB, NULL, &amp;key, &amp;value, DB_NOOVERWRITE); <I><FONT COLOR="#B22222">// 0, not DB_NOOVERWRITE
+</FONT></I>    <B><FONT COLOR="#A020F0">switch</FONT></B>(dbRet) {
+    <B><FONT COLOR="#A020F0">case</FONT></B> <B><FONT COLOR="#5F9EA0">0</FONT></B>: 
+      printf(<B><FONT COLOR="#BC8F8F">&quot;Store: '%s' ==&gt; '%s'\n&quot;</FONT></B>, (<B><FONT COLOR="#228B22">char</FONT></B> *)key.data, (<B><FONT COLOR="#228B22">char</FONT></B> *)value.data); 
+      <B><FONT COLOR="#A020F0">break</FONT></B>;
+    <B><FONT COLOR="#A020F0">case</FONT></B> <B><FONT COLOR="#5F9EA0">DB_KEYEXIST</FONT></B>: 
+      printf(<B><FONT COLOR="#BC8F8F">&quot;Could not store '%s' because it was already in the DB.\n&quot;</FONT></B>, (<B><FONT COLOR="#228B22">char</FONT></B> *)key.data); 
+      <B><FONT COLOR="#A020F0">break</FONT></B>;
+    <B><FONT COLOR="#5F9EA0">default</FONT></B>: 
+      myDB-&gt;err(myDB, dbRet, <B><FONT COLOR="#BC8F8F">&quot;DB-&gt;put&quot;</FONT></B>); 
+      closeDB(myDB);
+      exit(1);
+    } <I><FONT COLOR="#B22222">/* end switch */</FONT></I>
+  } <I><FONT COLOR="#B22222">/* end for */</FONT></I>
+
+  <I><FONT COLOR="#B22222">/* Lookup the second one.. */</FONT></I>
+  loadDBT(&amp;key, keys[1], strlen(keys[1])+1);
+  dbRet = myDB-&gt;get(myDB, NULL, &amp;key, &amp;value, 0);
+  <B><FONT COLOR="#A020F0">switch</FONT></B>(dbRet) {
+  <B><FONT COLOR="#A020F0">case</FONT></B> <B><FONT COLOR="#5F9EA0">0</FONT></B>:
+    printf(<B><FONT COLOR="#BC8F8F">&quot;Got record: '%s' ==&gt; '%s'\n&quot;</FONT></B>, (<B><FONT COLOR="#228B22">char</FONT></B> *)key.data, (<B><FONT COLOR="#228B22">char</FONT></B> *)value.data);
+    <B><FONT COLOR="#A020F0">break</FONT></B>;
+  <B><FONT COLOR="#A020F0">case</FONT></B> <B><FONT COLOR="#5F9EA0">DB_NOTFOUND</FONT></B>:
+    printf(<B><FONT COLOR="#BC8F8F">&quot;Fail: Could not find key '%s' in DB.\n&quot;</FONT></B>, (<B><FONT COLOR="#228B22">char</FONT></B> *)key.data);
+    <B><FONT COLOR="#A020F0">break</FONT></B>;
+  <B><FONT COLOR="#5F9EA0">default</FONT></B>:
+    myDB-&gt;err(myDB, dbRet, <B><FONT COLOR="#BC8F8F">&quot;DB-&gt;get&quot;</FONT></B>);
+    closeDB(myDB);
+    exit(1);
+  } <I><FONT COLOR="#B22222">/* end switch */</FONT></I>
+
+  <I><FONT COLOR="#B22222">/* Now delete the second record.. */</FONT></I>
+  loadDBT(&amp;key, keys[1], strlen(keys[1])+1);
+  dbRet = myDB-&gt;del(myDB, NULL, &amp;key, 0);
+  <B><FONT COLOR="#A020F0">switch</FONT></B>(dbRet) {
+  <B><FONT COLOR="#A020F0">case</FONT></B> <B><FONT COLOR="#5F9EA0">0</FONT></B>: 
+    printf(<B><FONT COLOR="#BC8F8F">&quot;Deleted: '%s'\n&quot;</FONT></B>, (<B><FONT COLOR="#228B22">char</FONT></B> *)key.data);
+    <B><FONT COLOR="#A020F0">break</FONT></B>;
+  <B><FONT COLOR="#A020F0">case</FONT></B> <B><FONT COLOR="#5F9EA0">DB_NOTFOUND</FONT></B>:
+    printf(<B><FONT COLOR="#BC8F8F">&quot;Fail: Could not find key '%s' in DB.\n&quot;</FONT></B>, (<B><FONT COLOR="#228B22">char</FONT></B> *)key.data);
+    <B><FONT COLOR="#A020F0">break</FONT></B>;
+  <B><FONT COLOR="#5F9EA0">default</FONT></B>:
+    myDB-&gt;err(myDB, dbRet, <B><FONT COLOR="#BC8F8F">&quot;DB-&gt;del&quot;</FONT></B>);
+    closeDB(myDB);
+    exit(1);
+  } <I><FONT COLOR="#B22222">/* end switch */</FONT></I>
+
+  <I><FONT COLOR="#B22222">/* We should always close our DB -- even before we exit.. */</FONT></I>
+  closeDB(myDB);
+  printf(<B><FONT COLOR="#BC8F8F">&quot;DB closed... Bye!\n&quot;</FONT></B>);
+
+  exit(1);
+} <I><FONT COLOR="#B22222">/* func main */</FONT></I>
+
+<I><FONT COLOR="#B22222">/* The sleepycat people ask that things be zeroed so that they can add
+   stuff to the DBT struct someday.  This function is just a little
+   helper to do just that. */</FONT></I>
+<B><FONT COLOR="#228B22">void</FONT></B> <B><FONT COLOR="#0000FF">zeroDBT</FONT></B>(DBT *dbt) {
+  memset(dbt, 0, <B><FONT COLOR="#A020F0">sizeof</FONT></B>(DBT));  
+} <I><FONT COLOR="#B22222">/* func zeroDBT */</FONT></I>
+
+<I><FONT COLOR="#B22222">/* This is a simple data loader for DBTs to save a couple of lines of code. */</FONT></I>
+<B><FONT COLOR="#228B22">void</FONT></B> <B><FONT COLOR="#0000FF">loadDBT</FONT></B>(DBT *dbt, <B><FONT COLOR="#228B22">void</FONT></B> *data, <B><FONT COLOR="#228B22">int</FONT></B> length) {
+  zeroDBT(dbt);
+  dbt-&gt;data = data;
+  dbt-&gt;size = length;
+} <I><FONT COLOR="#B22222">/* func loadDBT */</FONT></I>
+
+<I><FONT COLOR="#B22222">/* I put this in a function so it can be called in error
+   conditions. Normally people would put this kind of stuff in an exit
+   handler, try construct in C++, or a destructor. */</FONT></I>
+<B><FONT COLOR="#228B22">void</FONT></B> <B><FONT COLOR="#0000FF">closeDB</FONT></B>(DB *dbp) {
+  <B><FONT COLOR="#228B22">int</FONT></B> dbRet;
+  dbRet = dbp-&gt;close(dbp, 0);
+  <B><FONT COLOR="#A020F0">switch</FONT></B>(dbRet) {
+  <B><FONT COLOR="#A020F0">case</FONT></B> <B><FONT COLOR="#5F9EA0">0</FONT></B>:
+    <B><FONT COLOR="#A020F0">break</FONT></B>;
+  <B><FONT COLOR="#5F9EA0">default</FONT></B>:
+    printf(<B><FONT COLOR="#BC8F8F">&quot;Fail: Could not close the db...\n&quot;</FONT></B>);
+  }
+} <I><FONT COLOR="#B22222">/* func closeDB */</FONT></I>
+</PRE>
+<HR \/>
+<ADDRESS>Generated by <A HREF="http://www.iki.fi/~mtr/genscript/">GNU Enscript 1.6.5.2</A>.</ADDRESS>
+</BODY>
+</HTML>

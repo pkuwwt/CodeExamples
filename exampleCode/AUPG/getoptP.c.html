@@ -1,0 +1,84 @@
+<!DOCTYPE html PUBLIC "-//IETF//DTD HTML 2.0//EN">
+<HTML>
+<HEAD>
+<TITLE>AUPG/getoptP.c</TITLE>
+</HEAD>
+<BODY BGCOLOR="#FFFFFF" TEXT="#000000" LINK="#1F00FF" ALINK="#FF0000" VLINK="#9900DD">
+<A NAME="top"> </A>
+<A NAME="file1"> </A>
+<H1><a href="getoptP.c">getoptP.c</a></H1>
+
+<PRE>
+<I><FONT COLOR="#B22222">/* -*- Mode:C; Coding:us-ascii-unix; fill-column:132 -*- */</FONT></I>
+<I><FONT COLOR="#B22222">/**********************************************************************************************************************************/</FONT></I>
+<I><FONT COLOR="#B22222">/**
+   @file      getoptP.c
+   @author    Mitch Richling &lt;http://www.mitchr.me/&gt;
+   @Copyright Copyright 1999,2004 by Mitch Richling.  All rights reserved.
+   @brief     Demo POSIX getopt() function.@EOL
+   @Keywords  posix getopt unix
+   @Std       C89 POSIX.2
+
+   How to use the most traditional form of the UNIX getopt() function.  Note the GNU version has significantly more functionality.
+***********************************************************************************************************************************/</FONT></I>
+
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;stdlib.h&gt;</FONT></B>             <I><FONT COLOR="#B22222">/* Standard Lib    C89   */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;stdio.h&gt;</FONT></B>              <I><FONT COLOR="#B22222">/* I/O lib         C89   */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;unistd.h&gt;</FONT></B>             <I><FONT COLOR="#B22222">/* UNIX std stf    POSIX */</FONT></I>
+
+<I><FONT COLOR="#B22222">/**********************************************************************************************************************************/</FONT></I>
+<B><FONT COLOR="#228B22">void</FONT></B> <B><FONT COLOR="#0000FF">prtUseAndExit</FONT></B>();
+
+<I><FONT COLOR="#B22222">/**********************************************************************************************************************************/</FONT></I>
+<B><FONT COLOR="#228B22">int</FONT></B> <B><FONT COLOR="#0000FF">main</FONT></B>(<B><FONT COLOR="#228B22">int</FONT></B> argc, <B><FONT COLOR="#228B22">char</FONT></B> **argv) {
+  <I><FONT COLOR="#B22222">/* Stuff from the getopt library. */</FONT></I>
+  <B><FONT COLOR="#228B22">extern</FONT></B> <B><FONT COLOR="#228B22">char</FONT></B> *optarg;  <I><FONT COLOR="#B22222">/* String argument following a regular arg. (-o foo)*/</FONT></I>
+  <B><FONT COLOR="#228B22">extern</FONT></B> <B><FONT COLOR="#228B22">int</FONT></B>   optind;  <I><FONT COLOR="#B22222">/* Index of next argument, or of first arg NOT processed. */</FONT></I>
+  <B><FONT COLOR="#228B22">extern</FONT></B> <B><FONT COLOR="#228B22">int</FONT></B>   optopt;  <I><FONT COLOR="#B22222">/* Holds error character. */</FONT></I>
+  <B><FONT COLOR="#228B22">extern</FONT></B> <B><FONT COLOR="#228B22">int</FONT></B>   opterr;  <I><FONT COLOR="#B22222">/* Set to zero to suppress error messages. */</FONT></I>
+
+  <I><FONT COLOR="#B22222">/* Our variables */</FONT></I>
+  <B><FONT COLOR="#228B22">int</FONT></B> c;
+  <B><FONT COLOR="#228B22">int</FONT></B> curArg;
+  <B><FONT COLOR="#228B22">int</FONT></B> aCmdLineOptFound = 0;
+  <B><FONT COLOR="#228B22">int</FONT></B> bCmdLineOptFound = 0;
+  <B><FONT COLOR="#228B22">int</FONT></B> oCmdLineOptFound = 0;
+  <B><FONT COLOR="#228B22">char</FONT></B> *oCmdLineOptArg = NULL;
+
+  <I><FONT COLOR="#B22222">/* Run through the arguments. Note as of IEEE Std 1003.2-1992 (POSIX.2), getopt returns -1 -- was an EOF in the good old days. */</FONT></I>
+  <B><FONT COLOR="#A020F0">while</FONT></B> ((c = getopt(argc, argv, <B><FONT COLOR="#BC8F8F">&quot;habo:&quot;</FONT></B>)) != EOF) {
+    <B><FONT COLOR="#A020F0">switch</FONT></B> (c) {
+      <B><FONT COLOR="#A020F0">case</FONT></B> <B><FONT COLOR="#BC8F8F">'a'</FONT></B>: aCmdLineOptFound++;                          <B><FONT COLOR="#A020F0">break</FONT></B>;
+      <B><FONT COLOR="#A020F0">case</FONT></B> <B><FONT COLOR="#BC8F8F">'b'</FONT></B>: bCmdLineOptFound++;                          <B><FONT COLOR="#A020F0">break</FONT></B>;
+      <B><FONT COLOR="#A020F0">case</FONT></B> <B><FONT COLOR="#BC8F8F">'o'</FONT></B>: oCmdLineOptFound++; oCmdLineOptArg = optarg; <B><FONT COLOR="#A020F0">break</FONT></B>;
+      <B><FONT COLOR="#A020F0">case</FONT></B> <B><FONT COLOR="#BC8F8F">'h'</FONT></B>: prtUseAndExit();                             <B><FONT COLOR="#A020F0">break</FONT></B>;
+      <B><FONT COLOR="#A020F0">case</FONT></B> <B><FONT COLOR="#BC8F8F">'?'</FONT></B>: prtUseAndExit();                             <B><FONT COLOR="#A020F0">break</FONT></B>;
+      <B><FONT COLOR="#A020F0">default</FONT></B> : prtUseAndExit(); <I><FONT COLOR="#B22222">/* Can't happen */</FONT></I>          <B><FONT COLOR="#A020F0">break</FONT></B>;
+    } <I><FONT COLOR="#B22222">/* end swtich */</FONT></I>
+  } <I><FONT COLOR="#B22222">/* end while */</FONT></I>
+
+  <I><FONT COLOR="#B22222">/* Print out what we found. */</FONT></I>
+  <B><FONT COLOR="#A020F0">if</FONT></B>(aCmdLineOptFound) { printf(<B><FONT COLOR="#BC8F8F">&quot;Found(%d): -a\n&quot;</FONT></B>, aCmdLineOptFound); } <I><FONT COLOR="#B22222">/* end if */</FONT></I>
+  <B><FONT COLOR="#A020F0">if</FONT></B>(bCmdLineOptFound) { printf(<B><FONT COLOR="#BC8F8F">&quot;Found(%d): -b\n&quot;</FONT></B>, bCmdLineOptFound); } <I><FONT COLOR="#B22222">/* end if */</FONT></I>
+  <B><FONT COLOR="#A020F0">if</FONT></B>(oCmdLineOptFound) { printf(<B><FONT COLOR="#BC8F8F">&quot;Found(%d): -o %s\n&quot;</FONT></B>, oCmdLineOptFound, oCmdLineOptArg); } <I><FONT COLOR="#B22222">/* end if */</FONT></I>
+
+  <I><FONT COLOR="#B22222">/* Go through the rest of the arguments and print them. */</FONT></I>
+  <B><FONT COLOR="#A020F0">if</FONT></B>(optind &lt; argc) {
+    printf(<B><FONT COLOR="#BC8F8F">&quot;The remaining arguments: \n&quot;</FONT></B>);
+    <B><FONT COLOR="#A020F0">for</FONT></B> (curArg=optind; curArg&lt;argc; curArg++)
+      printf(<B><FONT COLOR="#BC8F8F">&quot;  %s\n&quot;</FONT></B>, argv[curArg]);
+  } <I><FONT COLOR="#B22222">/* end if */</FONT></I>
+
+  <B><FONT COLOR="#A020F0">return</FONT></B> 0;
+} <I><FONT COLOR="#B22222">/* end func main */</FONT></I>
+
+<I><FONT COLOR="#B22222">/**********************************************************************************************************************************/</FONT></I>
+<B><FONT COLOR="#228B22">void</FONT></B> <B><FONT COLOR="#0000FF">prtUseAndExit</FONT></B>() {
+  fprintf(stderr, <B><FONT COLOR="#BC8F8F">&quot;usage: cmd [-h] [-a] [-b] [-o &lt;filename&gt;] files...\n&quot;</FONT></B>);
+  exit(2);
+} <I><FONT COLOR="#B22222">/* end func prtUseAndExit */</FONT></I>
+</PRE>
+<HR \/>
+<ADDRESS>Generated by <A HREF="http://www.iki.fi/~mtr/genscript/">GNU Enscript 1.6.5.90</A>.</ADDRESS>
+</BODY>
+</HTML>

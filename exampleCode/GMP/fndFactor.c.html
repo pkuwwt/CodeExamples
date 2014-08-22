@@ -1,0 +1,107 @@
+<!DOCTYPE html PUBLIC "-//IETF//DTD HTML 2.0//EN">
+<HTML>
+<HEAD>
+<TITLE>GMP/fndFactor.c</TITLE>
+</HEAD>
+<BODY BGCOLOR="#FFFFFF" TEXT="#000000" LINK="#1F00FF" ALINK="#FF0000" VLINK="#9900DD">
+<A NAME="top"> </A>
+<A NAME="file1"> </A>
+<H1><a href="fndFactor.c">fndFactor.c</a></H1>
+
+<PRE>
+<I><FONT COLOR="#B22222">/**
+   @file      fndFactor.c
+   @author    Mitch Richling &lt;http://www.mitchr.me/&gt;
+   @Copyright Copyright 1998 by Mitch Richling.  All rights reserved.
+   @brief     Really dumb prime factor finder GMP example.@EOL
+   @Keywords  none
+   @Std       C89
+
+              This program is intended to find the largest prime
+              smaller than the SQRT of the given number.  The algorithm
+              is the one most people try in grade school -- i.e. we test
+              all odd numbers less than the SQRT for divisibility!  This
+              program makes a good benchmark if the status printing is
+              removed.
+              
+*/</FONT></I>
+
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;stdlib.h&gt;</FONT></B>             <I><FONT COLOR="#B22222">/* Standard Lib    ISOC  */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;stdio.h&gt;</FONT></B>              <I><FONT COLOR="#B22222">/* I/O lib         ISOC  */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;stdarg.h&gt;</FONT></B>             <I><FONT COLOR="#B22222">/* Variable args   ISOC  */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;gmp.h&gt;</FONT></B>                <I><FONT COLOR="#B22222">/* GNU GMP Library       */</FONT></I>
+
+<I><FONT COLOR="#B22222">// 6005662386412099
+</FONT></I><I><FONT COLOR="#B22222">// 600566238641209
+</FONT></I><I><FONT COLOR="#B22222">// 3107418240490043721350750035888567930037346022842727545720161948823206440518081504556346829671723286782437916272838033415471073108501919548529007337724822783525742386454014691736602477652346609
+</FONT></I>
+<B><FONT COLOR="#228B22">int</FONT></B> <B><FONT COLOR="#0000FF">main</FONT></B>(<B><FONT COLOR="#228B22">int</FONT></B> argc, <B><FONT COLOR="#228B22">char</FONT></B> *argv[]);
+
+<B><FONT COLOR="#228B22">int</FONT></B> <B><FONT COLOR="#0000FF">main</FONT></B>(<B><FONT COLOR="#228B22">int</FONT></B> argc, <B><FONT COLOR="#228B22">char</FONT></B> *argv[]) {
+  mpz_t m, n, p, k;
+  <B><FONT COLOR="#228B22">int</FONT></B> i,j;
+
+  <I><FONT COLOR="#B22222">// Get the number to play with
+</FONT></I>  <B><FONT COLOR="#A020F0">if</FONT></B>(argc &lt; 2) {
+    printf(<B><FONT COLOR="#BC8F8F">&quot;No argument provided, using built in number\n&quot;</FONT></B>);
+    mpz_init_set_str(m, <B><FONT COLOR="#BC8F8F">&quot;6005662386412099&quot;</FONT></B>, 10);
+  } <B><FONT COLOR="#A020F0">else</FONT></B> {
+    mpz_init_set_str(m, argv[1], 10);
+  }
+
+  <I><FONT COLOR="#B22222">// Output the number we are working on
+</FONT></I>  printf(<B><FONT COLOR="#BC8F8F">&quot;        m: &quot;</FONT></B>);
+  mpz_out_str(stdout, 10, m);
+  printf(<B><FONT COLOR="#BC8F8F">&quot;\n&quot;</FONT></B>);
+
+  <I><FONT COLOR="#B22222">// Check for 2|m
+</FONT></I>  <B><FONT COLOR="#A020F0">if</FONT></B>(mpz_divisible_ui_p(m, 2)) {
+    printf(<B><FONT COLOR="#BC8F8F">&quot;FOUND p|m: 2\n&quot;</FONT></B>);
+    exit(1);
+  }
+
+  <I><FONT COLOR="#B22222">// Compute k=SQRT(M)
+</FONT></I>  mpz_init(k);
+  mpz_sqrt(k, m);
+  gmp_printf(<B><FONT COLOR="#BC8F8F">&quot;  SQRT(m): %Zd\n&quot;</FONT></B>, k);
+
+  <I><FONT COLOR="#B22222">// 2|SQRT(M) =&gt; p=SQRT(M)+5, else p=SQRT(M)+4
+</FONT></I>  mpz_init(p);
+  <B><FONT COLOR="#A020F0">if</FONT></B>(mpz_divisible_ui_p(k, 2)) {
+    mpz_add_ui(p, k, 5);
+  } <B><FONT COLOR="#A020F0">else</FONT></B> {
+    mpz_add_ui(p, k, 4);
+  }
+
+  <I><FONT COLOR="#B22222">// Move DOWN from SQRT(m) by two looking for something that | m
+</FONT></I>  mpz_init(n);
+  <B><FONT COLOR="#A020F0">for</FONT></B>(i=0,j=0;1 || i&lt;10000000;i++) {
+    <I><FONT COLOR="#B22222">// Subtract 2, and test for |.
+</FONT></I>    mpz_sub_ui(p, p, 2);
+    <B><FONT COLOR="#A020F0">if</FONT></B>(mpz_divisible_p(m, p)) {
+      gmp_printf(<B><FONT COLOR="#BC8F8F">&quot;FOUND p|m: %Zd\n&quot;</FONT></B>, p);
+      <B><FONT COLOR="#A020F0">if</FONT></B>(mpz_cmp_ui(p, 1) == 0)
+        printf(<B><FONT COLOR="#BC8F8F">&quot;m was prime!\n&quot;</FONT></B>);
+      exit(1);
+    }
+    <I><FONT COLOR="#B22222">// Print status every 100K tests
+</FONT></I>    j++;
+    <B><FONT COLOR="#A020F0">if</FONT></B>(j&gt;100000) {
+      j=0;
+      mpz_sub(n, k, p);
+      gmp_printf(<B><FONT COLOR="#BC8F8F">&quot;  CHECKED: %Zd\n&quot;</FONT></B>, n);
+    }
+  }
+
+
+  <I><FONT COLOR="#B22222">// If we got here, then we didn't find the value..
+</FONT></I>  printf(<B><FONT COLOR="#BC8F8F">&quot;No Factors Found\n&quot;</FONT></B>);
+  exit(0);
+
+  <B><FONT COLOR="#A020F0">return</FONT></B> 0;
+}
+</PRE>
+<HR \/>
+<ADDRESS>Generated by <A HREF="http://www.iki.fi/~mtr/genscript/">GNU Enscript 1.6.5.2</A>.</ADDRESS>
+</BODY>
+</HTML>

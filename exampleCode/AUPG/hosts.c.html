@@ -1,0 +1,90 @@
+<!DOCTYPE html PUBLIC "-//IETF//DTD HTML 2.0//EN">
+<HTML>
+<HEAD>
+<TITLE>AUPG/hosts.c</TITLE>
+</HEAD>
+<BODY BGCOLOR="#FFFFFF" TEXT="#000000" LINK="#1F00FF" ALINK="#FF0000" VLINK="#9900DD">
+<A NAME="top"> </A>
+<A NAME="file1"> </A>
+<H1><a href="hosts.c">hosts.c</a></H1>
+
+<PRE>
+<I><FONT COLOR="#B22222">/* -*- Mode:C; Coding:us-ascii-unix; fill-column:132 -*- */</FONT></I>
+<I><FONT COLOR="#B22222">/**********************************************************************************************************************************/</FONT></I>
+<I><FONT COLOR="#B22222">/**
+   @file      hosts.c
+   @author    Mitch Richling &lt;http://www.mitchr.me/&gt;
+   @Copyright Copyright 1996 by Mitch Richling.  All rights reserved.
+   @brief     UNIX host queries@EOL
+   @Keywords  UNIX host information
+   @Std       ISOC POSIX SYSV3 BSD4.3
+   @Tested    
+              - Solaris 2.8
+              - MacOS X.2
+              - Linux (RH 7.3)
+
+   This is an example program intended to illustrate how to query the name of the current host, and how to query a UNIX host's
+   resolver which may, in turn, query any one of several data sources includeing /etc/hosts, DNS, NIS, NIS+, NetInfo, LDAP, and
+   Active Directory.  In today's world, this is normally just DNS.
+***********************************************************************************************************************************/</FONT></I>
+
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;sys/types.h&gt;</FONT></B>          <I><FONT COLOR="#B22222">/* UNIX types      POSIX */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;sys/socket.h&gt;</FONT></B>         <I><FONT COLOR="#B22222">/* UNIX sockets    POSIX */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;string.h&gt;</FONT></B>             <I><FONT COLOR="#B22222">/* Strings         C89   */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;netdb.h&gt;</FONT></B>              <I><FONT COLOR="#B22222">/* DNS lookup      ????  */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;stdlib.h&gt;</FONT></B>             <I><FONT COLOR="#B22222">/* Standard Lib    C89   */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;unistd.h&gt;</FONT></B>             <I><FONT COLOR="#B22222">/* UNIX std stf    POSIX */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;stdio.h&gt;</FONT></B>              <I><FONT COLOR="#B22222">/* I/O lib         C89   */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;netinet/in.h&gt;</FONT></B>         <I><FONT COLOR="#B22222">/* Inet socket     POSIX */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;arpa/inet.h&gt;</FONT></B>          <I><FONT COLOR="#B22222">/* inet            ????  */</FONT></I>
+
+<I><FONT COLOR="#B22222">/**********************************************************************************************************************************/</FONT></I>
+<B><FONT COLOR="#228B22">int</FONT></B> <B><FONT COLOR="#0000FF">main</FONT></B>(<B><FONT COLOR="#228B22">int</FONT></B> argc, <B><FONT COLOR="#228B22">char</FONT></B> *argv[]) {
+  <B><FONT COLOR="#228B22">char</FONT></B> hostName[512];
+  <B><FONT COLOR="#228B22">struct</FONT></B> hostent *theHostEnt;
+  <B><FONT COLOR="#228B22">char</FONT></B> **p, **q;
+  <B><FONT COLOR="#228B22">struct</FONT></B> in_addr aAddress;
+
+  <I><FONT COLOR="#B22222">/* Use host on command line, or use the current hostname if no arguments are given. */</FONT></I>
+  <B><FONT COLOR="#A020F0">if</FONT></B>(argc &gt; 1)
+    strncpy(hostName, argv[1], <B><FONT COLOR="#A020F0">sizeof</FONT></B>(hostName) - 1);
+  <B><FONT COLOR="#A020F0">else</FONT></B> <B><FONT COLOR="#A020F0">if</FONT></B>(gethostname(hostName, <B><FONT COLOR="#A020F0">sizeof</FONT></B>(hostName)) &lt; 0) {
+    perror(<B><FONT COLOR="#BC8F8F">&quot;ERROR: hosts: Couldn't get host name&quot;</FONT></B>);
+    exit(1);
+  } <I><FONT COLOR="#B22222">/* end if */</FONT></I>
+  printf(<B><FONT COLOR="#BC8F8F">&quot;Host name: %s\n&quot;</FONT></B>, hostName);
+
+  <I><FONT COLOR="#B22222">/* Now lets lookup this host's information */</FONT></I>
+  <B><FONT COLOR="#A020F0">if</FONT></B>((theHostEnt = gethostbyname(hostName)) == NULL) {
+    perror(<B><FONT COLOR="#BC8F8F">&quot;ERROR: hosts: Host unknown&quot;</FONT></B>);
+    exit(1);
+  } <I><FONT COLOR="#B22222">/* end if */</FONT></I>
+
+  printf(<B><FONT COLOR="#BC8F8F">&quot;Official name: %s\n&quot;</FONT></B>, theHostEnt-&gt;h_name);
+
+  <I><FONT COLOR="#B22222">/* This if is something that is not frequently seen in real code.  This is because EVERYBODY uses IP, and many simply assume that
+     the addresses they get will be IP addresses. */</FONT></I>
+  <B><FONT COLOR="#A020F0">if</FONT></B>(theHostEnt-&gt;h_addrtype == AF_INET) {
+    printf(<B><FONT COLOR="#BC8F8F">&quot;Using IP addresses.\n&quot;</FONT></B>);
+    printf(<B><FONT COLOR="#BC8F8F">&quot;IP addresses: &quot;</FONT></B>);
+    <B><FONT COLOR="#A020F0">for</FONT></B>(p = theHostEnt-&gt;h_addr_list; *p != 0; p++) {
+      memcpy(&amp;aAddress.s_addr, *p, <B><FONT COLOR="#A020F0">sizeof</FONT></B>(aAddress.s_addr));
+      printf(<B><FONT COLOR="#BC8F8F">&quot; %s&quot;</FONT></B>, inet_ntoa(aAddress));
+    } <I><FONT COLOR="#B22222">/* end for */</FONT></I>
+    printf(<B><FONT COLOR="#BC8F8F">&quot;\n&quot;</FONT></B>);
+  } <B><FONT COLOR="#A020F0">else</FONT></B>
+    printf(<B><FONT COLOR="#BC8F8F">&quot;Not using IP addresses.\n&quot;</FONT></B>);
+
+  printf(<B><FONT COLOR="#BC8F8F">&quot;aliases: &quot;</FONT></B>);
+  <B><FONT COLOR="#A020F0">for</FONT></B>(q = theHostEnt-&gt;h_aliases; *q != 0; q++)
+    printf(<B><FONT COLOR="#BC8F8F">&quot; %s&quot;</FONT></B>, *q);
+  printf(<B><FONT COLOR="#BC8F8F">&quot;\n&quot;</FONT></B>);
+
+  <B><FONT COLOR="#A020F0">return</FONT></B> 0;
+
+} <I><FONT COLOR="#B22222">/* end func main */</FONT></I>
+</PRE>
+<HR \/>
+<ADDRESS>Generated by <A HREF="http://www.iki.fi/~mtr/genscript/">GNU Enscript 1.6.5.90</A>.</ADDRESS>
+</BODY>
+</HTML>

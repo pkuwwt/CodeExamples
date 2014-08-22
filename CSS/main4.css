@@ -1,0 +1,791 @@
+/*
+# top right bottom left
+*/
+
+/* ******************************************************************************************************************************** */
+html {
+  margin: 0px;
+  padding: 0px;
+  border-width: 0px;
+  border-style: none;
+  background-color: white;
+  color: black;
+  white-space: normal;
+}
+body {
+  margin: 0px;
+  padding: 0px;
+  border-width: 0px;
+  border-style: none;
+  font-size:100%;
+  font-family: sans-serif;
+  background-color: white;
+  color: black;
+  white-space: normal;
+}
+h1 {  /* Normally only at the top of the page */
+  background-image: url(../pics/bluGrdUpTall.gif);
+  background-repeat: repeat-x;
+  background-position: 0px 0px;
+  font-size: 2.5em;
+  font-family: serif;
+  font-weight: bold;
+  min-height: 100px;
+  margin: 0px 0px 0px 0px;
+  border-width: 0px;
+  border-style: none;
+  padding: 15px 0px 0px 100px;
+  white-space: nowrap;
+  z-index: 1;
+}
+h2 {
+  font-size: 1.25em;
+  font-weight: bold;
+  background-color: #ffe4b6;
+  margin: 0px 0px 0px 0px;
+  padding: 0px 0px 0px 1ex;
+  border-top: 2px solid #c6821a;
+  white-space: nowrap;
+}
+h3 {
+  font-size: 1.00em;
+  font-weight: bold;
+  margin: 0px;
+  white-space: nowrap;
+}
+h4 {
+  font-size: 1.00em;
+  font-weight: bold;
+  margin: 0px;
+  white-space: nowrap;
+}
+p {
+  font-size: 1em;
+  white-space: normal;
+}
+dl {
+  font-size: 1em;
+}
+ul {
+  font-size: 1em;
+  list-style-type: circle;
+}
+a:visited {
+  color: purple;
+}
+a:hover {
+  color: maroon;
+}
+a:active {
+  color: red;
+}
+
+
+/* ******************************************************************************************************************************** */
+/* Links with code in them */
+/* ******************************************************************************************************************************** */
+
+a.clink { 
+  font-family: monospace;
+}
+
+/* ******************************************************************************************************************************** */
+/* These are the styles for the top/bottom of page content (IDs) */
+/* ******************************************************************************************************************************** */
+
+p#topCopyRight {
+  font-size: .8em;
+  color: #33FF00;
+  white-space: nowrap;
+  font-weight: normal; 
+  text-align: right;
+  position: absolute;
+  top: 0px;
+  right: 0px;
+  margin: 0px;
+  border-style: none;
+  padding: 5px 5px 5px 5px;
+  z-index: 2;
+}
+a#topHomeLink {
+  position: absolute;
+  top: 0px;
+  left: 0px;
+  border-width: 0px;
+  border-style: none;
+  z-index: 2;
+}
+a#topHomeLink img {
+  border-width: 0px;
+  border-style: none;
+  
+  margin-top: 5px;
+  margin-left:5px;
+}
+#botPadAndCopyRight { 
+  width: 100%;
+  height: 200px;
+  background-image: url(../pics/bluGrdDnTall.gif);
+  background-repeat: repeat-x;
+  background-position: 0px 0px;
+  background-color: #1655A4;
+  margin: 50px 0px 0px 0px;
+  font-size: .8em;
+  color: #33FF00;
+  white-space: nowrap;
+  font-weight: normal; 
+  text-align: center;
+  padding: 1200px 0px 0px 0px;
+  z-index: 2;
+}
+
+/* ******************************************************************************************************************************** */
+/* High level containers for page main content */
+/* ******************************************************************************************************************************** */
+
+/* This ID is for the main page content.  It sets up the minimum margins on left and right, adds a bit of pad at the top, and
+   insures that the content area is tall enough to not look silly.*/
+.minMar {
+	margin-left: 50px;
+	margin-right: 50px;	
+	margin-top: 1em;
+	min-height: 800px;
+}
+
+/* The normal container just inside of minMar div.  Makes sure auto-flowed content dosen't get too skinny or too wide -- i.e.
+   it is "just right".  On modern browsers, this will also center the contents in the containing block. */
+.threeBearWidthAndCenter  {
+	max-width: 60em;
+    min-width: 40em;
+	margin-left: auto;
+	margin-right: auto;	
+	margin-top: 0px;
+	min-height: 0px;
+}
+
+/* ******************************************************************************************************************************** */
+/* A white-paper environmnt -- a typical page. */
+/* ******************************************************************************************************************************** */
+div.article > h2 { 
+  border-bottom: 1px dotted #c6821a;    
+ }
+div.article > h2 + * { 
+  padding-top: 0.25em;
+  margin-top: 0px;
+  background-image: url(../pics/orgGrdUp.jpg);
+  background-repeat: repeat-x;
+  background-position: 0px 0px;
+  min-height: 3em;
+ }
+
+/* ******************************************************************************************************************************** */
+/* Used for example code lists                                                      */
+/* Structure is <div> [p] ( <H2> [p] <dl> [p] ) ...  <>/[] have man-page meanings   */
+/* Note: dl always follow an item with a backgroudn (h2 or anno p)                  */
+/* ******************************************************************************************************************************** */
+div.exCodeList { 
+  border-bottom: 1px dotted #c6821a;  
+}
+.exCodeList dl { 
+  margin: 0px;
+  padding: 0px;
+  font-size: 1em;
+  background-image: url(../pics/orgGrdUp.jpg);
+  background-repeat: repeat-x;
+  background-position: 0px 0px;
+  min-height: 50px;
+}
+.exCodeList dt {                  /* We list sourc code files here. */
+  font-family: monospace;
+  border-top: 1px dotted #c6821a;  
+  white-space: nowrap;
+}
+.exCodeList h2 {                    /* Nix the bottom border */
+  border-bottom-style: none;
+}
+div.exCodeList > p:first-child {    /* <p> is first in DIV => gets a background and indented to match h2 */
+  background-color: #ffe4b6;
+  padding:  0px 0px 0px 1.25ex;
+  border-top: 1px dotted #c6821a;
+}
+.exCodeList h2 + p {                /* H2 annotation paragrph gets a background.  Indent to match h2 */
+  background-color: #ffe4b6;
+  padding:  0px 0px 0px 1.25ex;
+  border-top: 1px dotted #c6821a;
+}
+.exCodeList p {                     /* Top level paragraphs should have a border at the top */
+  margin: 0px;
+  padding: 0px;
+  border-top: 1px dotted #c6821a;
+}
+.exCodeList dd > p {               /* Paragraphs in dd don't get border */
+  border-top: none;
+}
+
+.exCodeList table { 
+  margin: 0px;
+  padding: 0px;
+  font-size: 1em;
+  background-image: url(../pics/orgGrdUp.jpg);
+  background-repeat: repeat-x;
+  background-position: 0px 0px;
+  min-height: 50px;
+  width: 100%;
+  border-collapse:collapse;
+  border-spacing: 0px;
+  border-width: 1px;
+  border-style: outset;
+  border-color: #c6821a;
+  white-space: nowrap;
+}
+
+.exCodeList th {
+  font-weight: bold;
+  border-style: inset;
+  border-width: 1px;
+  border-color: #c6821a;
+  padding: 0px;
+}
+
+.exCodeList td {
+  border-style: inset;
+  border-width: 1px;
+  border-color: #c6821a;
+  padding: 0px;
+}
+
+/* ******************************************************************************************************************************** */
+/* Headings are to the left of the content */
+/* ******************************************************************************************************************************** */
+.leftHdrBox {
+  position:relative;
+  left:0px;
+  background-color: #ffe4b6;
+  border-style:none;
+  border-top: 2px solid #c6821a;
+}
+.leftHdrBox > * { 
+  background-color: #ffffff;   
+  margin: 0px 0px 0px 11em;
+  padding: 0 0 0 1ex;
+}
+.leftHdrBox h3 {
+  font-weight: bold;
+  background-color: #ffe4b6;
+  position: absolute;
+  left: 2px;
+  top: 0px;
+  margin: 0px;
+  padding: 2px 0px 0px 3px;
+  border-style: none;
+  white-space: normal;
+  width: 7em;
+  background-color: #ffe4b6;
+}
+.leftHdrBox h4 {
+  border-left: 1px dotted #c6821a;
+  white-space: nowrap;
+  font-weight: bold;
+  background-image: url(../pics/orgGrdLeft.jpg);
+  background-repeat: repeat-y;
+  background-position: 0px 0px;
+}
+.leftHdrBox ul {
+  border-left: 1px dotted #c6821a;
+  white-space: normal;
+  background-image: url(../pics/orgGrdLeft.jpg);
+  background-repeat: repeat-y;
+  background-position: 0px 0px;
+  padding: 0 0 0 3ex;
+  list-style-position: outside;
+  min-height: 2em;
+}
+.leftHdrBox p {
+  border-left: 1px dotted #c6821a;
+  white-space: normal;
+  background-image: url(../pics/orgGrdLeft.jpg);
+  background-repeat: repeat-y;
+  background-position: 0px 0px;
+  min-height: 2em;
+}
+.leftHdrBox	dl.priceList {
+  border-left: 1px dotted #c6821a;
+  white-space: normal;
+  background-image: url(../pics/orgGrdLeft.jpg);
+  background-repeat: repeat-y;
+  background-position: 0px 0px;
+  min-height: 3em;
+}
+.leftHdrBox dl.priceList dt {
+	    float:left;
+	    font-weight:bold;
+        text-align: right;
+        margin: 0.00px 0.0em 1px 0px;
+	    padding:0.25em 0.50em 0.25em 0.50em;
+	    width:3em;
+        white-space: nowrap;
+        border-bottom: 1px dotted #c6821a;
+}
+.leftHdrBox	dl.priceList dd {
+	    margin:  0px 0px 2px 4.0em;
+	    padding: 0.25em 0px 0.25em  0.0em;
+        border-bottom: 1px dotted #c6821a;
+        white-space: nowrap;
+}
+
+/* ******************************************************************************************************************************** */
+/* Simple lisk lists (as on the homepage and link pages) */
+/* ******************************************************************************************************************************** */
+.linkBox ul {
+  background-image: url(../pics/orgGrdUp.jpg);
+  background-repeat: repeat-x;
+  background-position: 0px 0px;
+  list-style-position: inside;
+  margin: 0px 0px 3px 0px;
+  padding: 0 0.5ex 0 1em;
+  min-height: 2em;
+  white-space: nowrap;
+  border-top: 1px dotted #c6821a;
+  font-size: 1em;
+}
+.linkBox h2 {
+  font-size: 1em;
+  font-weight: bold;
+  background-color: #ffe4b6;
+  margin: 0;
+  padding: 0 0 0 5px;
+  border-top: 2px solid #c6821a;
+/*  border-bottom: 1px dotted #c6821a;*/
+  white-space: nowrap;
+}
+.linkBox p {
+  font-size: 0.8em;
+  background-color: #ffe4b6;
+  margin: 0;
+  padding: 0 0 0 5px;
+  border-top: 1px dotted #c6821a;
+  white-space: normal;
+}
+
+.linkBox div.lbFade {
+  background-image: url(../pics/orgGrdUp.jpg);
+  background-repeat: repeat-x;
+  background-position: 0px 0px;
+  list-style-position: inside;
+  margin: 0px 0px 3px 0px;
+  padding: 0 0.5ex 0 1em;
+  min-height: 2em;
+  border-top: 1px dotted #c6821a;
+  font-size: 1em;
+  background-color:transparent;
+}
+
+
+/* These form elements are inside the header -- should use specific selectors, but IE is stupid */
+.linkBox form {
+  background-image: url(../pics/orgGrdUp.jpg);
+  background-repeat: repeat-x;
+  background-position: 0px 0px;
+  list-style-position: inside;
+  margin: 0px 0px 0px 0px;
+  padding: 0em;
+  min-height: 2em;
+  white-space: nowrap;
+  font-size: 1em;
+/*
+  margin:0px;
+  padding: 0px;
+  border-width: 0px;
+  border-style: none;
+*/
+}
+.linkBox input {
+  margin: 2px;
+  padding: 0px;
+  color: red;
+  font-size: 0.64em;
+  border: 1px dotted #c6821a;
+}
+
+.tinyIndex {
+  font-size: 11px;
+}
+.tinyIndex table { 
+  width: 100%;
+  border-collapse:separate;
+  margin: 0px;
+  padding: 0px;
+  border-width: 0px;
+  border-style: none;
+}
+.tinyIndex td {
+  width: 33%;
+  background-color: #ffe4b6;
+  padding: 0px 3px 2px 3px;
+  margin: 0px;
+  text-align:center;
+  border-width: 0px;
+  border-style: none;
+}
+.tinyIndex tr { 
+  margin: 0px;
+  padding: 0px;
+  border-width: 0px;
+  border-style: none;
+}
+
+/* ******************************************************************************************************************************** */
+.topHdrBox { 
+  background-image: url(../pics/orgGrdUp.jpg);
+  background-repeat: repeat-x;
+  background-position: 0px 0px;
+  min-height: 20px;
+ }
+.topHdrBox ul {
+  list-style-position: outside;
+  margin: 0em 0em 0em 2em;
+  padding: 0em 0em 0em 0em;
+  white-space: normal;
+  min-height: 2em;
+}
+.topHdrBox p {
+  margin: 0px;
+  padding: 0 0 0 1em;
+  white-space: normal;
+}
+
+
+/* ******************************************************************************************************************************** */
+/* Used for FAQs */
+/* ******************************************************************************************************************************** */
+dl.faqList { 
+  border-bottom: 1px dotted #c6821a;  
+  margin: 0px;
+  padding: 0px;
+}
+dl.faqList > dt { 
+  font-weight: bold;
+  font-style: oblique;
+  font-size: 1em;
+  border-top: 1px dotted #c6821a;  
+  background-color: #ffe4b6;
+  border-bottom: 1px dotted #c6821a;  
+  margin: 0px;
+  padding: 0px;
+}
+dl.faqList > dt:before { 
+  content: "Q: "
+}
+dl.faqList > dd { 
+  background-image: url(../pics/orgGrdUp.jpg);
+  background-repeat: repeat-x;
+  background-position: 0px 0px;
+  min-height: 50px;
+  margin: 0px;
+  font-size: 1em;
+  padding: 0.25em 10px 10px 10px;
+}
+
+dl.faqList > dd > p {
+  margin: 0px;
+  padding:  0.5em 0px 0px 0ex;
+  white-space: normal;
+}
+
+dl.faqList > dd > ul {
+  margin: 0px;
+  padding:  0.25em 0px 0px 3em;
+  white-space: normal;
+}
+
+dl.faqList > dd > dl {
+  margin: 0px;
+  padding:  0.25em 0px 0px 3em;
+}
+
+/* ******************************************************************************************************************************** */
+
+/* The following classes are usefull for simple DL structures that have DT parts that are about 10 chars or shorter all on a
+   single line.  The DD parts can wrap, and span multiple lines.  The DT and DD parts will start on the same line - i.e. DT on
+   the left and DD on the right.  Three varities are provided:
+       simpleLeft:  DT is left justified and bold
+       simpleRight: DT is right justified and bold
+       boxLeft:     DT is left justified, bold, and in a colored box.
+       bold:        DT is bold, left justified, and on a line
+*/
+	dl.simpleLeftDL {
+        font-size: 1em;
+	    margin-bottom:1em;
+	}
+	dl.simpleLeftDL dt {
+	    float:left;
+	    font-weight:bold;
+        font-size: 1em;
+        text-align: left;
+        margin: 0.00px 0.0em 1px 0px;
+	    padding:0.25em 0.50em 0.25em 0.50em;
+	    width:10em;
+        white-space: nowrap;
+	}
+	dl.simpleLeftDL dd {
+        font-size: 1em;
+	    margin:  0px 0px 2px 12em;
+	    padding: 0.25em 0px 0.25em  0.0em;
+	}
+
+	dl.simpleRightDL {
+	    margin-bottom:1em;
+        font-size: 1em;
+	}
+	dl.simpleRightDL dt {
+	    float:left;
+	    font-weight:bold;
+        font-size: 1em;
+        text-align: right;
+        margin: 0.00px 0.0em 1px 0px;
+	    padding:0.25em 0.50em 0.25em 0.50em;
+	    width:10em;
+        white-space: nowrap;
+	}
+	dl.simpleRightDL dd {
+        font-size: 1em;
+	    margin:  0px 0px 2px 12em;
+	    padding: 0.25em 0px 0.25em  0.0em;
+	}
+
+	dl.boxLeftDL {
+        font-size: 1em;
+	    margin-bottom:1em;
+	}
+	dl.boxLeftDL dt {
+	    background:#5f9be3;
+	    color:#ffffff;
+	    float:left;
+	    font-weight:bold;
+        font-size: 1em;
+
+        margin: 0.00px 0.0em 1px 0px;
+	    padding:0.25em 0.50em 0.25em 0.50em;
+
+	    width:10em;
+        white-space: nowrap;
+	}
+	dl.boxLeftDL dd {
+        font-size: 1em;
+	    margin:  0px 0px 2px 12em;
+	    padding: 0.25em 0px 0.25em  0.0em;
+	}
+
+	dl.boldDL {
+        font-size: 1em;
+	}
+	dl.boldDL dt {
+	    font-weight:bold;
+        font-size: 1em;
+        white-space: nowrap;
+	}
+	dl.boldDL dd {
+        font-size: 1em;
+	}
+
+/* ******************************************************************************************************************************** */
+/* Annotated image lists */
+
+    /* **************************************** */
+	dl.img100x75LeftDL {
+	    margin-bottom:1em;
+	}
+	dl.img100x75LeftDL dt {
+	    float:left;
+        margin: 0px;
+	    padding: 5px 0px 0px 0px;
+	    width:110px;
+        height: 75px;
+        white-space: nowrap;
+        border-top: 1px dotted #c6821a;  
+	}
+	dl.img100x75LeftDL dd {
+        min-height: 75px;
+	    margin:  0px 0px 2px 110px;
+	    padding: 10px 0px 0px  0px;
+        border-top: 1px dotted #c6821a;  
+	}
+    /* **************************************** */
+	dl.img150x113LeftDL {
+	    margin-bottom:1em;
+	}
+	dl.img150x113LeftDL dt {
+	    float:left;
+        margin: 0px;
+	    padding: 5px 0px 0px 0px;
+	    width:160px;
+        height: 113px;
+        white-space: nowrap;
+        border-top: 1px dotted #c6821a;  
+	}
+	dl.img150x113LeftDL dd {
+        min-height: 113px;
+	    margin:  0px 0px 2px 161px;
+	    padding: 10px 0px 0px  0px;
+        border-top: 1px dotted #c6821a;  
+	}
+    /* **************************************** */
+	dl.img256x256LeftDL {
+	    margin-bottom:1em;
+	}
+	dl.img256x256LeftDL dt {
+	    float:left;
+        margin: 0px;
+	    padding: 5px 0px 0px 0px;
+	    width:266px;
+        height: 256px;
+        white-space: nowrap;
+        border-top: 1px dotted #c6821a;  
+	}
+	dl.img256x256LeftDL dd {
+        min-height: 256px;
+	    margin:  0px 0px 2px 267px;
+	    padding: 10px 0px 0px  0px;
+        border-top: 1px dotted #c6821a;  
+	}
+    /* **************************************** */
+	dl.img320x240LeftDL {
+	    margin-bottom:1em;
+	}
+	dl.img320x240LeftDL dt {
+	    float:left;
+        margin: 0px;
+	    padding: 5px 0px 0px 0px;
+	    width:330px;
+        height: 240px;
+        white-space: nowrap;
+        border-top: 1px dotted #c6821a;  
+	}
+	dl.img320x240LeftDL dd {
+        min-height: 240px;
+	    margin:  0px 0px 2px 330px;
+	    padding: 10px 0px 0px  0px;
+        border-top: 1px dotted #c6821a;  
+	}
+
+
+/* ******************************************************************************************************************************** */
+
+div.bookInfoRecord { 
+  width: 55em;
+  margin-left:auto;
+  margin-right:auto;
+}
+.bookInfoRecord dl {
+  font-size: 1em;
+  margin-bottom:1em;
+  border-bottom: 2px solid #c6821a;  
+
+  margin-top: 0px;
+  padding-top: 0.25em;
+  background-image: url(../pics/orgGrdUp.jpg);
+  background-repeat: repeat-x;
+  background-position: 0px 0px;
+}
+.bookInfoRecord dl > dt {
+  float:left;
+  font-weight:bold;
+  font-size: 1em;
+  text-align: right;
+  margin: 0.00px 0.0em 1px 0px;
+  padding:0.25em 0.0em 0.25em 0.50em;
+  width:15em;
+  white-space: nowrap;
+  border-top: 2px solid #c6821a;  
+}
+.bookInfoRecord dl > dd {
+  font-size: 1em;
+  margin:  0px 0px 2px 16em;
+  padding: 0.25em 0px 0.25em  0.0em;
+  border-top: 2px solid #c6821a;  
+}
+.bookInfoRecord h2 > a {
+  text-decoration: none;
+  font-size: 1.0em;
+  color: #000000;
+}
+
+/* ******************************************************************************************************************************** */
+/* Annotated Bibliography */
+/* ******************************************************************************************************************************** */
+
+#catIndex, #recIndex, #kwIndex, #athIndex {
+  width: 30em;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* #catIndex, #recIndex, #kwIndex, #athIndex  */
+.bookIndexList ul {
+  background-image: url(../pics/orgGrdUp.jpg);
+  background-repeat: repeat-x;
+  background-position: 0px 0px;
+  margin-top: 0em;
+  padding: 0.25em 0px 0.5em  1.5em;
+  border-top: 1px dotted #c6821a;  
+  border-bottom: 2px solid #c6821a;  
+  list-style-position: inside;
+}
+
+#booklist {
+  border-collapse:collapse;
+  border: 1px solid black;
+  width:50em;
+  margin-left: auto;
+  margin-right: auto;
+}
+#booklist td, #booklist th {
+  font-size:1em;
+  border:1px solid #c6821a;
+  padding:3px 7px 2px 7px;
+  white-space: nowrap; 
+}
+#booklist th {
+  font-size:1.1em;
+  text-align:left;
+  padding-top:5px;
+  padding-bottom:4px;
+  background-color:#ffe4b6;
+  color:#000000;
+  white-space: nowrap; 
+}
+#booklist tr.blel td {
+  color:#000000;
+  background-color:#FDF8E6;
+  white-space: nowrap; 
+}
+
+
+/* ******************************************************************************************************************************** */
+/* Stock Market Page */
+/* ******************************************************************************************************************************** */
+
+.smc {
+  margin: 0px;
+  padding: 1px;
+  border-width: 0px;
+  font-size: 0px;
+}
+
+div.smc { 
+/*  width:981px;*/
+  width:789px;
+  margin-left:auto;
+  margin-right:auto;
+}
+
+
+/* ******************************************************************************************************************************** */
+/* Misc */
+/* ******************************************************************************************************************************** */
+/* THis is a div that is 90% the width of the outside container, has a small border, and 1px box arround it */
+div.outBox {
+  margin:1px;
+  width:90%;
+  border: 1px solid #c6821a;
+}

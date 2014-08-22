@@ -1,0 +1,158 @@
+<!DOCTYPE html PUBLIC "-//IETF//DTD HTML 2.0//EN">
+<HTML>
+<HEAD>
+<TITLE>AUPG/fileStuff.c</TITLE>
+</HEAD>
+<BODY BGCOLOR="#FFFFFF" TEXT="#000000" LINK="#1F00FF" ALINK="#FF0000" VLINK="#9900DD">
+<A NAME="top"> </A>
+<A NAME="file1"> </A>
+<H1><a href="fileStuff.c">fileStuff.c</a></H1>
+
+<PRE>
+<I><FONT COLOR="#B22222">/* -*- Mode:C; Coding:us-ascii-unix; fill-column:132 -*- */</FONT></I>
+<I><FONT COLOR="#B22222">/**********************************************************************************************************************************/</FONT></I>
+<I><FONT COLOR="#B22222">/**
+   @file      fileStuff.c
+   @author    Mitch Richling &lt;http://www.mitchr.me/&gt;
+   @Copyright Copyright 1995 by Mitch Richling.  All rights reserved.
+   @brief     Recursive traversal of UNIX directories@EOL
+   @Keywords  UNIX directory file traversal
+   @Std       ISOC POSIX
+   @Tested    
+              - Solaris 2.8
+              - MacOS X.2
+              - Linux (RH 7.3)
+
+   This C program is intended to illustrate how to perform several file operations using both UNIX and ISO C APIs.
+   Functions demonstrated include:
+
+      - chdir
+      - chmod
+      - link
+      - rename
+      - rmdir
+      - symlink
+      - mkdir
+      - unlink
+      - remove
+***********************************************************************************************************************************/</FONT></I>
+
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;stdio.h&gt;</FONT></B>              <I><FONT COLOR="#B22222">/* I/O lib         C89   */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;stdlib.h&gt;</FONT></B>             <I><FONT COLOR="#B22222">/* Standard Lib    C89   */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;string.h&gt;</FONT></B>             <I><FONT COLOR="#B22222">/* Strings         C89   */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;sys/types.h&gt;</FONT></B>          <I><FONT COLOR="#B22222">/* UNIX types      POSIX */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;dirent.h&gt;</FONT></B>             <I><FONT COLOR="#B22222">/* UNIX dirs       POSIX */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;errno.h&gt;</FONT></B>              <I><FONT COLOR="#B22222">/* error stf       POSIX */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;utime.h&gt;</FONT></B>              <I><FONT COLOR="#B22222">/* utime           POSIX */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;sys/stat.h&gt;</FONT></B>           <I><FONT COLOR="#B22222">/* UNIX stat       POSIX */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;time.h&gt;</FONT></B>               <I><FONT COLOR="#B22222">/* time            C89   */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;unistd.h&gt;</FONT></B>             <I><FONT COLOR="#B22222">/* UNIX std stf    POSIX */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;fcntl.h&gt;</FONT></B>              <I><FONT COLOR="#B22222">/* UNIX file ctrl  UNIX  */</FONT></I>
+
+<I><FONT COLOR="#B22222">/**********************************************************************************************************************************/</FONT></I>
+<B><FONT COLOR="#228B22">int</FONT></B> <B><FONT COLOR="#0000FF">main</FONT></B>(<B><FONT COLOR="#228B22">int</FONT></B> argc, <B><FONT COLOR="#228B22">char</FONT></B> *argv[]) {
+  <B><FONT COLOR="#228B22">int</FONT></B> fd;
+
+  <I><FONT COLOR="#B22222">/* create a directory */</FONT></I>
+  <B><FONT COLOR="#A020F0">if</FONT></B>(mkdir(<B><FONT COLOR="#BC8F8F">&quot;foo&quot;</FONT></B>, S_IRWXU)) {
+    perror(<B><FONT COLOR="#BC8F8F">&quot;mkdir() failure&quot;</FONT></B>);
+    exit(1);
+  } <I><FONT COLOR="#B22222">/* end if */</FONT></I>
+
+  <I><FONT COLOR="#B22222">/* change the mode of the new directory.  See 'fchmod' for how to do this with a file descriptor*/</FONT></I>
+  <B><FONT COLOR="#A020F0">if</FONT></B>(chmod(<B><FONT COLOR="#BC8F8F">&quot;foo&quot;</FONT></B>, S_IRWXU | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH)) {
+    perror(<B><FONT COLOR="#BC8F8F">&quot;chmod() failure&quot;</FONT></B>);
+    exit(2);
+  } <I><FONT COLOR="#B22222">/* end if */</FONT></I>
+
+  <I><FONT COLOR="#B22222">/* change into new directory */</FONT></I>
+  <B><FONT COLOR="#A020F0">if</FONT></B>(chdir(<B><FONT COLOR="#BC8F8F">&quot;foo&quot;</FONT></B>)) {
+    perror(<B><FONT COLOR="#BC8F8F">&quot;chdir() failure&quot;</FONT></B>);
+    exit(2);
+  } <I><FONT COLOR="#B22222">/* end if */</FONT></I>
+
+  <I><FONT COLOR="#B22222">/* create a new file named 'bar' */</FONT></I>
+  <B><FONT COLOR="#A020F0">if</FONT></B>((fd=open(<B><FONT COLOR="#BC8F8F">&quot;bar&quot;</FONT></B>, O_CREAT | O_TRUNC | O_WRONLY, S_IRWXU | S_IRWXG | S_IRWXO)) &lt; 0) {
+    perror(<B><FONT COLOR="#BC8F8F">&quot;open() failure&quot;</FONT></B>);
+    exit(2);
+  } <I><FONT COLOR="#B22222">/* end if */</FONT></I>
+  write(fd, <B><FONT COLOR="#BC8F8F">&quot;HELLO\n\n&quot;</FONT></B>, 7);
+  <B><FONT COLOR="#A020F0">if</FONT></B>(close(fd)) {
+    perror(NULL);
+    exit(2);
+  } <I><FONT COLOR="#B22222">/* end if */</FONT></I>
+
+  <I><FONT COLOR="#B22222">/* create a new file named 'barben' */</FONT></I>
+  <B><FONT COLOR="#A020F0">if</FONT></B>((fd=open(<B><FONT COLOR="#BC8F8F">&quot;barben&quot;</FONT></B>, O_CREAT | O_TRUNC | O_WRONLY, S_IRWXU | S_IRWXG | S_IRWXO)) &lt; 0) {
+    perror(<B><FONT COLOR="#BC8F8F">&quot;open() failure&quot;</FONT></B>);
+    exit(2);
+  } <I><FONT COLOR="#B22222">/* end if */</FONT></I>
+  write(fd, <B><FONT COLOR="#BC8F8F">&quot;HELLO DUDE\n\n&quot;</FONT></B>, 12);
+  <B><FONT COLOR="#A020F0">if</FONT></B>(close(fd)) {
+    perror(NULL);
+    exit(2);
+  } <I><FONT COLOR="#B22222">/* end if */</FONT></I>
+
+  <I><FONT COLOR="#B22222">/* rename 'barben' to 'barber' the ISO C way. The UNIX way to do this is with 'link' and 'unlink'. */</FONT></I>
+  <B><FONT COLOR="#A020F0">if</FONT></B>(rename(<B><FONT COLOR="#BC8F8F">&quot;barben&quot;</FONT></B>, <B><FONT COLOR="#BC8F8F">&quot;barber&quot;</FONT></B>)) {
+    perror(<B><FONT COLOR="#BC8F8F">&quot;rename() failure&quot;</FONT></B>);
+    exit(2);
+  } <I><FONT COLOR="#B22222">/* end if */</FONT></I>
+
+  <I><FONT COLOR="#B22222">/* create a symlink to 'bar' named 'babar' */</FONT></I>
+  <B><FONT COLOR="#A020F0">if</FONT></B>(symlink(<B><FONT COLOR="#BC8F8F">&quot;bar&quot;</FONT></B>, <B><FONT COLOR="#BC8F8F">&quot;babar&quot;</FONT></B>)) {
+    perror(<B><FONT COLOR="#BC8F8F">&quot;symlink() failure&quot;</FONT></B>);
+    exit(2);
+  } <I><FONT COLOR="#B22222">/* end if */</FONT></I>
+
+  <I><FONT COLOR="#B22222">/* create a hard link to 'bar' named 'harbar' */</FONT></I>
+  <B><FONT COLOR="#A020F0">if</FONT></B>(link(<B><FONT COLOR="#BC8F8F">&quot;bar&quot;</FONT></B>, <B><FONT COLOR="#BC8F8F">&quot;harbar&quot;</FONT></B>)) {
+    perror(<B><FONT COLOR="#BC8F8F">&quot;link() failure&quot;</FONT></B>);
+    exit(2);
+  } <I><FONT COLOR="#B22222">/* end if */</FONT></I>
+
+  <I><FONT COLOR="#B22222">/* Wait around so that the user can explore what was created. */</FONT></I>
+  printf(<B><FONT COLOR="#BC8F8F">&quot;Hit [enter] to continue...\n&quot;</FONT></B>);
+  getchar();
+
+  <I><FONT COLOR="#B22222">/* The UNIX way to &quot;delete&quot; a file */</FONT></I>
+  <B><FONT COLOR="#A020F0">if</FONT></B>(unlink(<B><FONT COLOR="#BC8F8F">&quot;harbar&quot;</FONT></B>)) {
+    perror(<B><FONT COLOR="#BC8F8F">&quot;unlink() failure&quot;</FONT></B>);
+    exit(2);
+  } <I><FONT COLOR="#B22222">/* end if */</FONT></I>
+
+  <I><FONT COLOR="#B22222">/* The ISO C way to delete a file. */</FONT></I>
+  <B><FONT COLOR="#A020F0">if</FONT></B>(remove(<B><FONT COLOR="#BC8F8F">&quot;babar&quot;</FONT></B>)) {
+    perror(<B><FONT COLOR="#BC8F8F">&quot;remove() failure&quot;</FONT></B>);
+    exit(2);
+  } <I><FONT COLOR="#B22222">/* end if */</FONT></I>
+
+  <I><FONT COLOR="#B22222">/* Nuke the rest of the files we created. */</FONT></I>
+  <B><FONT COLOR="#A020F0">if</FONT></B>(remove(<B><FONT COLOR="#BC8F8F">&quot;bar&quot;</FONT></B>)) {
+    perror(<B><FONT COLOR="#BC8F8F">&quot;remove() failure&quot;</FONT></B>);
+    exit(2);
+  } <I><FONT COLOR="#B22222">/* end if */</FONT></I>
+  <B><FONT COLOR="#A020F0">if</FONT></B>(remove(<B><FONT COLOR="#BC8F8F">&quot;barber&quot;</FONT></B>)) {
+    perror(<B><FONT COLOR="#BC8F8F">&quot;remove() failure&quot;</FONT></B>);
+    exit(2);
+  } <I><FONT COLOR="#B22222">/* end if */</FONT></I>
+
+  <I><FONT COLOR="#B22222">/* change back down one directory */</FONT></I>
+  <B><FONT COLOR="#A020F0">if</FONT></B>(chdir(<B><FONT COLOR="#BC8F8F">&quot;../&quot;</FONT></B>)) {
+    perror(<B><FONT COLOR="#BC8F8F">&quot;chdir() failure&quot;</FONT></B>);
+    exit(2);
+  } <I><FONT COLOR="#B22222">/* end if */</FONT></I>
+
+  <I><FONT COLOR="#B22222">/* Remove the directory --- it is empty now. */</FONT></I>
+  <B><FONT COLOR="#A020F0">if</FONT></B>(rmdir(<B><FONT COLOR="#BC8F8F">&quot;foo&quot;</FONT></B>)) {
+    perror(<B><FONT COLOR="#BC8F8F">&quot;rmdir() failure&quot;</FONT></B>);
+    exit(2);
+  } <I><FONT COLOR="#B22222">/* end if */</FONT></I>
+
+  <B><FONT COLOR="#A020F0">return</FONT></B> 0;
+} <I><FONT COLOR="#B22222">/* end func main */</FONT></I>
+</PRE>
+<HR \/>
+<ADDRESS>Generated by <A HREF="http://www.iki.fi/~mtr/genscript/">GNU Enscript 1.6.5.90</A>.</ADDRESS>
+</BODY>
+</HTML>

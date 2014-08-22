@@ -1,0 +1,135 @@
+<!DOCTYPE html PUBLIC "-//IETF//DTD HTML 2.0//EN">
+<HTML>
+<HEAD>
+<TITLE>cpp/algorithm.cpp</TITLE>
+</HEAD>
+<BODY BGCOLOR="#FFFFFF" TEXT="#000000" LINK="#1F00FF" ALINK="#FF0000" VLINK="#9900DD">
+<A NAME="top"> </A>
+<A NAME="file1"> </A>
+<H1><a href="algorithm.cpp">algorithm.cpp</a></H1>
+
+<PRE>
+<I><FONT COLOR="#B22222">// -*- Mode:C++; Coding:us-ascii-unix; fill-column:132 -*-
+</FONT></I><I><FONT COLOR="#B22222">/**********************************************************************************************************************************/</FONT></I>
+<I><FONT COLOR="#B22222">/**
+   @file      algorithm.cpp
+   @author    Mitch Richling &lt;http://www.mitchr.me&gt;
+   @Copyright Copyright 2000 by Mitch Richling.  All rights reserved.
+   @brief     Example of how to use algorithms in the STL specified by C++ 98.@EOL
+   @Keywords  Standard C++ STL algorithm
+   @Std       C++98
+
+   This program is an example of how use some of the algorithms found in the &lt;algorithms&gt; header file in C++ 98.
+
+     - adjacent_find      
+     - adjacent_find (w predicate)
+     - count                      
+     - count_if                   
+     - find               
+     - find_first_of      
+     - find_first_of (w predicate)
+     - find_if            
+     - max_element                
+     - min_element        
+
+***********************************************************************************************************************************/</FONT></I>
+
+<I><FONT COLOR="#B22222">////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+</FONT></I>#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;vector&gt;</FONT></B>                  <I><FONT COLOR="#B22222">/* STL vector              C++98/11 */</FONT></I> 
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;iostream&gt;</FONT></B>                <I><FONT COLOR="#B22222">/* C++ iostream            C++98/11 */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;algorithm&gt;</FONT></B>               <I><FONT COLOR="#B22222">/* STL algorithm           C++98/11 */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;functional&gt;</FONT></B>              <I><FONT COLOR="#B22222">/* STL funcs               C++98/11 */</FONT></I>
+
+<I><FONT COLOR="#B22222">////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+</FONT></I><B><FONT COLOR="#228B22">void</FONT></B> <B><FONT COLOR="#0000FF">printVec</FONT></B>(<B><FONT COLOR="#228B22">char</FONT></B> <B><FONT COLOR="#228B22">const</FONT></B>* msg, std::vector&lt;<B><FONT COLOR="#228B22">int</FONT></B>&gt; &amp;v);
+
+<I><FONT COLOR="#B22222">////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+</FONT></I><B><FONT COLOR="#228B22">template</FONT></B> &lt;<B><FONT COLOR="#228B22">class</FONT></B> T&gt; <B><FONT COLOR="#228B22">void</FONT></B> printSeq(<B><FONT COLOR="#228B22">char</FONT></B> <B><FONT COLOR="#228B22">const</FONT></B>* msg, T b, T e);
+
+<I><FONT COLOR="#B22222">////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+</FONT></I><B><FONT COLOR="#228B22">int</FONT></B> <B><FONT COLOR="#0000FF">main</FONT></B>() {
+  <B><FONT COLOR="#5F9EA0">std</FONT></B>::vector&lt;<B><FONT COLOR="#228B22">int</FONT></B>&gt; v1, v2, v3;
+  <B><FONT COLOR="#5F9EA0">std</FONT></B>::vector&lt;<B><FONT COLOR="#228B22">int</FONT></B>&gt;::iterator vi;
+  <B><FONT COLOR="#228B22">int</FONT></B> i;
+
+  <I><FONT COLOR="#B22222">// push_back can also be used put put things at the end of vector:
+</FONT></I>  <B><FONT COLOR="#A020F0">for</FONT></B>(<B><FONT COLOR="#228B22">int</FONT></B> i=0; i&lt;10; i++) {
+    v1.push_back(i);
+    v2.push_back(i);
+	v2.insert(v2.begin(), 2*i);
+	v3.insert(v3.begin(), 100-i);
+    v3.push_back(i);
+  } <I><FONT COLOR="#B22222">/* end for */</FONT></I>
+  printVec(<B><FONT COLOR="#BC8F8F">&quot;v1: &quot;</FONT></B>, v1);
+  printVec(<B><FONT COLOR="#BC8F8F">&quot;v2: &quot;</FONT></B>, v2);
+  printVec(<B><FONT COLOR="#BC8F8F">&quot;v3: &quot;</FONT></B>, v3);
+
+  <I><FONT COLOR="#B22222">// Demo min_element().  max_element() works the same way..
+</FONT></I>  vi = std::min_element(v3.begin(), v3.end());
+  <B><FONT COLOR="#5F9EA0">std</FONT></B>::cout &lt;&lt; <B><FONT COLOR="#BC8F8F">&quot;Minimum element in v3: &quot;</FONT></B> &lt;&lt; *vi &lt;&lt; std::endl;
+
+  <I><FONT COLOR="#B22222">// You can specify a predicate for both min_element() and max_element():
+</FONT></I>  vi = std::min_element(v3.begin(), v3.end(), std::greater&lt;<B><FONT COLOR="#228B22">int</FONT></B>&gt;());
+  <B><FONT COLOR="#5F9EA0">std</FONT></B>::cout &lt;&lt; <B><FONT COLOR="#BC8F8F">&quot;Minimum element in v3: &quot;</FONT></B> &lt;&lt; *vi &lt;&lt; std::endl;
+
+  vi = std::find(v3.begin(), v3.end(), 95);
+  <B><FONT COLOR="#A020F0">if</FONT></B>(vi != v3.end()) 
+    <B><FONT COLOR="#5F9EA0">std</FONT></B>::cout &lt;&lt; <B><FONT COLOR="#BC8F8F">&quot;Found 95 in v3: &quot;</FONT></B> &lt;&lt; *vi &lt;&lt; std::endl;
+
+  vi = std::find_if(v3.begin(), v3.end(), std::bind2nd(std::greater&lt;<B><FONT COLOR="#228B22">int</FONT></B>&gt;(), 95));
+  <B><FONT COLOR="#A020F0">if</FONT></B>(vi != v3.end()) 
+    <B><FONT COLOR="#5F9EA0">std</FONT></B>::cout &lt;&lt; <B><FONT COLOR="#BC8F8F">&quot;Found &gt;95 in v3: &quot;</FONT></B> &lt;&lt; *vi &lt;&lt; std::endl;
+
+  i = std::count(v3.begin(), v3.end(), 95);
+  <B><FONT COLOR="#5F9EA0">std</FONT></B>::cout &lt;&lt; <B><FONT COLOR="#BC8F8F">&quot;Number of 95's in v3: &quot;</FONT></B> &lt;&lt; i &lt;&lt; std::endl;
+
+  i = std::count_if(v3.begin(), v3.end(), std::bind2nd(std::greater&lt;<B><FONT COLOR="#228B22">int</FONT></B>&gt;(), 95));
+  <B><FONT COLOR="#5F9EA0">std</FONT></B>::cout &lt;&lt; <B><FONT COLOR="#BC8F8F">&quot;Number of &gt;95 in v3: &quot;</FONT></B> &lt;&lt; i &lt;&lt; std::endl;
+
+  vi = std::adjacent_find(v2.begin(), v2.end());
+  <B><FONT COLOR="#A020F0">if</FONT></B>(vi != v2.end()) 
+    <B><FONT COLOR="#5F9EA0">std</FONT></B>::cout &lt;&lt; <B><FONT COLOR="#BC8F8F">&quot;Found two alike in v2: &quot;</FONT></B> &lt;&lt; *vi &lt;&lt; <B><FONT COLOR="#BC8F8F">&quot; and &quot;</FONT></B> &lt;&lt; *(++vi) &lt;&lt; std::endl;
+
+  <I><FONT COLOR="#B22222">// Find first pair such that they both are &gt;4..
+</FONT></I>  vi = std::adjacent_find(v2.begin(), v2.end(), std::less&lt;<B><FONT COLOR="#228B22">int</FONT></B>&gt;());
+  <B><FONT COLOR="#A020F0">if</FONT></B>(vi != v2.end()) 
+    <B><FONT COLOR="#5F9EA0">std</FONT></B>::cout &lt;&lt; <B><FONT COLOR="#BC8F8F">&quot;Found two next to each other with i&lt;j in v2: &quot;</FONT></B> &lt;&lt; *vi &lt;&lt; <B><FONT COLOR="#BC8F8F">&quot; and &quot;</FONT></B> &lt;&lt; *(++vi) &lt;&lt; std::endl;
+
+  printSeq(<B><FONT COLOR="#BC8F8F">&quot;v1[5:7]: &quot;</FONT></B>, v2.begin()+5, v2.begin()+8);
+
+  vi = std::find_first_of(v1.begin(), v1.end(), v2.begin()+5, v2.begin()+8);
+  <B><FONT COLOR="#A020F0">if</FONT></B>(vi != v1.end()) 
+    <B><FONT COLOR="#5F9EA0">std</FONT></B>::cout &lt;&lt; <B><FONT COLOR="#BC8F8F">&quot;Found something in v2[5:7] in v1: &quot;</FONT></B> &lt;&lt; *vi &lt;&lt; std::endl;
+
+  vi = std::find_first_of(v1.begin(), v1.end(), v2.begin()+5, v2.begin()+8, std::greater&lt;<B><FONT COLOR="#228B22">int</FONT></B>&gt;());
+  <B><FONT COLOR="#A020F0">if</FONT></B>(vi != v1.end()) 
+    <B><FONT COLOR="#5F9EA0">std</FONT></B>::cout &lt;&lt; <B><FONT COLOR="#BC8F8F">&quot;Found something greater than one of v2[5:7] in v1: &quot;</FONT></B> &lt;&lt; *vi &lt;&lt; std::endl;
+
+  vi = std::search(v2.begin(), v2.end(), v1.begin(), v1.end());
+  <B><FONT COLOR="#A020F0">if</FONT></B>(vi != v2.end()) {
+    <B><FONT COLOR="#5F9EA0">std</FONT></B>::cout &lt;&lt; <B><FONT COLOR="#BC8F8F">&quot;Found v1 in v2 at: &quot;</FONT></B> &lt;&lt; (vi - v2.begin()) &lt;&lt; std::endl;
+    printSeq(<B><FONT COLOR="#BC8F8F">&quot;The part of v2 we found: &quot;</FONT></B>, vi, v2.end());
+  } <I><FONT COLOR="#B22222">/* end if */</FONT></I>
+
+} <I><FONT COLOR="#B22222">/* end func main */</FONT></I>
+
+<I><FONT COLOR="#B22222">////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+</FONT></I><B><FONT COLOR="#228B22">void</FONT></B> <B><FONT COLOR="#0000FF">printVec</FONT></B>(<B><FONT COLOR="#228B22">char</FONT></B> <B><FONT COLOR="#228B22">const</FONT></B>* msg, std::vector&lt;<B><FONT COLOR="#228B22">int</FONT></B>&gt; &amp;v) {
+  <B><FONT COLOR="#5F9EA0">std</FONT></B>::cout &lt;&lt; msg;
+  <B><FONT COLOR="#A020F0">for</FONT></B>(std::vector&lt;<B><FONT COLOR="#228B22">int</FONT></B>&gt;::iterator vi = v.begin(); vi != v.end(); ++vi)
+ 	<B><FONT COLOR="#5F9EA0">std</FONT></B>::cout &lt;&lt; *vi &lt;&lt; <B><FONT COLOR="#BC8F8F">&quot; &quot;</FONT></B>;
+  <B><FONT COLOR="#5F9EA0">std</FONT></B>::cout &lt;&lt; std::endl;
+} <I><FONT COLOR="#B22222">/* end func printVec */</FONT></I>
+
+<I><FONT COLOR="#B22222">////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+</FONT></I><B><FONT COLOR="#228B22">template</FONT></B> &lt;<B><FONT COLOR="#228B22">class</FONT></B> T&gt; <B><FONT COLOR="#228B22">void</FONT></B> printSeq(<B><FONT COLOR="#228B22">char</FONT></B> <B><FONT COLOR="#228B22">const</FONT></B>* msg, T b, T e) {
+     <B><FONT COLOR="#5F9EA0">std</FONT></B>::cout &lt;&lt; msg;
+     <B><FONT COLOR="#A020F0">for</FONT></B>(T vi = b; vi != e; ++vi)
+       <B><FONT COLOR="#5F9EA0">std</FONT></B>::cout &lt;&lt; *vi &lt;&lt; <B><FONT COLOR="#BC8F8F">&quot; &quot;</FONT></B>;
+     <B><FONT COLOR="#5F9EA0">std</FONT></B>::cout &lt;&lt; std::endl;  
+} <I><FONT COLOR="#B22222">/* end func printSeq */</FONT></I>
+</PRE>
+<HR \/>
+<ADDRESS>Generated by <A HREF="http://www.iki.fi/~mtr/genscript/">GNU Enscript 1.6.5.90</A>.</ADDRESS>
+</BODY>
+</HTML>

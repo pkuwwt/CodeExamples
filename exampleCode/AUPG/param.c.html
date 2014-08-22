@@ -1,0 +1,86 @@
+<!DOCTYPE html PUBLIC "-//IETF//DTD HTML 2.0//EN">
+<HTML>
+<HEAD>
+<TITLE>AUPG/param.c</TITLE>
+</HEAD>
+<BODY BGCOLOR="#FFFFFF" TEXT="#000000" LINK="#1F00FF" ALINK="#FF0000" VLINK="#9900DD">
+<A NAME="top"> </A>
+<A NAME="file1"> </A>
+<H1><a href="param.c">param.c</a></H1>
+
+<PRE>
+<I><FONT COLOR="#B22222">/* -*- Mode:C; Coding:us-ascii-unix; fill-column:132 -*- */</FONT></I>
+<I><FONT COLOR="#B22222">/**********************************************************************************************************************************/</FONT></I>
+<I><FONT COLOR="#B22222">/**
+   @file      param.c
+   @author    Mitch Richling &lt;http://www.mitchr.me/&gt;
+   @Copyright Copyright 2004 by Mitch Richling.  All rights reserved.
+   @brief     How to use paths.h@EOL
+   @Keywords  paths.h unix
+   @Std       UNKNOWN
+   @Tested    
+              - MacOS X.3
+   
+   This is an example program intended to illustrate how to make use of the param.h header available on some UNIX systems (BSD
+   variants).
+***********************************************************************************************************************************/</FONT></I>
+
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;stdio.h&gt;</FONT></B>              <I><FONT COLOR="#B22222">/* I/O lib         C89   */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;sys/param.h&gt;</FONT></B>          <I><FONT COLOR="#B22222">/* UNIX Params     ????  */</FONT></I>
+
+<I><FONT COLOR="#B22222">/**********************************************************************************************************************************/</FONT></I>
+<B><FONT COLOR="#228B22">int</FONT></B> <B><FONT COLOR="#0000FF">main</FONT></B>(<B><FONT COLOR="#228B22">int</FONT></B> argc, <B><FONT COLOR="#228B22">char</FONT></B> *argv[]) {
+
+#<B><FONT COLOR="#5F9EA0">ifdef</FONT></B> <FONT COLOR="#B8860B">MAXINTERP</FONT>     
+  printf(<B><FONT COLOR="#BC8F8F">&quot;MAXINTERP        max interpreter file name length   %d\n&quot;</FONT></B>, (<B><FONT COLOR="#228B22">int</FONT></B>)MAXINTERP);
+#<B><FONT COLOR="#5F9EA0">else</FONT></B>
+  printf(<B><FONT COLOR="#BC8F8F">&quot;MAXINTERP        is not supported on this platform\n&quot;</FONT></B>);
+#<B><FONT COLOR="#5F9EA0">endif</FONT></B>
+#<B><FONT COLOR="#5F9EA0">ifdef</FONT></B> <FONT COLOR="#B8860B">MAXLOGNAME</FONT>    
+  printf(<B><FONT COLOR="#BC8F8F">&quot;MAXLOGNAME       max login name length              %d\n&quot;</FONT></B>, (<B><FONT COLOR="#228B22">int</FONT></B>)MAXLOGNAME);
+#<B><FONT COLOR="#5F9EA0">else</FONT></B>
+  printf(<B><FONT COLOR="#BC8F8F">&quot;MAXLOGNAME       is not supported on this platform\n&quot;</FONT></B>);
+#<B><FONT COLOR="#5F9EA0">endif</FONT></B>
+#<B><FONT COLOR="#5F9EA0">ifdef</FONT></B> <FONT COLOR="#B8860B">MAXUPRC</FONT>       
+  printf(<B><FONT COLOR="#BC8F8F">&quot;MAXUPRC          max simultaneous processes         %d\n&quot;</FONT></B>, (<B><FONT COLOR="#228B22">int</FONT></B>)MAXUPRC);
+#<B><FONT COLOR="#5F9EA0">else</FONT></B>
+  printf(<B><FONT COLOR="#BC8F8F">&quot;MAXUPRC          is not supported on this platform\n&quot;</FONT></B>);
+#<B><FONT COLOR="#5F9EA0">endif</FONT></B>
+#<B><FONT COLOR="#5F9EA0">ifdef</FONT></B> <FONT COLOR="#B8860B">NCARGS</FONT>        
+  printf(<B><FONT COLOR="#BC8F8F">&quot;NCARGS           max bytes for an exec function     %d\n&quot;</FONT></B>, (<B><FONT COLOR="#228B22">int</FONT></B>)NCARGS);
+#<B><FONT COLOR="#5F9EA0">else</FONT></B>
+  printf(<B><FONT COLOR="#BC8F8F">&quot;NCARGS           is not supported on this platform\n&quot;</FONT></B>);
+#<B><FONT COLOR="#5F9EA0">endif</FONT></B>
+#<B><FONT COLOR="#5F9EA0">ifdef</FONT></B> <FONT COLOR="#B8860B">NOGROUP</FONT>       
+  printf(<B><FONT COLOR="#BC8F8F">&quot;NOGROUP          marker for empty group set member  %d\n&quot;</FONT></B>, (<B><FONT COLOR="#228B22">int</FONT></B>)NOGROUP);
+#<B><FONT COLOR="#5F9EA0">else</FONT></B>
+  printf(<B><FONT COLOR="#BC8F8F">&quot;MAXINTERP        is not supported on this platform\n&quot;</FONT></B>);
+#<B><FONT COLOR="#5F9EA0">endif</FONT></B>
+#<B><FONT COLOR="#5F9EA0">ifdef</FONT></B> <FONT COLOR="#B8860B">MAXDOMNAMELEN</FONT> 
+  printf(<B><FONT COLOR="#BC8F8F">&quot;MAXDOMNAMELEN    maximum domain name length         %d\n&quot;</FONT></B>, (<B><FONT COLOR="#228B22">int</FONT></B>)MAXDOMNAMELEN);
+#<B><FONT COLOR="#5F9EA0">else</FONT></B>
+  printf(<B><FONT COLOR="#BC8F8F">&quot;MAXINTERP        is not supported on this platform\n&quot;</FONT></B>);
+#<B><FONT COLOR="#5F9EA0">endif</FONT></B>
+#<B><FONT COLOR="#5F9EA0">ifdef</FONT></B> <FONT COLOR="#B8860B">NGROUPS</FONT>       
+  printf(<B><FONT COLOR="#BC8F8F">&quot;NGROUPS          max number groups                  %d\n&quot;</FONT></B>, (<B><FONT COLOR="#228B22">int</FONT></B>)NGROUPS);
+#<B><FONT COLOR="#5F9EA0">else</FONT></B>
+  printf(<B><FONT COLOR="#BC8F8F">&quot;MAXINTERP        is not supported on this platform\n&quot;</FONT></B>);
+#<B><FONT COLOR="#5F9EA0">endif</FONT></B>
+#<B><FONT COLOR="#5F9EA0">ifdef</FONT></B> <FONT COLOR="#B8860B">NOFILE</FONT>        
+  printf(<B><FONT COLOR="#BC8F8F">&quot;NOFILE           default max open files per process %d\n&quot;</FONT></B>, (<B><FONT COLOR="#228B22">int</FONT></B>)NOFILE);
+#<B><FONT COLOR="#5F9EA0">else</FONT></B>
+  printf(<B><FONT COLOR="#BC8F8F">&quot;NOFILE           is not supported on this platform\n&quot;</FONT></B>);
+#<B><FONT COLOR="#5F9EA0">endif</FONT></B>
+#<B><FONT COLOR="#5F9EA0">ifdef</FONT></B> <FONT COLOR="#B8860B">MAXHOSTNAMELEN</FONT>
+  printf(<B><FONT COLOR="#BC8F8F">&quot;MAXHOSTNAMELEN   max hostname size                  %d\n&quot;</FONT></B>, (<B><FONT COLOR="#228B22">int</FONT></B>)MAXHOSTNAMELEN);
+#<B><FONT COLOR="#5F9EA0">else</FONT></B>
+  printf(<B><FONT COLOR="#BC8F8F">&quot;MAXHOSTNAMELEN   is not supported on this platform\n&quot;</FONT></B>);
+#<B><FONT COLOR="#5F9EA0">endif</FONT></B>
+
+  <B><FONT COLOR="#A020F0">return</FONT></B> 0;
+} <I><FONT COLOR="#B22222">/* end func main */</FONT></I>
+</PRE>
+<HR \/>
+<ADDRESS>Generated by <A HREF="http://www.iki.fi/~mtr/genscript/">GNU Enscript 1.6.5.90</A>.</ADDRESS>
+</BODY>
+</HTML>

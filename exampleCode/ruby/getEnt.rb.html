@@ -1,0 +1,92 @@
+<!DOCTYPE html PUBLIC "-//IETF//DTD HTML 2.0//EN">
+<HTML>
+<HEAD>
+<TITLE>ruby/getEnt.rb</TITLE>
+</HEAD>
+<BODY BGCOLOR="#FFFFFF" TEXT="#000000" LINK="#1F00FF" ALINK="#FF0000" VLINK="#9900DD">
+<A NAME="top"> </A>
+<A NAME="file1"> </A>
+<H1><a href="getEnt.rb">getEnt.rb</a></H1>
+
+<PRE>
+<I><FONT COLOR="#B22222">#!/usr/local/bin/ruby
+</FONT></I>
+<I><FONT COLOR="#B22222">##
+</FONT></I><I><FONT COLOR="#B22222"># @file      getEnt.rb
+</FONT></I><I><FONT COLOR="#B22222"># @author    Mitch Richling &lt;http://www.mitchr.me/&gt;
+</FONT></I><I><FONT COLOR="#B22222"># @Copyright Copyright 2007 by Mitch Richling.  All rights reserved.
+</FONT></I><I><FONT COLOR="#B22222"># @brief     How to get user password and group info.@EOL
+</FONT></I><I><FONT COLOR="#B22222"># @Keywords  ruby examples passwd password group
+</FONT></I><I><FONT COLOR="#B22222"># @Std       Ruby 1.8
+</FONT></I><I><FONT COLOR="#B22222">#
+</FONT></I><I><FONT COLOR="#B22222">#            The Ruby standard library Etc class provides access to
+</FONT></I><I><FONT COLOR="#B22222">#            the passwd and group database.  Entry points for the
+</FONT></I><I><FONT COLOR="#B22222">#            POSIX functions getpwnam, getgrgid, getpwuid, and
+</FONT></I><I><FONT COLOR="#B22222">#            getpwnam are all provided, but they return Ruby objects.
+</FONT></I><I><FONT COLOR="#B22222">#            In addition more Ruby-like iterators are also provided
+</FONT></I><I><FONT COLOR="#B22222">#            for the password and group databases.  Finally, a very
+</FONT></I><I><FONT COLOR="#B22222">#            traditional interface consisting of endgrent, endpwent,
+</FONT></I><I><FONT COLOR="#B22222">#            getgrent, getpwent, setgrent, and setpwent is provided
+</FONT></I><I><FONT COLOR="#B22222">#            for old school, POSIX-style access.
+</FONT></I><I><FONT COLOR="#B22222">#
+</FONT></I><I><FONT COLOR="#B22222">#            Members of group objects
+</FONT></I><I><FONT COLOR="#B22222">#                  name     Group name   String 
+</FONT></I><I><FONT COLOR="#B22222">#                  passwd   Password     String
+</FONT></I><I><FONT COLOR="#B22222">#                  gid      Group ID     Integer
+</FONT></I><I><FONT COLOR="#B22222">#                  mem      Members      Array of strings
+</FONT></I><I><FONT COLOR="#B22222">#
+</FONT></I><I><FONT COLOR="#B22222">#            Members of passwd objects
+</FONT></I><I><FONT COLOR="#B22222">#                  name     Login Name   String
+</FONT></I><I><FONT COLOR="#B22222">#                  passwd   Password     String
+</FONT></I><I><FONT COLOR="#B22222">#                  uid      User ID      Integer
+</FONT></I><I><FONT COLOR="#B22222">#                  gid      Group ID     Integer
+</FONT></I><I><FONT COLOR="#B22222">#                  gecos    GECOS        String
+</FONT></I><I><FONT COLOR="#B22222">#                  dir      Home Dir     String
+</FONT></I><I><FONT COLOR="#B22222">#                  shell    Shell        String
+</FONT></I><I><FONT COLOR="#B22222">#
+</FONT></I><I><FONT COLOR="#B22222">#            See the processStuff.rb example for details about
+</FONT></I><I><FONT COLOR="#B22222">#            functions like initgroups &amp; groups.
+</FONT></I>
+<B><FONT COLOR="#5F9EA0">require</FONT></B> <B><FONT COLOR="#BC8F8F">'etc'</FONT></B> 
+
+puts(<B><FONT COLOR="#BC8F8F">&quot;Login Name: #{Etc.getlogin}&quot;</FONT></B>)
+
+<I><FONT COLOR="#B22222"># Get passwd record from login name
+</FONT></I>p1=Etc.getpwnam(Etc.getlogin)
+puts(<B><FONT COLOR="#BC8F8F">&quot;User ID: #{p1.uid}&quot;</FONT></B>)
+puts(<B><FONT COLOR="#BC8F8F">&quot;Group ID: #{p1.gid}&quot;</FONT></B>)
+
+<I><FONT COLOR="#B22222"># Get group name via the GID for the current user
+</FONT></I>g1=Etc.getgrgid(p1.gid)
+puts(<B><FONT COLOR="#BC8F8F">&quot;Group Name: #{g1.name}&quot;</FONT></B>)
+
+<I><FONT COLOR="#B22222"># Get the user name via the UID for the current user
+</FONT></I><I><FONT COLOR="#B22222">#for the 0 user (usually 'root')
+</FONT></I>p2=Etc.getpwuid(p1.uid);
+puts(<B><FONT COLOR="#BC8F8F">&quot;Login Name: #{p2.name}&quot;</FONT></B>)
+
+<I><FONT COLOR="#B22222"># A &quot;Ruby-like&quot; construct is provided by the group iterator:
+</FONT></I>numGroups=0;
+Etc.group {|g|
+  numGroups += 1;
+}
+puts(<B><FONT COLOR="#BC8F8F">&quot;Found #{numGroups} groups&quot;</FONT></B>)
+
+<I><FONT COLOR="#B22222"># A similar construct is provided by the passwd iterator:
+</FONT></I>numPasswds=0;
+Etc.passwd {|p|
+  numPasswds += 1;
+}
+puts(<B><FONT COLOR="#BC8F8F">&quot;Found #{numPasswds} passwds&quot;</FONT></B>)
+
+<I><FONT COLOR="#B22222"># Get the name of the &quot;SuperUser&quot; (UID 0) if the system has one...
+</FONT></I><B><FONT COLOR="#A020F0">begin</FONT></B>
+  puts(<B><FONT COLOR="#BC8F8F">&quot;SuperUser Name: #{Etc.getpwuid(0).name}&quot;</FONT></B>)
+<B><FONT COLOR="#A020F0">rescue</FONT></B>
+  puts(<B><FONT COLOR="#BC8F8F">&quot;This system has no 'root' user!&quot;</FONT></B>)
+<B><FONT COLOR="#A020F0">end</FONT></B>
+</PRE>
+<HR \/>
+<ADDRESS>Generated by <A HREF="http://www.iki.fi/~mtr/genscript/">GNU Enscript 1.6.5.2</A>.</ADDRESS>
+</BODY>
+</HTML>

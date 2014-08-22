@@ -1,0 +1,92 @@
+<!DOCTYPE html PUBLIC "-//IETF//DTD HTML 2.0//EN">
+<HTML>
+<HEAD>
+<TITLE>AUPG/passwdshadow.c</TITLE>
+</HEAD>
+<BODY BGCOLOR="#FFFFFF" TEXT="#000000" LINK="#1F00FF" ALINK="#FF0000" VLINK="#9900DD">
+<A NAME="top"> </A>
+<A NAME="file1"> </A>
+<H1><a href="passwdshadow.c">passwdshadow.c</a></H1>
+
+<PRE>
+<I><FONT COLOR="#B22222">/* -*- Mode:C; Coding:us-ascii-unix; fill-column:132 -*- */</FONT></I>
+<I><FONT COLOR="#B22222">/**********************************************************************************************************************************/</FONT></I>
+<I><FONT COLOR="#B22222">/**
+   @file      passwdshadow.c
+   @author    Mitch Richling &lt;http://www.mitchr.me/&gt;
+   @Copyright Copyright 1996 by Mitch Richling.  All rights reserved.
+   @brief     UNIX password and shadow password degrees@EOL
+   @Keywords  UNIX password shadow passwd getpwuid
+   @Std       ISOC POSIX UNIX98 BSD4.3 SYSV3
+   @Tested    
+              - Solaris 2.8
+              - BROKEN: MacOS X.2 (no shadow API)
+              - Linux (RH 7.3)
+              - Debian 7.4 + gcc (Debian 4.7.2-5) 4.7.2
+
+   This is an example program intended to illustrate how to query most UNIX versions for password and shadow password information.
+   This has been tested on Solaris and Linux.
+***********************************************************************************************************************************/</FONT></I>
+
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;pwd.h&gt;</FONT></B>                <I><FONT COLOR="#B22222">/* UNIX passwd     POSIX */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;sys/types.h&gt;</FONT></B>          <I><FONT COLOR="#B22222">/* UNIX types      POSIX */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;stdlib.h&gt;</FONT></B>             <I><FONT COLOR="#B22222">/* Standard Lib    C89   */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;shadow.h&gt;</FONT></B>             <I><FONT COLOR="#B22222">/* UNIX shadow DB  SYSV  */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;unistd.h&gt;</FONT></B>             <I><FONT COLOR="#B22222">/* UNIX std stf    POSIX */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;stdio.h&gt;</FONT></B>              <I><FONT COLOR="#B22222">/* I/O lib         C89   */</FONT></I>
+
+<I><FONT COLOR="#B22222">/**********************************************************************************************************************************/</FONT></I>
+<B><FONT COLOR="#228B22">int</FONT></B> <B><FONT COLOR="#0000FF">main</FONT></B>(<B><FONT COLOR="#228B22">int</FONT></B> argc, <B><FONT COLOR="#228B22">char</FONT></B> *argv[]) {
+  <B><FONT COLOR="#228B22">struct</FONT></B> passwd *pwEnt;
+  <B><FONT COLOR="#228B22">struct</FONT></B> spwd *spEnt;
+  <B><FONT COLOR="#228B22">char</FONT></B> pwSalt[3];
+  uid_t theUid, theEuid;
+
+  <I><FONT COLOR="#B22222">/* Figure out who the user is running this thing. */</FONT></I>
+  theUid = getuid();
+  theEuid = geteuid();
+  printf(<B><FONT COLOR="#BC8F8F">&quot;uid: %ld  euid: %ld\n&quot;</FONT></B>, (<B><FONT COLOR="#228B22">long</FONT></B>)theUid, (<B><FONT COLOR="#228B22">long</FONT></B>)theEuid);
+
+  <I><FONT COLOR="#B22222">/* Get the password record for the user. */</FONT></I>
+  pwEnt = getpwuid(theUid);
+  <B><FONT COLOR="#A020F0">if</FONT></B>(pwEnt == NULL) {
+    printf(<B><FONT COLOR="#BC8F8F">&quot;ERROR: getpwuid.\n&quot;</FONT></B>);
+    exit(1);
+  } <I><FONT COLOR="#B22222">/* end if */</FONT></I>
+  printf(<B><FONT COLOR="#BC8F8F">&quot;pw_name:   %s\n&quot;</FONT></B>, pwEnt-&gt;pw_name);
+  printf(<B><FONT COLOR="#BC8F8F">&quot;pw_passwd: %s\n&quot;</FONT></B>, pwEnt-&gt;pw_passwd);
+  printf(<B><FONT COLOR="#BC8F8F">&quot;pw_uid:    %ld\n&quot;</FONT></B>, (<B><FONT COLOR="#228B22">long</FONT></B>)pwEnt-&gt;pw_uid);
+  printf(<B><FONT COLOR="#BC8F8F">&quot;pw_gid:    %ld\n&quot;</FONT></B>, (<B><FONT COLOR="#228B22">long</FONT></B>)pwEnt-&gt;pw_gid);
+  printf(<B><FONT COLOR="#BC8F8F">&quot;pw_gecos:  %s\n&quot;</FONT></B>, pwEnt-&gt;pw_gecos);
+  printf(<B><FONT COLOR="#BC8F8F">&quot;pw_dir:    %s\n&quot;</FONT></B>, pwEnt-&gt;pw_dir);
+  printf(<B><FONT COLOR="#BC8F8F">&quot;pw_shell:  %s\n&quot;</FONT></B>, pwEnt-&gt;pw_shell);
+
+  <I><FONT COLOR="#B22222">/* Get the shadow information for this user. */</FONT></I>
+  spEnt = getspnam(pwEnt-&gt;pw_name);
+  <B><FONT COLOR="#A020F0">if</FONT></B>(spEnt == NULL) {
+    printf(<B><FONT COLOR="#BC8F8F">&quot;ERROR: getspnam.\n&quot;</FONT></B>);
+    exit(1);
+  } <I><FONT COLOR="#B22222">/* end if */</FONT></I>
+  printf(<B><FONT COLOR="#BC8F8F">&quot;sp_namp:    %s\n&quot;</FONT></B>, spEnt-&gt;sp_namp);
+  printf(<B><FONT COLOR="#BC8F8F">&quot;sp_pwdp:    %s\n&quot;</FONT></B>, spEnt-&gt;sp_pwdp);
+  printf(<B><FONT COLOR="#BC8F8F">&quot;sp_lastchg: %ld\n&quot;</FONT></B>, (<B><FONT COLOR="#228B22">long</FONT></B>)spEnt-&gt;sp_lstchg);
+  printf(<B><FONT COLOR="#BC8F8F">&quot;sp_min:     %ld\n&quot;</FONT></B>, (<B><FONT COLOR="#228B22">long</FONT></B>)spEnt-&gt;sp_min);
+  printf(<B><FONT COLOR="#BC8F8F">&quot;sp_max:     %ld\n&quot;</FONT></B>, (<B><FONT COLOR="#228B22">long</FONT></B>)spEnt-&gt;sp_max);
+  printf(<B><FONT COLOR="#BC8F8F">&quot;sp_warn:    %ld\n&quot;</FONT></B>, (<B><FONT COLOR="#228B22">long</FONT></B>)spEnt-&gt;sp_warn);
+  printf(<B><FONT COLOR="#BC8F8F">&quot;sp_intact:  %ld\n&quot;</FONT></B>, (<B><FONT COLOR="#228B22">long</FONT></B>)spEnt-&gt;sp_inact);
+  printf(<B><FONT COLOR="#BC8F8F">&quot;sp_expire:  %ld\n&quot;</FONT></B>, (<B><FONT COLOR="#228B22">long</FONT></B>)spEnt-&gt;sp_expire);
+  printf(<B><FONT COLOR="#BC8F8F">&quot;sp_flag:    %ld\n&quot;</FONT></B>, (<B><FONT COLOR="#228B22">long</FONT></B>)spEnt-&gt;sp_flag);
+
+  <I><FONT COLOR="#B22222">/* Extract the salt from the encrypted password. */</FONT></I>
+  pwSalt[0] = (spEnt-&gt;sp_pwdp)[0];
+  pwSalt[1] = (spEnt-&gt;sp_pwdp)[1];
+  pwSalt[2] = <B><FONT COLOR="#BC8F8F">'\0'</FONT></B>;
+  printf(<B><FONT COLOR="#BC8F8F">&quot;Salt: %s\n&quot;</FONT></B>, pwSalt);
+
+  <B><FONT COLOR="#A020F0">return</FONT></B> 0;
+} <I><FONT COLOR="#B22222">/* end func main */</FONT></I>
+</PRE>
+<HR \/>
+<ADDRESS>Generated by <A HREF="http://www.iki.fi/~mtr/genscript/">GNU Enscript 1.6.5.90</A>.</ADDRESS>
+</BODY>
+</HTML>

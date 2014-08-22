@@ -1,0 +1,96 @@
+<!DOCTYPE html PUBLIC "-//IETF//DTD HTML 2.0//EN">
+<HTML>
+<HEAD>
+<TITLE>blas/blaio.h</TITLE>
+</HEAD>
+<BODY BGCOLOR="#FFFFFF" TEXT="#000000" LINK="#1F00FF" ALINK="#FF0000" VLINK="#9900DD">
+<A NAME="top"> </A>
+<A NAME="file1"> </A>
+<H1><a href="blaio.h">blaio.h</a></H1>
+
+<PRE>
+<I><FONT COLOR="#B22222">/* -*- Mode:C; Coding:us-ascii-unix; fill-column:132 -*- */</FONT></I>
+<I><FONT COLOR="#B22222">/* ****************************************************************************************************************************** */</FONT></I>
+<I><FONT COLOR="#B22222">/**
+   @file      blaio.h
+   @author    Mitch Richling &lt;http://www.mitchr.me/&gt;
+   @Copyright Copyright 1999 by Mitch Richling.  All rights reserved.
+   @brief     Basic Linear Algebra I/O Subroutines@EOL
+   @Keywords  none
+   @Std       C89
+
+   Include file for the BLAIO (Basic Linear Algebra I/O Subroutines).  The BLAIO is intended to provide a very simple interface for
+   printing and reading matrix and vector quantities.  The library is primarily useful for debugging software making use of BLAS or
+   higher level numerical linear algebra libraries.
+              
+*/</FONT></I>
+
+<I><FONT COLOR="#B22222">/* ------------------------------------------------------------------------------------------------------------------------------ */</FONT></I>
+
+#<B><FONT COLOR="#5F9EA0">ifdef</FONT></B> <FONT COLOR="#B8860B">__APPLE__</FONT>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;Accelerate/Accelerate.h&gt;</FONT></B>    <I><FONT COLOR="#B22222">/* The MacOS X blas/lapack stuff */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">else</FONT></B>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;cblas.h&gt;</FONT></B>              <I><FONT COLOR="#B22222">/* C BLAS          BLAS  */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">endif</FONT></B>
+
+<I><FONT COLOR="#B22222">//#define REALT __CLPK_real
+</FONT></I><I><FONT COLOR="#B22222">//#define REALT float
+</FONT></I>#<B><FONT COLOR="#5F9EA0">define</FONT></B> <FONT COLOR="#B8860B">REALT</FONT> double
+
+#<B><FONT COLOR="#5F9EA0">ifndef</FONT></B> <FONT COLOR="#B8860B">REALT</FONT>
+#<B><FONT COLOR="#5F9EA0">define</FONT></B> <FONT COLOR="#B8860B">REALT</FONT> double
+#<B><FONT COLOR="#5F9EA0">endif</FONT></B>
+
+<B><FONT COLOR="#228B22">void</FONT></B> <B><FONT COLOR="#0000FF">sgeprt</FONT></B>(<B><FONT COLOR="#228B22">int</FONT></B> m, <B><FONT COLOR="#228B22">int</FONT></B> n, REALT, <B><FONT COLOR="#228B22">char</FONT></B> *c);
+<B><FONT COLOR="#228B22">void</FONT></B> <B><FONT COLOR="#0000FF">dgeprt</FONT></B>(<B><FONT COLOR="#228B22">int</FONT></B> m, <B><FONT COLOR="#228B22">int</FONT></B> n, REALT, <B><FONT COLOR="#228B22">char</FONT></B> *c);
+
+<I><FONT COLOR="#B22222">/* ****************************************************************************************************************************** */</FONT></I>
+<I><FONT COLOR="#B22222">/* This function is intended to be used as a utility function for numerical software working with REALT precession vectors in C.  It
+   will attractively print vectors in semi-mathematical notation in an easy and flexible way. */</FONT></I>
+<B><FONT COLOR="#228B22">void</FONT></B> <B><FONT COLOR="#0000FF">printVector</FONT></B>(<B><FONT COLOR="#228B22">int</FONT></B> n, REALT  *v,        <I><FONT COLOR="#B22222">/* Size and array                 */</FONT></I>
+                 <B><FONT COLOR="#228B22">int</FONT></B> wide, <B><FONT COLOR="#228B22">int</FONT></B> prec,      <I><FONT COLOR="#B22222">/* Width and precesion for floats */</FONT></I>
+                 <B><FONT COLOR="#228B22">char</FONT></B> *pad,               <I><FONT COLOR="#B22222">/* Right pad string               */</FONT></I>
+                 <B><FONT COLOR="#228B22">char</FONT></B> *ldel, <B><FONT COLOR="#228B22">char</FONT></B> *rdel,  <I><FONT COLOR="#B22222">/* Left and right delimiter       */</FONT></I>
+                 <B><FONT COLOR="#228B22">char</FONT></B> *tag                <I><FONT COLOR="#B22222">/* Tag for first line             */</FONT></I>
+  );
+
+<I><FONT COLOR="#B22222">/* ****************************************************************************************************************************** */</FONT></I>
+<I><FONT COLOR="#B22222">/* Print a matrix out with the matrix elements printed a format string like &quot;%wide.precf&quot;.  Each row will be delimited by
+   lidel/ridel.  The matrix will be delimited by ldel/rdel.  Each number, and left delimiter will be followed by the pad string.
+   The first line of the matrix will have the tag string printed at the start of the line, and all remaining lines will have spaces
+   printed to align the rest of the matrix past the tag. */</FONT></I>
+<B><FONT COLOR="#228B22">void</FONT></B> <B><FONT COLOR="#0000FF">printMatrix</FONT></B>(<B><FONT COLOR="#228B22">const</FONT></B> <B><FONT COLOR="#228B22">enum</FONT></B> CBLAS_ORDER order, 
+                 <B><FONT COLOR="#228B22">int</FONT></B> n, <B><FONT COLOR="#228B22">int</FONT></B> m, REALT  *a,  <I><FONT COLOR="#B22222">/* Size and array                 */</FONT></I>
+                 <B><FONT COLOR="#228B22">int</FONT></B> wide, <B><FONT COLOR="#228B22">int</FONT></B> prec,       <I><FONT COLOR="#B22222">/* Width and precesion for floats */</FONT></I>
+                 <B><FONT COLOR="#228B22">char</FONT></B> *pad,                <I><FONT COLOR="#B22222">/* Right pad string               */</FONT></I>
+                 <B><FONT COLOR="#228B22">char</FONT></B> *ldel, <B><FONT COLOR="#228B22">char</FONT></B> *rdel,   <I><FONT COLOR="#B22222">/* Left and right delimiter       */</FONT></I>
+                 <B><FONT COLOR="#228B22">char</FONT></B> *lidel, <B><FONT COLOR="#228B22">char</FONT></B> *ridel, <I><FONT COLOR="#B22222">/* Left and right INNER delimiter */</FONT></I>
+                 <B><FONT COLOR="#228B22">char</FONT></B> *tag                 <I><FONT COLOR="#B22222">/* Tag for first line             */</FONT></I>
+  );
+
+<I><FONT COLOR="#B22222">/* ****************************************************************************************************************************** */</FONT></I>
+<I><FONT COLOR="#B22222">/* Returns the number of elements it found.  Sets n and m to the size of the matrix. */</FONT></I>
+<B><FONT COLOR="#228B22">int</FONT></B> <B><FONT COLOR="#0000FF">readMatrix</FONT></B>(<B><FONT COLOR="#228B22">int</FONT></B> *n, <B><FONT COLOR="#228B22">int</FONT></B> *m,   <I><FONT COLOR="#B22222">/* Will contain size of the array after the read */</FONT></I>
+               REALT  *a,        <I><FONT COLOR="#B22222">/* Will point to the data                        */</FONT></I>
+               <B><FONT COLOR="#228B22">int</FONT></B> maxEle,       <I><FONT COLOR="#B22222">/* Maximum number of elements to read            */</FONT></I>
+               <B><FONT COLOR="#228B22">char</FONT></B> *fileName    <I><FONT COLOR="#B22222">/* The file name to read the data from           */</FONT></I>
+  );
+
+<I><FONT COLOR="#B22222">/* ****************************************************************************************************************************** */</FONT></I>
+<I><FONT COLOR="#B22222">/* Print out a matrix of chars indicateing a magnitude threshold on each element.  For example, print a '*' for non-zero elements,
+   and a ' ' for zero elements. Both positive and negative thresholds may be provided for added flexibility.  The intent is that
+   this will be used for visual output on a screen or printer.  If you want an &quot;image&quot;, then see the function writeMatrixImage. */</FONT></I>
+<B><FONT COLOR="#228B22">void</FONT></B> <B><FONT COLOR="#0000FF">printMatrixThr</FONT></B>(<B><FONT COLOR="#228B22">const</FONT></B> <B><FONT COLOR="#228B22">enum</FONT></B> CBLAS_ORDER order, 
+                   <B><FONT COLOR="#228B22">int</FONT></B> n, <B><FONT COLOR="#228B22">int</FONT></B> m, REALT  *a,    <I><FONT COLOR="#B22222">/* Size and array                 */</FONT></I>
+                   <B><FONT COLOR="#228B22">char</FONT></B> *inStr, <B><FONT COLOR="#228B22">char</FONT></B> *outStr,  <I><FONT COLOR="#B22222">/* &quot;in&quot; string, and &quot;out&quot; string  */</FONT></I>
+                   REALT  minIn, REALT  maxIn, <I><FONT COLOR="#B22222">/* Min/Max values for &quot;in&quot; range. */</FONT></I>
+                   <B><FONT COLOR="#228B22">char</FONT></B> *pad,                  <I><FONT COLOR="#B22222">/* Right pad string               */</FONT></I>
+                   <B><FONT COLOR="#228B22">char</FONT></B> *ldel, <B><FONT COLOR="#228B22">char</FONT></B> *rdel,     <I><FONT COLOR="#B22222">/* Left and right delimiter       */</FONT></I>
+                   <B><FONT COLOR="#228B22">char</FONT></B> *lidel, <B><FONT COLOR="#228B22">char</FONT></B> *ridel,   <I><FONT COLOR="#B22222">/* Left and right INNER delimiter */</FONT></I>
+                   <B><FONT COLOR="#228B22">char</FONT></B> *tag                   <I><FONT COLOR="#B22222">/* Tag for first line             */</FONT></I>
+  );
+</PRE>
+<HR \/>
+<ADDRESS>Generated by <A HREF="http://www.iki.fi/~mtr/genscript/">GNU Enscript 1.6.5.90</A>.</ADDRESS>
+</BODY>
+</HTML>

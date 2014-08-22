@@ -1,0 +1,201 @@
+<!DOCTYPE html PUBLIC "-//IETF//DTD HTML 2.0//EN">
+<HTML>
+<HEAD>
+<TITLE>blas/blaio.c</TITLE>
+</HEAD>
+<BODY BGCOLOR="#FFFFFF" TEXT="#000000" LINK="#1F00FF" ALINK="#FF0000" VLINK="#9900DD">
+<A NAME="top"> </A>
+<A NAME="file1"> </A>
+<H1><a href="blaio.c">blaio.c</a></H1>
+
+<PRE>
+<I><FONT COLOR="#B22222">/* -*- Mode:C; Coding:us-ascii-unix; fill-column:132 -*- */</FONT></I>
+<I><FONT COLOR="#B22222">/* ****************************************************************************************************************************** */</FONT></I>
+<I><FONT COLOR="#B22222">/**
+   @file      blaio.c
+   @author    Mitch Richling &lt;http://www.mitchr.me/&gt;
+   @Copyright Copyright 1993 by Mitch Richling.  All rights reserved.
+   @brief     matrix/vector I/O@EOL
+   @Keywords  blas numerical linear algebra matrix vector
+   @Std       C89
+
+   A few simple matrix/vector print/read functions useful for printing small test cases and debugging
+              
+*/</FONT></I>
+
+<I><FONT COLOR="#B22222">/* ------------------------------------------------------------------------------------------------------------------------------ */</FONT></I>
+
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;stdlib.h&gt;</FONT></B>             <I><FONT COLOR="#B22222">/* Standard Lib    ISOC  */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;stdio.h&gt;</FONT></B>              <I><FONT COLOR="#B22222">/* I/O lib         ISOC  */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;ctype.h&gt;</FONT></B>              <I><FONT COLOR="#B22222">/* Char classes    ISOC  */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;string.h&gt;</FONT></B>             <I><FONT COLOR="#B22222">/* Strings         ISOC  */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&quot;blaio.h&quot;</FONT></B>
+
+<I><FONT COLOR="#B22222">/* ****************************************************************************************************************************** */</FONT></I>
+<B><FONT COLOR="#228B22">void</FONT></B> <B><FONT COLOR="#0000FF">printMatrixUbr</FONT></B>(<B><FONT COLOR="#228B22">const</FONT></B> <B><FONT COLOR="#228B22">enum</FONT></B> CBLAS_ORDER order, <I><FONT COLOR="#B22222">/* CBLAS row order                                                 */</FONT></I>
+                    <B><FONT COLOR="#228B22">int</FONT></B> n, <B><FONT COLOR="#228B22">int</FONT></B> m, REALT  *a,      <I><FONT COLOR="#B22222">/* Size and array                                                  */</FONT></I>
+                    <B><FONT COLOR="#228B22">char</FONT></B> *inStr, <B><FONT COLOR="#228B22">char</FONT></B> *outStr,    <I><FONT COLOR="#B22222">/* &quot;in&quot; string, and &quot;out&quot; string                                   */</FONT></I>
+                    REALT  minIn, REALT  maxIn,   <I><FONT COLOR="#B22222">/* Min/Max values for &quot;in&quot; range.                                  */</FONT></I>
+                    <B><FONT COLOR="#228B22">int</FONT></B> wide, <B><FONT COLOR="#228B22">int</FONT></B> prec,           <I><FONT COLOR="#B22222">/* Width and precesion for floats                                  */</FONT></I>
+                    <B><FONT COLOR="#228B22">int</FONT></B> *rowPerm, <B><FONT COLOR="#228B22">int</FONT></B> *colPerm,                                                                      
+                    <B><FONT COLOR="#228B22">char</FONT></B> prtMode,                 <I><FONT COLOR="#B22222">/* b=bitmap, V=values, *=in/out)                                   */</FONT></I>
+                    <B><FONT COLOR="#228B22">char</FONT></B> *fileName, 
+                    <B><FONT COLOR="#228B22">int</FONT></B> maskMode,                 <I><FONT COLOR="#B22222">/* L=below diag, U=above diag, D=Diagnal, M=Mask, 0=NONE, \0=NONE  */</FONT></I>
+                    <B><FONT COLOR="#228B22">char</FONT></B> *mask,
+                    <B><FONT COLOR="#228B22">char</FONT></B> *pad,                    <I><FONT COLOR="#B22222">/* Right pad string                                                */</FONT></I>
+                    <B><FONT COLOR="#228B22">char</FONT></B> *ldel, <B><FONT COLOR="#228B22">char</FONT></B> *rdel,       <I><FONT COLOR="#B22222">/* Left and right delimiter                                        */</FONT></I>
+                    <B><FONT COLOR="#228B22">char</FONT></B> *lidel, <B><FONT COLOR="#228B22">char</FONT></B> *ridel,     <I><FONT COLOR="#B22222">/* Left and right INNER delimiter                                  */</FONT></I>
+                    <B><FONT COLOR="#228B22">char</FONT></B> *tag                     <I><FONT COLOR="#B22222">/* Tag for first line                                              */</FONT></I>
+  );
+
+<I><FONT COLOR="#B22222">/* ****************************************************************************************************************************** */</FONT></I>
+<B><FONT COLOR="#228B22">void</FONT></B> <B><FONT COLOR="#0000FF">printVector</FONT></B>(<B><FONT COLOR="#228B22">int</FONT></B> n, REALT  *v, <B><FONT COLOR="#228B22">int</FONT></B> wide, <B><FONT COLOR="#228B22">int</FONT></B> prec, <B><FONT COLOR="#228B22">char</FONT></B> *pad, <B><FONT COLOR="#228B22">char</FONT></B> *ldel, <B><FONT COLOR="#228B22">char</FONT></B> *rdel, <B><FONT COLOR="#228B22">char</FONT></B> *tag) {
+  printMatrixUbr(CblasRowMajor, 1, n, v, NULL, NULL, 0.0, 0.0, wide, prec, NULL, NULL, <B><FONT COLOR="#BC8F8F">'V'</FONT></B>, NULL, <B><FONT COLOR="#BC8F8F">'0'</FONT></B>, NULL, pad, ldel, rdel, <B><FONT COLOR="#BC8F8F">&quot;&quot;</FONT></B>, <B><FONT COLOR="#BC8F8F">&quot;&quot;</FONT></B>, tag);
+} <I><FONT COLOR="#B22222">/* end func printVector */</FONT></I>
+
+<I><FONT COLOR="#B22222">/* ****************************************************************************************************************************** */</FONT></I>
+<B><FONT COLOR="#228B22">void</FONT></B> <B><FONT COLOR="#0000FF">printMatrix</FONT></B>(<B><FONT COLOR="#228B22">const</FONT></B> <B><FONT COLOR="#228B22">enum</FONT></B> CBLAS_ORDER order, <B><FONT COLOR="#228B22">int</FONT></B> n, <B><FONT COLOR="#228B22">int</FONT></B> m, REALT  *a, <B><FONT COLOR="#228B22">int</FONT></B> wide, <B><FONT COLOR="#228B22">int</FONT></B> prec, <B><FONT COLOR="#228B22">char</FONT></B> *pad, <B><FONT COLOR="#228B22">char</FONT></B> *ldel, <B><FONT COLOR="#228B22">char</FONT></B> *rdel, <B><FONT COLOR="#228B22">char</FONT></B> *lidel, <B><FONT COLOR="#228B22">char</FONT></B> *ridel, <B><FONT COLOR="#228B22">char</FONT></B> *tag) {
+  printMatrixUbr(order, n, m, a, NULL, NULL, 0.0, 0.0, wide, prec, NULL, NULL, <B><FONT COLOR="#BC8F8F">'V'</FONT></B>, NULL, <B><FONT COLOR="#BC8F8F">'0'</FONT></B>, NULL, pad, ldel, rdel, lidel, ridel, tag);
+} <I><FONT COLOR="#B22222">/* end func printMatrix */</FONT></I>
+
+<I><FONT COLOR="#B22222">/* ****************************************************************************************************************************** */</FONT></I>
+<B><FONT COLOR="#228B22">void</FONT></B> <B><FONT COLOR="#0000FF">printMatrixThr</FONT></B>(<B><FONT COLOR="#228B22">const</FONT></B> <B><FONT COLOR="#228B22">enum</FONT></B> CBLAS_ORDER order, <B><FONT COLOR="#228B22">int</FONT></B> n, <B><FONT COLOR="#228B22">int</FONT></B> m, REALT  *a, <B><FONT COLOR="#228B22">char</FONT></B> *inStr, <B><FONT COLOR="#228B22">char</FONT></B> *outStr, REALT  minIn, REALT  maxIn, <B><FONT COLOR="#228B22">char</FONT></B> *pad, <B><FONT COLOR="#228B22">char</FONT></B> *ldel, <B><FONT COLOR="#228B22">char</FONT></B> *rdel, <B><FONT COLOR="#228B22">char</FONT></B> *lidel, <B><FONT COLOR="#228B22">char</FONT></B> *ridel, <B><FONT COLOR="#228B22">char</FONT></B> *tag) {
+  printMatrixUbr(order, n, m, a, inStr, outStr, minIn, maxIn, 0, 0, NULL, NULL, <B><FONT COLOR="#BC8F8F">'*'</FONT></B>, NULL, <B><FONT COLOR="#BC8F8F">'0'</FONT></B>, NULL, pad, ldel, rdel, lidel, ridel, tag);
+} <I><FONT COLOR="#B22222">/* end func printMatrixThr*/</FONT></I>
+
+<I><FONT COLOR="#B22222">/* ****************************************************************************************************************************** */</FONT></I>
+<B><FONT COLOR="#228B22">void</FONT></B> <B><FONT COLOR="#0000FF">printMatrixUbr</FONT></B>(<B><FONT COLOR="#228B22">const</FONT></B> <B><FONT COLOR="#228B22">enum</FONT></B> CBLAS_ORDER order, <I><FONT COLOR="#B22222">/* CBLAS row order                  */</FONT></I>
+                    <B><FONT COLOR="#228B22">int</FONT></B> n, <B><FONT COLOR="#228B22">int</FONT></B> m, REALT  *a,      <I><FONT COLOR="#B22222">/* Size and array                   */</FONT></I>
+                    <B><FONT COLOR="#228B22">char</FONT></B> *inStr, <B><FONT COLOR="#228B22">char</FONT></B> *outStr,    <I><FONT COLOR="#B22222">/* &quot;in&quot; string, and &quot;out&quot; string    */</FONT></I>
+                    REALT  minIn, REALT  maxIn,   <I><FONT COLOR="#B22222">/* Min/Max values for &quot;in&quot; range.   */</FONT></I>
+                    <B><FONT COLOR="#228B22">int</FONT></B> wide, <B><FONT COLOR="#228B22">int</FONT></B> prec,           <I><FONT COLOR="#B22222">/* Width and precesion for floats   */</FONT></I>
+                    <B><FONT COLOR="#228B22">int</FONT></B> *rowPerm, <B><FONT COLOR="#228B22">int</FONT></B> *colPerm,   <I><FONT COLOR="#B22222">/* Permute rows i-&gt;xx[i]            */</FONT></I>
+                    <B><FONT COLOR="#228B22">char</FONT></B> prtMode,                 <I><FONT COLOR="#B22222">/* b=bitmap, V=values, *=in/out     */</FONT></I>
+                    <B><FONT COLOR="#228B22">char</FONT></B> *fileName,               <I><FONT COLOR="#B22222">/* if NULL, stdout.                 */</FONT></I>
+                    <B><FONT COLOR="#228B22">int</FONT></B> maskMode,                 <I><FONT COLOR="#B22222">/* L, U, D, M-Mask, 0=NONE          */</FONT></I>
+                    <B><FONT COLOR="#228B22">char</FONT></B> *mask,                   <I><FONT COLOR="#B22222">/* Mask (same size as a) ctrl print */</FONT></I>
+                    <B><FONT COLOR="#228B22">char</FONT></B> *pad,                    <I><FONT COLOR="#B22222">/* Right pad string                 */</FONT></I>
+                    <B><FONT COLOR="#228B22">char</FONT></B> *ldel, <B><FONT COLOR="#228B22">char</FONT></B> *rdel,       <I><FONT COLOR="#B22222">/* Left and right delimiter         */</FONT></I>
+                    <B><FONT COLOR="#228B22">char</FONT></B> *lidel, <B><FONT COLOR="#228B22">char</FONT></B> *ridel,     <I><FONT COLOR="#B22222">/* Left and right INNER delimiter   */</FONT></I>
+                    <B><FONT COLOR="#228B22">char</FONT></B> *tag                     <I><FONT COLOR="#B22222">/* Tag for first line               */</FONT></I>
+  ) {
+  <B><FONT COLOR="#228B22">int</FONT></B> i, j, iP, jP;
+  <B><FONT COLOR="#228B22">int</FONT></B> k, ldelLen, tagLen, cIdx, prtPerMask;
+  REALT  pVal;
+
+  <B><FONT COLOR="#A020F0">if</FONT></B>(inStr == NULL)  inStr  = <B><FONT COLOR="#BC8F8F">&quot;*&quot;</FONT></B>;
+  <B><FONT COLOR="#A020F0">if</FONT></B>(outStr == NULL) outStr = <B><FONT COLOR="#BC8F8F">&quot; &quot;</FONT></B>;
+  <B><FONT COLOR="#A020F0">if</FONT></B>(wide &lt; 0)       wide   = 5;
+  <B><FONT COLOR="#A020F0">if</FONT></B>(prec &lt; 0)       prec   = 2;
+  <B><FONT COLOR="#A020F0">if</FONT></B>(ldel == NULL)   ldel   = <B><FONT COLOR="#BC8F8F">&quot;[&quot;</FONT></B>;
+  <B><FONT COLOR="#A020F0">if</FONT></B>(ridel == NULL)  ridel  = <B><FONT COLOR="#BC8F8F">&quot;]&quot;</FONT></B>;
+  <B><FONT COLOR="#A020F0">if</FONT></B>(lidel == NULL)  lidel  = <B><FONT COLOR="#BC8F8F">&quot;[&quot;</FONT></B>;
+  <B><FONT COLOR="#A020F0">if</FONT></B>(rdel == NULL)   rdel   = <B><FONT COLOR="#BC8F8F">&quot;]&quot;</FONT></B>;
+  <B><FONT COLOR="#A020F0">if</FONT></B>(pad  == NULL)   pad    = <B><FONT COLOR="#BC8F8F">&quot; &quot;</FONT></B>;
+  <B><FONT COLOR="#A020F0">if</FONT></B>(tag  == NULL)   tag    = <B><FONT COLOR="#BC8F8F">&quot;&quot;</FONT></B>;
+
+  ldelLen = strlen(ldel);
+  tagLen = strlen(tag);
+  <B><FONT COLOR="#A020F0">for</FONT></B>(j=0; j&lt;n; j++) {
+    <B><FONT COLOR="#A020F0">if</FONT></B>(j==0) 
+      printf(<B><FONT COLOR="#BC8F8F">&quot;%s%s%s%s&quot;</FONT></B>, tag, ldel, lidel, pad);
+    <B><FONT COLOR="#A020F0">else</FONT></B> {
+      <B><FONT COLOR="#A020F0">for</FONT></B>(k=0;k&lt;tagLen;k++) printf(<B><FONT COLOR="#BC8F8F">&quot; &quot;</FONT></B>);
+      <B><FONT COLOR="#A020F0">for</FONT></B>(k=0;k&lt;ldelLen;k++) printf(<B><FONT COLOR="#BC8F8F">&quot; &quot;</FONT></B>);
+      printf(<B><FONT COLOR="#BC8F8F">&quot;%s%s&quot;</FONT></B>, lidel, pad);
+    } <I><FONT COLOR="#B22222">/* end if/else */</FONT></I>
+    <B><FONT COLOR="#A020F0">for</FONT></B>(i=0; i&lt;m; i++) {
+      <B><FONT COLOR="#A020F0">if</FONT></B>(colPerm != NULL)
+        iP = colPerm[i];
+      <B><FONT COLOR="#A020F0">else</FONT></B>
+        iP = i;
+      <B><FONT COLOR="#A020F0">if</FONT></B>(rowPerm != NULL)
+        jP = rowPerm[j];
+      <B><FONT COLOR="#A020F0">else</FONT></B>
+        jP = j;
+      <B><FONT COLOR="#A020F0">if</FONT></B>(order == CblasColMajor)
+        cIdx = n*iP+jP;
+      <B><FONT COLOR="#A020F0">else</FONT></B>
+        cIdx = m*jP+iP;
+      pVal = a[cIdx];
+      <I><FONT COLOR="#B22222">// Figure out what the mask has to do with printing..
+</FONT></I>      <B><FONT COLOR="#A020F0">if</FONT></B>(maskMode == <B><FONT COLOR="#BC8F8F">'0'</FONT></B>)
+        prtPerMask = 1;
+      <B><FONT COLOR="#A020F0">else</FONT></B> <B><FONT COLOR="#A020F0">if</FONT></B>(maskMode == <B><FONT COLOR="#BC8F8F">'L'</FONT></B>)
+        prtPerMask = (iP&lt;jP);  <I><FONT COLOR="#B22222">// Row order specific!  Fix this.
+</FONT></I>      <B><FONT COLOR="#A020F0">else</FONT></B> <B><FONT COLOR="#A020F0">if</FONT></B>(maskMode == <B><FONT COLOR="#BC8F8F">'D'</FONT></B>)
+        prtPerMask = (iP==jP);
+      <B><FONT COLOR="#A020F0">else</FONT></B> <B><FONT COLOR="#A020F0">if</FONT></B>(maskMode == <B><FONT COLOR="#BC8F8F">'U'</FONT></B>)
+        prtPerMask = (iP&gt;jP);  <I><FONT COLOR="#B22222">// Row order specific!  Fix this.
+</FONT></I>      <B><FONT COLOR="#A020F0">else</FONT></B> <B><FONT COLOR="#A020F0">if</FONT></B>(maskMode == <B><FONT COLOR="#BC8F8F">'M'</FONT></B>)
+        prtPerMask = mask[cIdx];
+      <B><FONT COLOR="#A020F0">else</FONT></B>
+        prtPerMask = 1;
+
+      <B><FONT COLOR="#A020F0">if</FONT></B>(prtMode == <B><FONT COLOR="#BC8F8F">'*'</FONT></B>) {
+        <B><FONT COLOR="#A020F0">if</FONT></B>( prtPerMask &amp;&amp; (pVal &gt;= minIn) &amp;&amp; (pVal &lt;= maxIn) )
+          printf(<B><FONT COLOR="#BC8F8F">&quot;%s%s&quot;</FONT></B>, inStr, pad);
+        <B><FONT COLOR="#A020F0">else</FONT></B> 
+          printf(<B><FONT COLOR="#BC8F8F">&quot;%s%s&quot;</FONT></B>, outStr, pad);
+      } <B><FONT COLOR="#A020F0">else</FONT></B> {
+        <B><FONT COLOR="#A020F0">if</FONT></B>(prtPerMask)
+          printf(<B><FONT COLOR="#BC8F8F">&quot;%*.*f%s&quot;</FONT></B>, wide, prec, pVal, pad);
+        <B><FONT COLOR="#A020F0">else</FONT></B>
+          printf(<B><FONT COLOR="#BC8F8F">&quot;%*s%s&quot;</FONT></B>, wide, outStr, pad);
+      } <I><FONT COLOR="#B22222">/* end if/else */</FONT></I>
+    } <I><FONT COLOR="#B22222">/* end for */</FONT></I>
+    <B><FONT COLOR="#A020F0">if</FONT></B>(j==n-1)
+      printf(<B><FONT COLOR="#BC8F8F">&quot;%s%s\n&quot;</FONT></B>, ridel, rdel);
+    <B><FONT COLOR="#A020F0">else</FONT></B>
+      printf(<B><FONT COLOR="#BC8F8F">&quot;%s\n&quot;</FONT></B>, ridel);
+  } <I><FONT COLOR="#B22222">/* end for */</FONT></I>
+} <I><FONT COLOR="#B22222">/* end func printMatrixUbr*/</FONT></I>
+
+<I><FONT COLOR="#B22222">/* ****************************************************************************************************************************** */</FONT></I>
+<B><FONT COLOR="#228B22">int</FONT></B> <B><FONT COLOR="#0000FF">readMatrix</FONT></B>(<B><FONT COLOR="#228B22">int</FONT></B> *n, <B><FONT COLOR="#228B22">int</FONT></B> *m, REALT  *a, <B><FONT COLOR="#228B22">int</FONT></B> maxEle, <B><FONT COLOR="#228B22">char</FONT></B> *fileName) {
+  <B><FONT COLOR="#228B22">int</FONT></B> inComment;
+  <B><FONT COLOR="#228B22">int</FONT></B> numNumbers;
+  <B><FONT COLOR="#228B22">int</FONT></B> ch;
+  <B><FONT COLOR="#228B22">int</FONT></B> lengthOfNumber;
+  <B><FONT COLOR="#228B22">char</FONT></B> numberBuffer[256];
+  FILE *FP;
+
+  FP = fopen(fileName, <B><FONT COLOR="#BC8F8F">&quot;r&quot;</FONT></B>);
+  <B><FONT COLOR="#A020F0">if</FONT></B>(FP == NULL) 
+    <B><FONT COLOR="#A020F0">return</FONT></B> 1;
+  inComment = 0;
+  lengthOfNumber = -1;
+  numNumbers = 0;
+  <B><FONT COLOR="#A020F0">while</FONT></B>(EOF != (ch = getc(FP))) {
+    <B><FONT COLOR="#A020F0">if</FONT></B>(ch == <B><FONT COLOR="#BC8F8F">'#'</FONT></B>) inComment = 1;               <I><FONT COLOR="#B22222">/* Enter comment upon # char. */</FONT></I>
+    <B><FONT COLOR="#A020F0">if</FONT></B>(inComment &amp;&amp; (ch &lt; 20)) inComment = 0;  <I><FONT COLOR="#B22222">/* Break out of comment upon ANY control char. */</FONT></I>
+    <B><FONT COLOR="#A020F0">if</FONT></B>( !(inComment)) {
+      <B><FONT COLOR="#A020F0">if</FONT></B>(isdigit(ch) || (ch==<B><FONT COLOR="#BC8F8F">'.'</FONT></B>) || (ch==<B><FONT COLOR="#BC8F8F">'E'</FONT></B>) || (ch==<B><FONT COLOR="#BC8F8F">'e'</FONT></B>) || (ch==<B><FONT COLOR="#BC8F8F">'-'</FONT></B>) | (ch==<B><FONT COLOR="#BC8F8F">'+'</FONT></B>)) {
+        lengthOfNumber++;
+        numberBuffer[lengthOfNumber] = ch;
+      } <B><FONT COLOR="#A020F0">else</FONT></B> {
+        <B><FONT COLOR="#A020F0">if</FONT></B>(lengthOfNumber&gt;=0) {
+          numberBuffer[lengthOfNumber+1] = <B><FONT COLOR="#BC8F8F">'\0'</FONT></B>;
+          lengthOfNumber = -1;
+          numNumbers++;
+          <B><FONT COLOR="#A020F0">if</FONT></B>(numNumbers==1) {
+            *n = atoi(numberBuffer);
+          } <B><FONT COLOR="#A020F0">else</FONT></B> <B><FONT COLOR="#A020F0">if</FONT></B>(numNumbers==2) {
+            *m = atoi(numberBuffer);
+          } <B><FONT COLOR="#A020F0">else</FONT></B> <B><FONT COLOR="#A020F0">if</FONT></B> (numNumbers&lt;maxEle) {
+            a[numNumbers-3] = atof(numberBuffer);
+          } <B><FONT COLOR="#A020F0">else</FONT></B> {
+            <B><FONT COLOR="#A020F0">return</FONT></B>(-1);
+          } <I><FONT COLOR="#B22222">/* end if/else */</FONT></I>
+        } <I><FONT COLOR="#B22222">/* end if */</FONT></I>
+      } <I><FONT COLOR="#B22222">/* end if/else */</FONT></I>
+    } <I><FONT COLOR="#B22222">/* end if */</FONT></I>
+  } <I><FONT COLOR="#B22222">/* end while */</FONT></I>
+  fclose(FP);
+  <B><FONT COLOR="#A020F0">return</FONT></B>(numNumbers-2);
+} <I><FONT COLOR="#B22222">/* end func main */</FONT></I>
+</PRE>
+<HR \/>
+<ADDRESS>Generated by <A HREF="http://www.iki.fi/~mtr/genscript/">GNU Enscript 1.6.5.90</A>.</ADDRESS>
+</BODY>
+</HTML>

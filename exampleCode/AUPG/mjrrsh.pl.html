@@ -1,0 +1,102 @@
+<!DOCTYPE html PUBLIC "-//IETF//DTD HTML 2.0//EN">
+<HTML>
+<HEAD>
+<TITLE>AUPG/mjrrsh.pl</TITLE>
+</HEAD>
+<BODY BGCOLOR="#FFFFFF" TEXT="#000000" LINK="#1F00FF" ALINK="#FF0000" VLINK="#9900DD">
+<A NAME="top"> </A>
+<A NAME="file1"> </A>
+<H1><a href="mjrrsh.pl">mjrrsh.pl</a></H1>
+
+<PRE>
+<I><FONT COLOR="#B22222">#!/usr/local/bin/perl
+</FONT></I><I><FONT COLOR="#B22222"># -*- Mode:Perl; Coding:us-ascii-unix; fill-column:132 -*-
+</FONT></I>
+<I><FONT COLOR="#B22222">####################################################################################################################################
+</FONT></I><I><FONT COLOR="#B22222"># @file      mjrrsh.pl
+</FONT></I><I><FONT COLOR="#B22222"># @author    Mitch Richling &lt;http://www.mitchr.me/&gt;
+</FONT></I><I><FONT COLOR="#B22222"># @Copyright Copyright 2003 by Mitch Richling.  All rights reserved.
+</FONT></I><I><FONT COLOR="#B22222"># @brief     an rsh work alike@EOL
+</FONT></I><I><FONT COLOR="#B22222"># @Keywords  perl TCP/IP rsh UNIX
+</FONT></I><I><FONT COLOR="#B22222"># @Std       Perl5
+</FONT></I><I><FONT COLOR="#B22222">#
+</FONT></I><I><FONT COLOR="#B22222"># Any UNIX admin that considers security at even the most basic level should take a close look at a text that describes basic TCP/IP
+</FONT></I><I><FONT COLOR="#B22222"># protocols used for UNIX.  In particular, any good UNIX admin should take a close look at the protocols used by the &quot;r&quot;-commands.
+</FONT></I><I><FONT COLOR="#B22222">#
+</FONT></I><I><FONT COLOR="#B22222"># This perl script is intended to illistrate just how simple rsh(2) realy is.  Note, that the network protocol simply has the user
+</FONT></I><I><FONT COLOR="#B22222"># id and the command being sent to the remote host.  Then the remote host sends the results back.  Not a very good idea in our
+</FONT></I><I><FONT COLOR="#B22222"># dangerous world.
+</FONT></I><I><FONT COLOR="#B22222">#
+</FONT></I><I><FONT COLOR="#B22222"># The complexity in the script given is intended to provide an example of how to make a perl script timeout and exit gracefully even
+</FONT></I><I><FONT COLOR="#B22222"># in the face of network protocols that can just hang forever.  The script is a good basis for a custom rsh that can be used as a
+</FONT></I><I><FONT COLOR="#B22222"># more robust version than the one supplied by most OS venders.  One can achieve the same effect by putting an alarm in a perl
+</FONT></I><I><FONT COLOR="#B22222"># script and using the OS version of rsh.  The only disadvantage of this approach is that the rsh can be left hanging around from
+</FONT></I><I><FONT COLOR="#B22222"># such a program.  By rolling your own version of rsh in a perl script you can avoid shelling out, and you can cleanly handle
+</FONT></I><I><FONT COLOR="#B22222"># errors.  As an additional advantage, you can take different actions based upon where in the script the problem occurs.
+</FONT></I>
+<I><FONT COLOR="#B22222">##----------------------------------------------------------------------------------------------------------------------------------
+</FONT></I>
+<B><FONT COLOR="#A020F0">use</FONT></B> IO::Socket;
+
+$DNSQTIMEOUT = 10;
+$PINGTIMEOUT = 10;
+$PORTTIMEOUT = 10;
+$SENDTIMEOUT = 10;
+$RECVTIMEOUT = 10;
+
+<B><FONT COLOR="#A020F0">if</FONT></B>( ($&lt; != 0) || ($&gt; != 0) )  {
+    <B><FONT COLOR="#A020F0">print</FONT></B> <B><FONT COLOR="#BC8F8F">&quot;Real or Effective UID is not 0\n&quot;</FONT></B>; 
+    <B><FONT COLOR="#A020F0">exit</FONT></B>(1);
+}
+
+<B><FONT COLOR="#A020F0">if</FONT></B>( $#ARGV != 2) {
+    <B><FONT COLOR="#A020F0">die</FONT></B> <B><FONT COLOR="#BC8F8F">&quot;Incorrect argument count.\n&quot;</FONT></B>; 
+    <B><FONT COLOR="#A020F0">exit</FONT></B>(2);
+}
+
+$SIG{ALRM} = <B><FONT COLOR="#A020F0">sub</FONT></B> { <B><FONT COLOR="#A020F0">print</FONT></B> <B><FONT COLOR="#BC8F8F">&quot;Timeout during DNS lookup.\n&quot;</FONT></B>; <B><FONT COLOR="#A020F0">exit</FONT></B>(3); };
+<B><FONT COLOR="#A020F0">alarm</FONT></B> $DNSQTIMEOUT;
+<B><FONT COLOR="#A020F0">if</FONT></B>( ! <B><FONT COLOR="#A020F0">gethostbyname</FONT></B>($ARGV[1])) {
+    <B><FONT COLOR="#A020F0">print</FONT></B> <B><FONT COLOR="#BC8F8F">&quot;Unknown host.  DNS lookup failed\n&quot;</FONT></B>; 
+    <B><FONT COLOR="#A020F0">exit</FONT></B>(4);
+}
+
+$SIG{ALRM} = <B><FONT COLOR="#A020F0">sub</FONT></B> { <B><FONT COLOR="#A020F0">print</FONT></B> <B><FONT COLOR="#BC8F8F">&quot;Ping command hung.\n&quot;</FONT></B>; <B><FONT COLOR="#A020F0">exit</FONT></B>(5); };
+<B><FONT COLOR="#A020F0">alarm</FONT></B> $PINGTIMEOUT;
+<B><FONT COLOR="#A020F0">if</FONT></B>( !(<B><FONT COLOR="#BC8F8F">`/usr/sbin/ping $ARGV[1] 1`</FONT></B> =~ <B><FONT COLOR="#A020F0">m</FONT></B>/is alive/)) {
+    <B><FONT COLOR="#A020F0">print</FONT></B> <B><FONT COLOR="#BC8F8F">&quot;Couldn't ping host.\n&quot;</FONT></B>; 
+    <B><FONT COLOR="#A020F0">exit</FONT></B>(6);
+}
+
+$SIG{ALRM} = <B><FONT COLOR="#A020F0">sub</FONT></B> { <B><FONT COLOR="#A020F0">print</FONT></B> <B><FONT COLOR="#BC8F8F">&quot;Timeout obtaining a socket.\n&quot;</FONT></B>; <B><FONT COLOR="#A020F0">exit</FONT></B>(7); };
+<B><FONT COLOR="#A020F0">alarm</FONT></B> $PORTTIMEOUT;
+$tryPort = 1023;
+$socket = 0;
+<B><FONT COLOR="#A020F0">while</FONT></B>(($tryPort &gt; 128) &amp;&amp; (! $socket)) {
+    $socket = IO::Socket::INET-&gt;new(PeerAddr =&gt; <B><FONT COLOR="#BC8F8F">&quot;$ARGV[1]&quot;</FONT></B>,
+                            PeerPort =&gt; 514,
+                LocalPort =&gt; $tryPort,
+                            Proto =&gt; <B><FONT COLOR="#BC8F8F">&quot;tcp&quot;</FONT></B>,
+                Type =&gt; SOCK_STREAM);
+    $tryPort--;
+}
+
+<B><FONT COLOR="#A020F0">if</FONT></B>($socket) {
+    $SIG{ALRM} = <B><FONT COLOR="#A020F0">sub</FONT></B> { <B><FONT COLOR="#A020F0">print</FONT></B> <B><FONT COLOR="#BC8F8F">&quot;Timeout sending command.\n&quot;</FONT></B>; <B><FONT COLOR="#A020F0">exit</FONT></B>(8); };
+    <B><FONT COLOR="#A020F0">alarm</FONT></B> $SENDTIMEOUT;
+    <B><FONT COLOR="#A020F0">print</FONT></B> $socket <B><FONT COLOR="#BC8F8F">&quot;\000$ARGV[0]\000$ARGV[0]\000$ARGV[2]\000&quot;</FONT></B>;
+    $SIG{ALRM} = <B><FONT COLOR="#A020F0">sub</FONT></B> { <B><FONT COLOR="#A020F0">print</FONT></B> <B><FONT COLOR="#BC8F8F">&quot;Timeout receving command output.\n&quot;</FONT></B>; <B><FONT COLOR="#A020F0">exit</FONT></B>(9); };
+    <B><FONT COLOR="#A020F0">alarm</FONT></B> $RECVTIMEOUT;
+    <B><FONT COLOR="#A020F0">while</FONT></B>(&lt;$socket&gt;) 
+        { <B><FONT COLOR="#A020F0">print</FONT></B> <B><FONT COLOR="#BC8F8F">&quot;$_&quot;</FONT></B>; }
+    <B><FONT COLOR="#A020F0">close</FONT></B>($socket);
+    <B><FONT COLOR="#A020F0">exit</FONT></B>(0);
+} <B><FONT COLOR="#A020F0">else</FONT></B> {
+    <B><FONT COLOR="#A020F0">print</FONT></B> <B><FONT COLOR="#BC8F8F">&quot;Couldn't get socket\n&quot;</FONT></B>;
+    <B><FONT COLOR="#A020F0">exit</FONT></B>(10);
+}
+</PRE>
+<HR \/>
+<ADDRESS>Generated by <A HREF="http://www.iki.fi/~mtr/genscript/">GNU Enscript 1.6.5.90</A>.</ADDRESS>
+</BODY>
+</HTML>

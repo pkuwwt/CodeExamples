@@ -1,0 +1,126 @@
+<!DOCTYPE html PUBLIC "-//IETF//DTD HTML 2.0//EN">
+<HTML>
+<HEAD>
+<TITLE>openssl/evp_encrypt.c</TITLE>
+</HEAD>
+<BODY BGCOLOR="#FFFFFF" TEXT="#000000" LINK="#1F00FF" ALINK="#FF0000" VLINK="#9900DD">
+<A NAME="top"> </A>
+<A NAME="file1"> </A>
+<H1><a href="evp_encrypt.c">evp_encrypt.c</a></H1>
+
+<PRE>
+<I><FONT COLOR="#B22222">/**
+   @file      evp_encrypt.c
+   @author    Mitch Richling &lt;http://www.mitchr.me/&gt;
+   @Copyright Copyright 2008 by Mitch Richling.  All rights reserved.
+   @Revision  $Revision$ 
+   @SCMdate   $Date$
+   @brief     How to use OpenSSL's EVP interface to encrypt data.@EOL
+   @Keywords  OpenSSL EVP encrypt AES
+   @Std       C89
+
+              OpenSSL's EVP interface provides a high level, easy to
+              use, interface for some common cryptographic tools.
+              evp_encrypt.c illustrates how to do symmetric data
+              encryption while evp_decrypt .c illustrates how to do
+              symmetric data decryption.
+
+              The STDOUT of this program may be replicated with:
+
+              openssl enc -aes-256-cbc -e -nosalt \
+                -K 000102030405060708090A0B0C0D0E0F101112131415161718191A1B1C1D1E1F \
+                -iv 000102030405060708090A0B0C0D0E0F
+              
+*/</FONT></I>
+
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;openssl/ssl.h&gt;</FONT></B>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;openssl/bio.h&gt;</FONT></B>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;stdio.h&gt;</FONT></B>
+
+#<B><FONT COLOR="#5F9EA0">define</FONT></B> <FONT COLOR="#B8860B">INBUFSIZE</FONT> 512
+#<B><FONT COLOR="#5F9EA0">define</FONT></B> <FONT COLOR="#B8860B">OUTBUFSIZE</FONT> (1024*1024)
+
+<B><FONT COLOR="#228B22">void</FONT></B> <B><FONT COLOR="#0000FF">prtErrAndExit</FONT></B>(<B><FONT COLOR="#228B22">int</FONT></B> eVal, <B><FONT COLOR="#228B22">char</FONT></B> *msg);
+<B><FONT COLOR="#228B22">int</FONT></B> <B><FONT COLOR="#0000FF">main</FONT></B>(<B><FONT COLOR="#228B22">int</FONT></B> argc, <B><FONT COLOR="#228B22">char</FONT></B> *argv[]);
+
+<B><FONT COLOR="#228B22">int</FONT></B> <B><FONT COLOR="#0000FF">main</FONT></B>(<B><FONT COLOR="#228B22">int</FONT></B> argc, <B><FONT COLOR="#228B22">char</FONT></B> *argv[]) {
+  <B><FONT COLOR="#228B22">int</FONT></B> outBytes, inBytes, tmpOutBytes, bytesInBuf, i;
+  <B><FONT COLOR="#228B22">int</FONT></B> cipherBlockSize, cipherKeyLength, cipherIvLength;
+  <B><FONT COLOR="#228B22">unsigned</FONT></B> <B><FONT COLOR="#228B22">char</FONT></B> key[] = { <I><FONT COLOR="#B22222">/* Need all 32 bytes... */</FONT></I>
+    0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 
+    0x08, 0x09, 0x0A, 0x0B, 0x0C, 0x0D, 0x0E, 0x0F,
+    0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17, 
+    0x18, 0x19, 0x1A, 0x1B, 0x1C, 0x1D, 0x1E, 0x1F
+  };
+  <B><FONT COLOR="#228B22">unsigned</FONT></B> <B><FONT COLOR="#228B22">char</FONT></B> iv[] = { <I><FONT COLOR="#B22222">/* Only need 16 bytes... */</FONT></I>
+    0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 
+    0x08, 0x09, 0x0A, 0x0B, 0x0C, 0x0D, 0x0E, 0x0F,
+    0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17, 
+    0x18, 0x19, 0x1A, 0x1B, 0x1C, 0x1D, 0x1E, 0x1F
+  };
+  <B><FONT COLOR="#228B22">unsigned</FONT></B> <B><FONT COLOR="#228B22">char</FONT></B> buf2crypt[INBUFSIZE];
+  <B><FONT COLOR="#228B22">unsigned</FONT></B> <B><FONT COLOR="#228B22">char</FONT></B> outBuf[OUTBUFSIZE];
+  EVP_CIPHER_CTX ctx;
+
+  EVP_CIPHER_CTX_init(&amp;ctx);
+  EVP_EncryptInit_ex(&amp;ctx, EVP_aes_256_cbc(), NULL, key, iv);
+
+  cipherBlockSize = EVP_CIPHER_CTX_block_size(&amp;ctx); 
+  cipherKeyLength = EVP_CIPHER_CTX_key_length(&amp;ctx);
+  cipherIvLength  = EVP_CIPHER_CTX_iv_length(&amp;ctx);
+
+  fprintf(stderr, <B><FONT COLOR="#BC8F8F">&quot;INFO(evp_encrypt): Enc Algo:   %s\n&quot;</FONT></B>, OBJ_nid2ln(EVP_CIPHER_CTX_nid(&amp;ctx)));
+  fprintf(stderr, <B><FONT COLOR="#BC8F8F">&quot;INFO(evp_encrypt): Key:        &quot;</FONT></B>);
+  <B><FONT COLOR="#A020F0">for</FONT></B>(i=0; i&lt;cipherKeyLength; i++)
+    fprintf(stderr, <B><FONT COLOR="#BC8F8F">&quot;%02X&quot;</FONT></B>, (<B><FONT COLOR="#228B22">int</FONT></B>)(key[i]));
+  fprintf(stderr, <B><FONT COLOR="#BC8F8F">&quot;\n&quot;</FONT></B>);
+  fprintf(stderr, <B><FONT COLOR="#BC8F8F">&quot;INFO(evp_encrypt): IV:         &quot;</FONT></B>);
+  <B><FONT COLOR="#A020F0">for</FONT></B>(i=0; i&lt;cipherIvLength; i++)
+    fprintf(stderr, <B><FONT COLOR="#BC8F8F">&quot;%02X&quot;</FONT></B>, (<B><FONT COLOR="#228B22">int</FONT></B>)(iv[i]));
+  fprintf(stderr, <B><FONT COLOR="#BC8F8F">&quot;\n&quot;</FONT></B>);
+  fprintf(stderr, <B><FONT COLOR="#BC8F8F">&quot;INFO(evp_encrypt): block size: %d\n&quot;</FONT></B>, cipherBlockSize);
+  fprintf(stderr, <B><FONT COLOR="#BC8F8F">&quot;INFO(evp_encrypt): key length: %d\n&quot;</FONT></B>, cipherKeyLength);
+  fprintf(stderr, <B><FONT COLOR="#BC8F8F">&quot;INFO(evp_encrypt): IV length:  %d\n&quot;</FONT></B>, cipherIvLength);
+
+  <B><FONT COLOR="#A020F0">if</FONT></B>((cipherKeyLength &gt; 32) || (cipherIvLength  &gt; 16))
+    prtErrAndExit(1, <B><FONT COLOR="#BC8F8F">&quot;ERROR: Hardwired key or iv was too short!!\n&quot;</FONT></B>); 
+
+  fprintf(stderr, <B><FONT COLOR="#BC8F8F">&quot;INFO(evp_encrypt): READING DATA&quot;</FONT></B>);
+  inBytes = outBytes = 0;
+  <B><FONT COLOR="#A020F0">while</FONT></B>( (bytesInBuf = fread(buf2crypt, <B><FONT COLOR="#A020F0">sizeof</FONT></B>(<B><FONT COLOR="#228B22">char</FONT></B>), INBUFSIZE, stdin)) &gt; 0) {
+    fprintf(stderr, <B><FONT COLOR="#BC8F8F">&quot;.&quot;</FONT></B>);
+    <B><FONT COLOR="#A020F0">if</FONT></B>((OUTBUFSIZE - ((bytesInBuf + cipherBlockSize - 1) + outBytes)) &lt;= 0)
+      prtErrAndExit(1, <B><FONT COLOR="#BC8F8F">&quot;ERROR: Buffer was not big enough to hold encrypted data!!\n&quot;</FONT></B>);
+    <B><FONT COLOR="#A020F0">if</FONT></B>(!EVP_EncryptUpdate(&amp;ctx, outBuf + outBytes, &amp;tmpOutBytes, buf2crypt, bytesInBuf))
+      prtErrAndExit(1, <B><FONT COLOR="#BC8F8F">&quot;ERROR: EVP_EncryptUpdate didn't work...\n&quot;</FONT></B>);
+    outBytes += tmpOutBytes;
+    inBytes += bytesInBuf;
+  } <I><FONT COLOR="#B22222">/* end while */</FONT></I>
+  fprintf(stderr, <B><FONT COLOR="#BC8F8F">&quot;DONE\n&quot;</FONT></B>);
+
+  <B><FONT COLOR="#A020F0">if</FONT></B>((OUTBUFSIZE - (cipherBlockSize + outBytes)) &lt;= 0)
+    prtErrAndExit(1, <B><FONT COLOR="#BC8F8F">&quot;ERROR: Buffer was not big enough to hold encrypted data!!\n&quot;</FONT></B>);
+  <B><FONT COLOR="#A020F0">if</FONT></B>(!EVP_EncryptFinal_ex(&amp;ctx, outBuf+outBytes, &amp;tmpOutBytes))
+    prtErrAndExit(1, <B><FONT COLOR="#BC8F8F">&quot;ERROR: EVP_EncryptFinal_ex didn't work...\n&quot;</FONT></B>);
+  outBytes += tmpOutBytes;
+
+  fprintf(stderr, <B><FONT COLOR="#BC8F8F">&quot;INFO(evp_encrypt): Bytes in:   %d\n&quot;</FONT></B>, inBytes);
+  fprintf(stderr, <B><FONT COLOR="#BC8F8F">&quot;INFO(evp_encrypt): Bytes out:  %d\n&quot;</FONT></B>, outBytes);
+
+  EVP_CIPHER_CTX_cleanup(&amp;ctx);
+
+  fwrite(outBuf, 1, outBytes, stdout);
+  <B><FONT COLOR="#A020F0">return</FONT></B> 1;
+} <I><FONT COLOR="#B22222">/* end func main */</FONT></I>
+
+<I><FONT COLOR="#B22222">/* Save some vertical space with this simple error handling function.. */</FONT></I>
+<B><FONT COLOR="#228B22">void</FONT></B> <B><FONT COLOR="#0000FF">prtErrAndExit</FONT></B>(<B><FONT COLOR="#228B22">int</FONT></B> eVal, <B><FONT COLOR="#228B22">char</FONT></B> *msg) {
+  <B><FONT COLOR="#A020F0">if</FONT></B>(msg != NULL)
+    fprintf(stderr, <B><FONT COLOR="#BC8F8F">&quot;INFO(evp_encrypt): %s\n\n&quot;</FONT></B>, msg);
+  exit(eVal);
+} <I><FONT COLOR="#B22222">/* end func prtErrAndExit */</FONT></I>
+</PRE>
+<HR \/>
+<ADDRESS>Generated by <A HREF="http://www.iki.fi/~mtr/genscript/">GNU Enscript 1.6.5.2</A>.</ADDRESS>
+</BODY>
+</HTML>

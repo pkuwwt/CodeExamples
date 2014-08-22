@@ -1,0 +1,112 @@
+<!DOCTYPE html PUBLIC "-//IETF//DTD HTML 2.0//EN">
+<HTML>
+<HEAD>
+<TITLE>fltk/glutWithFltk.cpp</TITLE>
+</HEAD>
+<BODY BGCOLOR="#FFFFFF" TEXT="#000000" LINK="#1F00FF" ALINK="#FF0000" VLINK="#9900DD">
+<A NAME="top"> </A>
+<A NAME="file1"> </A>
+<H1><a href="glutWithFltk.cpp">glutWithFltk.cpp</a></H1>
+
+<PRE>
+<I><FONT COLOR="#B22222">// -*- Mode:C++; Coding:us-ascii-unix; fill-column:132 -*-
+</FONT></I><I><FONT COLOR="#B22222">/**********************************************************************************************************************************/</FONT></I>
+<I><FONT COLOR="#B22222">/**
+   @file      glutWithFltk.cpp
+   @author    Mitch Richling &lt;http://www.mitchr.me/&gt;
+   @Copyright Copyright 1993,1997,2003 by Mitch Richling.  All rights reserved.
+   @brief     Simple example of FLTK's GLUT compatibility features@EOL
+   @Keywords  fltk glut
+   @Std        FLTKv1.3
+
+   FLTK has a nice GLUT compatibility layer that makes creating sophisticated OpenGL programs a snap.  Many GLUT programs will
+   compile out of the box with nothing more than a change in include path!  This tiny program is such an example -- it is a GLUT
+   program with the include path changed.
+***********************************************************************************************************************************/</FONT></I>
+
+<I><FONT COLOR="#B22222">/**********************************************************************************************************************************/</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;FL/glut.H&gt;</FONT></B>            <I><FONT COLOR="#B22222">/* FLTK GLUT       FLTK  */</FONT></I>
+
+<I><FONT COLOR="#B22222">/**********************************************************************************************************************************/</FONT></I>
+<B><FONT COLOR="#228B22">static</FONT></B> <B><FONT COLOR="#228B22">float</FONT></B> r1 = 1, r2 = 0, r3 = 0;
+
+<I><FONT COLOR="#B22222">/**********************************************************************************************************************************/</FONT></I>
+<B><FONT COLOR="#228B22">void</FONT></B> <B><FONT COLOR="#0000FF">displayCall</FONT></B>() {
+  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+  glRotatef(0.5, r1, r2, r3);
+  glCallList(1);
+  glutSwapBuffers();
+}
+
+<I><FONT COLOR="#B22222">/**********************************************************************************************************************************/</FONT></I>
+<B><FONT COLOR="#228B22">void</FONT></B> <B><FONT COLOR="#0000FF">idleCall</FONT></B>() {
+  <B><FONT COLOR="#228B22">static</FONT></B> <B><FONT COLOR="#228B22">int</FONT></B> c = 0;
+  c++;
+  <B><FONT COLOR="#A020F0">if</FONT></B>(c &gt; 100) {
+    c = 0;
+    <B><FONT COLOR="#A020F0">if</FONT></B>(r1 &gt; 0) {
+      r1 = 0; r2 = 1; r3 = 0;
+    } <B><FONT COLOR="#A020F0">else</FONT></B> <B><FONT COLOR="#A020F0">if</FONT></B>(r2 &gt; 0) {
+      r1 = 0; r2 = 0; r3 = 1;
+    } <B><FONT COLOR="#A020F0">else</FONT></B> <B><FONT COLOR="#A020F0">if</FONT></B>(r3 &gt; 0) {
+      r1 = 1; r2 = 0; r3 = 0;
+    }
+  }
+  glutPostRedisplay();
+}
+
+<I><FONT COLOR="#B22222">/**********************************************************************************************************************************/</FONT></I>
+<B><FONT COLOR="#228B22">void</FONT></B> <B><FONT COLOR="#0000FF">computeCurve</FONT></B>() {
+  <B><FONT COLOR="#228B22">int</FONT></B> maxBalls    = 5000;
+  <B><FONT COLOR="#228B22">double</FONT></B> tDelta   = 0.01;
+  <B><FONT COLOR="#228B22">double</FONT></B> x = 0.11;
+  <B><FONT COLOR="#228B22">double</FONT></B> y = 0.0;
+  <B><FONT COLOR="#228B22">double</FONT></B> z = 0;
+  <B><FONT COLOR="#228B22">double</FONT></B> a = 10;
+  <B><FONT COLOR="#228B22">double</FONT></B> b = 28;
+  <B><FONT COLOR="#228B22">double</FONT></B> c = 8.0 / 3.0;
+  <B><FONT COLOR="#228B22">int</FONT></B> numBalls;
+  <B><FONT COLOR="#228B22">double</FONT></B> xNew, yNew, zNew;
+  glNewList(1, GL_COMPILE);
+  glColor3f(1,1,1);
+  glPointSize(2.0);
+  glBegin(GL_LINE_STRIP);
+  <B><FONT COLOR="#A020F0">for</FONT></B>(numBalls=0;numBalls&lt;maxBalls;numBalls++) {
+    xNew = x + a*(y-x)*tDelta;
+    yNew = y + (x*(b-z)-y)*tDelta;
+    zNew = z + (x*y-c*z)*tDelta;
+    glColor3f(1.0*numBalls/maxBalls, 0.2, 1.0-numBalls/maxBalls);
+    glVertex3f(xNew, yNew, zNew);    
+    x=xNew;
+    y=yNew;
+    z=zNew;
+  }
+  glEnd();
+  glEndList();
+}
+
+<I><FONT COLOR="#B22222">/**********************************************************************************************************************************/</FONT></I>
+<B><FONT COLOR="#228B22">int</FONT></B> <B><FONT COLOR="#0000FF">main</FONT></B>(<B><FONT COLOR="#228B22">int</FONT></B> argc, <B><FONT COLOR="#228B22">char</FONT></B> *argv[]) {
+  glutInit(&amp;argc, argv);
+  glutInitDisplayMode(GLUT_RGB | GLUT_DOUBLE | GLUT_DEPTH);
+  glutInitWindowSize(500, 500);
+  glutInitWindowPosition(10, 10);
+  glutCreateWindow(<B><FONT COLOR="#BC8F8F">&quot;GLUT Compatibility Mode Demo Program&quot;</FONT></B>);
+  glutDisplayFunc(displayCall);
+  glutIdleFunc(idleCall);
+  glEnable(GL_DEPTH_TEST);
+  glMatrixMode(GL_PROJECTION);
+  glLoadIdentity();
+  glOrtho(-2.0, 2.0, -2.0, 2.0, -2.0, 500.0);
+  glMatrixMode(GL_MODELVIEW);
+  glLoadIdentity();
+  glScalef(.03,.03,.03);
+  computeCurve();
+  glutMainLoop();
+  <B><FONT COLOR="#A020F0">return</FONT></B> 0;
+}
+</PRE>
+<HR \/>
+<ADDRESS>Generated by <A HREF="http://www.iki.fi/~mtr/genscript/">GNU Enscript 1.6.5.90</A>.</ADDRESS>
+</BODY>
+</HTML>

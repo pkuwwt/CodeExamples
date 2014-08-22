@@ -1,0 +1,163 @@
+<!DOCTYPE html PUBLIC "-//IETF//DTD HTML 2.0//EN">
+<HTML>
+<HEAD>
+<TITLE>ruby/arrayBasics.rb</TITLE>
+</HEAD>
+<BODY BGCOLOR="#FFFFFF" TEXT="#000000" LINK="#1F00FF" ALINK="#FF0000" VLINK="#9900DD">
+<A NAME="top"> </A>
+<A NAME="file1"> </A>
+<H1><a href="arrayBasics.rb">arrayBasics.rb</a></H1>
+
+<PRE>
+<I><FONT COLOR="#B22222">#!/usr/local/bin/ruby
+</FONT></I>
+<I><FONT COLOR="#B22222">##
+</FONT></I><I><FONT COLOR="#B22222"># @file      arrayBasics.rb
+</FONT></I><I><FONT COLOR="#B22222"># @author    Mitch Richling &lt;http://www.mitchr.me/&gt;
+</FONT></I><I><FONT COLOR="#B22222"># @Copyright Copyright 2006 by Mitch Richling.  All rights reserved.
+</FONT></I><I><FONT COLOR="#B22222"># @brief     Simple array examples.@EOL
+</FONT></I><I><FONT COLOR="#B22222"># @Keywords  ruby example array
+</FONT></I><I><FONT COLOR="#B22222"># @Std       Ruby 1.8
+</FONT></I><I><FONT COLOR="#B22222">#
+</FONT></I><I><FONT COLOR="#B22222">#            Also see arrayTraverse.rb, arrayAssoc.rb, enumBasics.rb,
+</FONT></I><I><FONT COLOR="#B22222">#            and strings.rb for more examples.
+</FONT></I>
+puts(<B><FONT COLOR="#BC8F8F">&quot;CONSTRUCTION&quot;</FONT></B>)
+a = [ 1, 2.3, <B><FONT COLOR="#BC8F8F">'hello'</FONT></B>, 4, 5.6, <B><FONT COLOR="#A020F0">nil</FONT></B>, 7, <B><FONT COLOR="#BC8F8F">'world'</FONT></B>, TRUE, <B><FONT COLOR="#BC8F8F">'BAR'</FONT></B> ]  <I><FONT COLOR="#B22222"># They can hold any data type
+</FONT></I>b = %w{ a bc <B><FONT COLOR="#A020F0">def</FONT></B> <B><FONT COLOR="#0000FF">}                                             # SAME AS: = ['a', 'bc', 'def']
+</FONT></B>c = Array.new(10, <B><FONT COLOR="#BC8F8F">'hello'</FONT></B>)                                      <I><FONT COLOR="#B22222"># Set an initial value for elements
+</FONT></I>d = Array::new                                                 <I><FONT COLOR="#B22222">#Empty array (Can also just say [])
+</FONT></I>puts(<B><FONT COLOR="#BC8F8F">&quot;  a=#{a.inspect}&quot;</FONT></B>)
+puts(<B><FONT COLOR="#BC8F8F">&quot;  b=#{b.inspect}&quot;</FONT></B>)
+puts(<B><FONT COLOR="#BC8F8F">&quot;  c=#{c.inspect}&quot;</FONT></B>)
+puts(<B><FONT COLOR="#BC8F8F">&quot;  d=#{d.inspect}&quot;</FONT></B>)
+
+puts(<B><FONT COLOR="#BC8F8F">&quot;INITIAL VALUE OBJECT&quot;</FONT></B>)
+e = Array.new(10, Array.new())
+puts(<B><FONT COLOR="#BC8F8F">&quot;  e=#{e.inspect}&quot;</FONT></B>)
+e[0].push(<B><FONT COLOR="#BC8F8F">'hello'</FONT></B>)
+puts(<B><FONT COLOR="#BC8F8F">&quot;  After push: #{e.inspect}&quot;</FONT></B>)
+
+<I><FONT COLOR="#B22222"># Indexing is rich. NOTE: foo[...] is the same as foo.slice(...)
+</FONT></I><I><FONT COLOR="#B22222"># Also note foo.at(n) is a tiny bit faster than foo[n]
+</FONT></I>puts(<B><FONT COLOR="#BC8F8F">&quot;INDEXING&quot;</FONT></B>)
+puts(<B><FONT COLOR="#BC8F8F">&quot;  a[1]      = #{a[1].inspect             }&quot;</FONT></B>)   <I><FONT COLOR="#B22222"># zero based indexes!
+</FONT></I>puts(<B><FONT COLOR="#BC8F8F">&quot;  a[1..2]   = #{a[1..2].inspect          }&quot;</FONT></B>)   <I><FONT COLOR="#B22222"># Range object
+</FONT></I>puts(<B><FONT COLOR="#BC8F8F">&quot;  a[1,3]    = #{a[1,3].inspect           }&quot;</FONT></B>)   <I><FONT COLOR="#B22222"># Start at 1, give me three
+</FONT></I>puts(<B><FONT COLOR="#BC8F8F">&quot;  a[-1]     = #{a[-1].inspect            }&quot;</FONT></B>)   <I><FONT COLOR="#B22222"># Last element
+</FONT></I>puts(<B><FONT COLOR="#BC8F8F">&quot;  a[-3..-1] = #{a[-3..-1].inspect        }&quot;</FONT></B>)   <I><FONT COLOR="#B22222"># third to last to last
+</FONT></I>puts(<B><FONT COLOR="#BC8F8F">&quot;  a[10]     = #{a[10].inspect            }&quot;</FONT></B>)   <I><FONT COLOR="#B22222"># nil if out of range
+</FONT></I>
+puts(<B><FONT COLOR="#BC8F8F">&quot;SUPER INDEXING&quot;</FONT></B>)
+puts(<B><FONT COLOR="#BC8F8F">&quot;  a.values_at(1)       = #{a.values_at(1).inspect        }&quot;</FONT></B>)
+puts(<B><FONT COLOR="#BC8F8F">&quot;  a.values_at(1,3,5)   = #{a.values_at(1,3,5).inspect    }&quot;</FONT></B>)
+puts(<B><FONT COLOR="#BC8F8F">&quot;  a.values_at(1..3, 5) = #{a.values_at(1..3, 5).inspect  }&quot;</FONT></B>)
+
+puts(<B><FONT COLOR="#BC8F8F">&quot;NAMED BITS&quot;</FONT></B>)
+puts(<B><FONT COLOR="#BC8F8F">&quot;  a.first    = #{a.first.inspect                        }&quot;</FONT></B>)
+puts(<B><FONT COLOR="#BC8F8F">&quot;  a.first(3) = #{a.first(3).inspect                     }&quot;</FONT></B>)
+puts(<B><FONT COLOR="#BC8F8F">&quot;  a.last     = #{a.last.inspect                         }&quot;</FONT></B>)
+puts(<B><FONT COLOR="#BC8F8F">&quot;  a.last(3)  = #{a.last(3).inspect                      }&quot;</FONT></B>)
+puts(<B><FONT COLOR="#BC8F8F">&quot;  a.values_at(1..3, 5) = #{a.values_at(1..3, 5).inspect }&quot;</FONT></B>)
+
+puts(<B><FONT COLOR="#BC8F8F">&quot;INDEXING WITH OUT OF BOUND VALUE&quot;</FONT></B>)
+puts(<B><FONT COLOR="#BC8F8F">&quot;  a[10]                   = #{a[10].inspect                    }&quot;</FONT></B>)
+puts(<B><FONT COLOR="#BC8F8F">&quot;  a.fetch(10, 'missing')  = #{a.fetch(10, 'missing').inspect   }&quot;</FONT></B>)
+puts(<B><FONT COLOR="#BC8F8F">&quot;  a.fetch(10) {|i| -i}    = #{(a.fetch(10) {|i| -i}).inspect   }&quot;</FONT></B>)
+
+puts(<B><FONT COLOR="#BC8F8F">&quot;ARRAY META DATA&quot;</FONT></B>)
+puts(<B><FONT COLOR="#BC8F8F">&quot;  a.length = #{a.length.inspect    }&quot;</FONT></B>)  <I><FONT COLOR="#B22222"># Number of items (same as .size)
+</FONT></I>puts(<B><FONT COLOR="#BC8F8F">&quot;  a.empty? = #{a.empty?.inspect    }&quot;</FONT></B>)  <I><FONT COLOR="#B22222"># Is array empty?
+</FONT></I>puts(<B><FONT COLOR="#BC8F8F">&quot;  a.nitems = #{a.nitems.inspect    }&quot;</FONT></B>)  <I><FONT COLOR="#B22222"># Number of non-nil items
+</FONT></I>
+puts(<B><FONT COLOR="#BC8F8F">&quot;ARRAYS AS QUEUES&quot;</FONT></B>)
+a &lt;&lt; <B><FONT COLOR="#BC8F8F">'push1'</FONT></B>
+a.push(<B><FONT COLOR="#BC8F8F">'push2'</FONT></B>)
+a += Array.new(1, <B><FONT COLOR="#BC8F8F">'push3'</FONT></B>)   <I><FONT COLOR="#B22222"># Note that + creates a new array!!
+</FONT></I>puts(<B><FONT COLOR="#BC8F8F">&quot;  After push:    a=#{a.inspect}&quot;</FONT></B>)
+anEle = a.pop
+puts(<B><FONT COLOR="#BC8F8F">&quot;  After pop:     a=#{a.inspect}&quot;</FONT></B>)
+puts(<B><FONT COLOR="#BC8F8F">&quot;  popped off:    #{anEle.inspect}&quot;</FONT></B>)
+a.unshift(<B><FONT COLOR="#BC8F8F">'unshift'</FONT></B>)
+puts(<B><FONT COLOR="#BC8F8F">&quot;  After unshift: a=#{a.inspect}&quot;</FONT></B>)
+anEle = a.shift
+puts(<B><FONT COLOR="#BC8F8F">&quot;  After shift:   a=#{a.inspect}&quot;</FONT></B>)
+puts(<B><FONT COLOR="#BC8F8F">&quot;  shifted off:   #{anEle.inspect}&quot;</FONT></B>)
+
+puts(<B><FONT COLOR="#BC8F8F">&quot;ARRAY SLICE ASSIGNMENT&quot;</FONT></B>)
+a[1,3] = [<B><FONT COLOR="#BC8F8F">'foo'</FONT></B>, <B><FONT COLOR="#BC8F8F">'bar'</FONT></B>, <B><FONT COLOR="#BC8F8F">'foobar'</FONT></B>]        <I><FONT COLOR="#B22222"># Swap out a slice
+</FONT></I>puts(<B><FONT COLOR="#BC8F8F">&quot;  after assn:   a=#{a.inspect}&quot;</FONT></B>)
+a[1,3] = [<B><FONT COLOR="#BC8F8F">'FOO'</FONT></B>, <B><FONT COLOR="#BC8F8F">'BAR'</FONT></B>]                  <I><FONT COLOR="#B22222"># Note we are replacing with smaller array
+</FONT></I>puts(<B><FONT COLOR="#BC8F8F">&quot;  after assn:   a=#{a.inspect}&quot;</FONT></B>)
+a.insert(6, <B><FONT COLOR="#BC8F8F">'insertAtSix'</FONT></B>)
+puts(<B><FONT COLOR="#BC8F8F">&quot;  after insert: a=#{a.inspect}&quot;</FONT></B>)
+
+puts(<B><FONT COLOR="#BC8F8F">&quot;PARALLEL ASSIGNMENT WORKS&quot;</FONT></B>)
+x, y = [1, 2]
+puts(<B><FONT COLOR="#BC8F8F">&quot;  x = #{x.inspect}&quot;</FONT></B>)
+puts(<B><FONT COLOR="#BC8F8F">&quot;  y = #{y.inspect}&quot;</FONT></B>)
+z=1
+x, y, z, w = [1, 2]          <I><FONT COLOR="#B22222"># The var z has no value, so gets nil
+</FONT></I>puts(<B><FONT COLOR="#BC8F8F">&quot;  x = #{x.inspect}&quot;</FONT></B>)
+puts(<B><FONT COLOR="#BC8F8F">&quot;  y = #{y.inspect}&quot;</FONT></B>)
+puts(<B><FONT COLOR="#BC8F8F">&quot;  z = #{z.inspect}&quot;</FONT></B>)
+x, y = [1, 2, 3]             <I><FONT COLOR="#B22222"># Throw away extra
+</FONT></I>puts(<B><FONT COLOR="#BC8F8F">&quot;  x = #{x.inspect}&quot;</FONT></B>)
+puts(<B><FONT COLOR="#BC8F8F">&quot;  y = #{y.inspect}&quot;</FONT></B>)
+x, *y = [1, 2, 3]            <I><FONT COLOR="#B22222"># Rest put into an array and stored in y
+</FONT></I>puts(<B><FONT COLOR="#BC8F8F">&quot;  x = #{x.inspect}&quot;</FONT></B>)
+puts(<B><FONT COLOR="#BC8F8F">&quot;  y = #{y.inspect}&quot;</FONT></B>)
+
+puts(<B><FONT COLOR="#BC8F8F">&quot;LOOKING FOR STUFF (GETTING INDEXES)&quot;</FONT></B>)
+puts(<B><FONT COLOR="#BC8F8F">&quot;  c.index('hello')  = #{c.index('hello').inspect  }&quot;</FONT></B>)
+puts(<B><FONT COLOR="#BC8F8F">&quot;  c.rindex('hello') = #{c.rindex('hello').inspect  }&quot;</FONT></B>)
+
+puts(<B><FONT COLOR="#BC8F8F">&quot;GETTING RID OF STUFF&quot;</FONT></B>)
+a.compact!
+puts(<B><FONT COLOR="#BC8F8F">&quot;  after compact!:  a=#{a.inspect}&quot;</FONT></B>)   <I><FONT COLOR="#B22222"># Also see: compact
+</FONT></I>a.uniq!
+puts(<B><FONT COLOR="#BC8F8F">&quot;  after unique!:   a=#{a.inspect}&quot;</FONT></B>)   <I><FONT COLOR="#B22222"># Also see: uniq
+</FONT></I>a.delete(5.6)
+puts(<B><FONT COLOR="#BC8F8F">&quot;  after delete:    a=#{a.inspect}&quot;</FONT></B>)
+anEle = a.delete_at(4)
+puts(<B><FONT COLOR="#BC8F8F">&quot;  after delete_at: a=#{a.inspect}&quot;</FONT></B>)
+puts(<B><FONT COLOR="#BC8F8F">&quot;  Thing deleted:   #{anEle}&quot;</FONT></B>)
+a.delete_if { |x| x.<B><FONT COLOR="#A020F0">class</FONT></B> == Fixnum }
+puts(<B><FONT COLOR="#BC8F8F">&quot;  after delete_if: a=#{a.inspect}&quot;</FONT></B>)  <I><FONT COLOR="#B22222"># Also see: reject! &amp; reject
+</FONT></I>a.slice!(2,2)
+puts(<B><FONT COLOR="#BC8F8F">&quot;  after slice:     a=#{a.inspect}&quot;</FONT></B>)  <I><FONT COLOR="#B22222"># Also see: slice
+</FONT></I>a.clear
+puts(<B><FONT COLOR="#BC8F8F">&quot;  after clear:     a=#{a.inspect}&quot;</FONT></B>)
+
+puts(<B><FONT COLOR="#BC8F8F">&quot;ORDERING&quot;</FONT></B>)
+b.reverse!
+puts(<B><FONT COLOR="#BC8F8F">&quot;  after reverse!: b=#{b.inspect}&quot;</FONT></B>)    <I><FONT COLOR="#B22222"># Also see: reverse
+</FONT></I>b.sort!
+puts(<B><FONT COLOR="#BC8F8F">&quot;  after sort!:    b=#{b.inspect}&quot;</FONT></B>)    <I><FONT COLOR="#B22222"># Also see: sort
+</FONT></I>
+puts(<B><FONT COLOR="#BC8F8F">&quot;LISPY, MAPPEN GOODNESS&quot;</FONT></B>)
+b.map! { |x| x.to_s + <B><FONT COLOR="#BC8F8F">&quot;YUMMY&quot;</FONT></B> }
+puts(<B><FONT COLOR="#BC8F8F">&quot;  after map!: b=#{b.inspect}&quot;</FONT></B>)    <I><FONT COLOR="#B22222"># Also see: map, collect, &amp; collect!
+</FONT></I>
+puts(<B><FONT COLOR="#BC8F8F">&quot;EVEN LISPY-IER GOODNESS&quot;</FONT></B>)
+c.fill(<B><FONT COLOR="#BC8F8F">&quot;world&quot;</FONT></B>)
+puts(<B><FONT COLOR="#BC8F8F">&quot;  after fill 1: c=#{c.inspect}&quot;</FONT></B>)
+c.fill(<B><FONT COLOR="#BC8F8F">&quot;!&quot;</FONT></B>, 6)
+puts(<B><FONT COLOR="#BC8F8F">&quot;  after fill 2: c=#{c.inspect}&quot;</FONT></B>)
+c.fill(<B><FONT COLOR="#BC8F8F">&quot;hello&quot;</FONT></B>, 0, 3)
+puts(<B><FONT COLOR="#BC8F8F">&quot;  after fill 3: c=#{c.inspect}&quot;</FONT></B>)
+c.fill(0,2) { |idx| idx }
+puts(<B><FONT COLOR="#BC8F8F">&quot;  after fill 4: c=#{c.inspect}&quot;</FONT></B>)
+c.fill(7..8) { |idx| idx }
+puts(<B><FONT COLOR="#BC8F8F">&quot;  after fill 5: c=#{c.inspect}&quot;</FONT></B>)
+c.fill(8) { |idx| idx }
+puts(<B><FONT COLOR="#BC8F8F">&quot;  after fill 6: c=#{c.inspect}&quot;</FONT></B>)
+
+<I><FONT COLOR="#B22222"># Finally, join is our friend....
+</FONT></I>c.uniq!.delete_if { |x| x.<B><FONT COLOR="#A020F0">class</FONT></B> == Fixnum }
+puts(c.join(<B><FONT COLOR="#BC8F8F">' '</FONT></B>).inspect)
+</PRE>
+<HR \/>
+<ADDRESS>Generated by <A HREF="http://www.iki.fi/~mtr/genscript/">GNU Enscript 1.6.5.2</A>.</ADDRESS>
+</BODY>
+</HTML>

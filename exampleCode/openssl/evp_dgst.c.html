@@ -1,0 +1,91 @@
+<!DOCTYPE html PUBLIC "-//IETF//DTD HTML 2.0//EN">
+<HTML>
+<HEAD>
+<TITLE>openssl/evp_dgst.c</TITLE>
+</HEAD>
+<BODY BGCOLOR="#FFFFFF" TEXT="#000000" LINK="#1F00FF" ALINK="#FF0000" VLINK="#9900DD">
+<A NAME="top"> </A>
+<A NAME="file1"> </A>
+<H1><a href="evp_dgst.c">evp_dgst.c</a></H1>
+
+<PRE>
+<I><FONT COLOR="#B22222">/**
+   @file      dgst.c
+   @author    Mitch Richling &lt;http://www.mitchr.me/&gt;
+   @Copyright Copyright 1995,1998,2005 by Mitch Richling.  All rights reserved.
+   @Revision  $Revision$ 
+   @SCMdate   $Date$
+   @brief     Compute both the MD5 and SHA1 checksums of STDIN.@EOL
+   @Keywords  none
+   @Std       C89
+
+              OpenSSL's EVP interface provides a high level, easy to
+              use, interface for some common cryptographic tools.
+              This program illustrates how to compute the md5 and sha1
+              hash using this interface.
+
+
+*/</FONT></I>
+
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;stdio.h&gt;</FONT></B>              <I><FONT COLOR="#B22222">/* I/O lib         ISOC  */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;stdlib.h&gt;</FONT></B>             <I><FONT COLOR="#B22222">/* Standard Lib    ISOC  */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;openssl/ssl.h&gt;</FONT></B>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;openssl/evp.h&gt;</FONT></B>
+
+#<B><FONT COLOR="#5F9EA0">define</FONT></B> <FONT COLOR="#B8860B">INBUFSIZE</FONT> 1024
+
+<B><FONT COLOR="#228B22">int</FONT></B> <B><FONT COLOR="#0000FF">main</FONT></B>(<B><FONT COLOR="#228B22">int</FONT></B> argc, <B><FONT COLOR="#228B22">char</FONT></B> *argv[]);
+
+<B><FONT COLOR="#228B22">int</FONT></B> <B><FONT COLOR="#0000FF">main</FONT></B>(<B><FONT COLOR="#228B22">int</FONT></B> argc, <B><FONT COLOR="#228B22">char</FONT></B> *argv[]) {
+  EVP_MD_CTX md5ctx, sha1ctx;
+  <B><FONT COLOR="#228B22">unsigned</FONT></B> <B><FONT COLOR="#228B22">char</FONT></B> md5val[EVP_MAX_MD_SIZE], sha1val[EVP_MAX_MD_SIZE];
+  <B><FONT COLOR="#228B22">unsigned</FONT></B> <B><FONT COLOR="#228B22">int</FONT></B> md5len, i, sha1len;
+  <B><FONT COLOR="#228B22">char</FONT></B> buf[INBUFSIZE];
+  <B><FONT COLOR="#228B22">int</FONT></B> numIn;
+
+  <I><FONT COLOR="#B22222">/* Initialize the hash objects. */</FONT></I>
+  EVP_DigestInit(&amp;md5ctx, EVP_md5());
+  EVP_DigestInit(&amp;sha1ctx, EVP_sha1());
+
+  <I><FONT COLOR="#B22222">/* Note: Must not call these AFTER we use EVP_DigestFinal */</FONT></I>
+  fprintf(stderr, <B><FONT COLOR="#BC8F8F">&quot;INFO(evp_dgst): H1: Dgst Algo:  %s\n&quot;</FONT></B>, OBJ_nid2ln(EVP_MD_CTX_type(&amp;md5ctx)));
+  fprintf(stderr, <B><FONT COLOR="#BC8F8F">&quot;INFO(evp_dgst): H1: Block Size: %d\n&quot;</FONT></B>, (<B><FONT COLOR="#228B22">int</FONT></B>)(EVP_MD_CTX_block_size(&amp;md5ctx)));
+  fprintf(stderr, <B><FONT COLOR="#BC8F8F">&quot;INFO(evp_dgst): H1: Hash Size:  %d\n&quot;</FONT></B>, (<B><FONT COLOR="#228B22">int</FONT></B>)(EVP_MD_CTX_size(&amp;md5ctx)));
+  fprintf(stderr, <B><FONT COLOR="#BC8F8F">&quot;INFO(evp_dgst): H2: Dgst Algo:  %s\n&quot;</FONT></B>, OBJ_nid2ln(EVP_MD_CTX_type(&amp;sha1ctx)));
+  fprintf(stderr, <B><FONT COLOR="#BC8F8F">&quot;INFO(evp_dgst): H2: Block Size: %d\n&quot;</FONT></B>, (<B><FONT COLOR="#228B22">int</FONT></B>)(EVP_MD_CTX_block_size(&amp;sha1ctx)));
+  fprintf(stderr, <B><FONT COLOR="#BC8F8F">&quot;INFO(evp_dgst): H2: Hash Size:  %d\n&quot;</FONT></B>, (<B><FONT COLOR="#228B22">int</FONT></B>)(EVP_MD_CTX_size(&amp;sha1ctx)));
+
+  <I><FONT COLOR="#B22222">/* Add the data to the checksum */</FONT></I>
+  fprintf(stderr, <B><FONT COLOR="#BC8F8F">&quot;INFO(evp_dgst): READING DATA&quot;</FONT></B>);
+  <B><FONT COLOR="#A020F0">while</FONT></B>( (numIn = fread(buf, <B><FONT COLOR="#A020F0">sizeof</FONT></B>(<B><FONT COLOR="#228B22">char</FONT></B>), INBUFSIZE, stdin)) &gt; 0) {
+    fprintf(stderr, <B><FONT COLOR="#BC8F8F">&quot;.&quot;</FONT></B>);
+    EVP_DigestUpdate(&amp;md5ctx,  buf, numIn);
+    EVP_DigestUpdate(&amp;sha1ctx, buf, numIn);
+  } <I><FONT COLOR="#B22222">/* end while */</FONT></I>
+  fprintf(stderr, <B><FONT COLOR="#BC8F8F">&quot;DONE\n&quot;</FONT></B>);
+
+  <I><FONT COLOR="#B22222">/* Finish up the hash function computation. */</FONT></I>
+  EVP_DigestFinal(&amp;md5ctx,  md5val,  &amp;md5len);
+  EVP_DigestFinal(&amp;sha1ctx, sha1val, &amp;sha1len);
+
+  printf(<B><FONT COLOR="#BC8F8F">&quot; MD5: &quot;</FONT></B>);
+  <B><FONT COLOR="#A020F0">for</FONT></B>(i=0; i&lt;md5len; i++)
+    printf(<B><FONT COLOR="#BC8F8F">&quot;%02x&quot;</FONT></B>, md5val[i]);
+  printf(<B><FONT COLOR="#BC8F8F">&quot;\n&quot;</FONT></B>);
+  printf(<B><FONT COLOR="#BC8F8F">&quot;SHA1: &quot;</FONT></B>);
+  <B><FONT COLOR="#A020F0">for</FONT></B>(i=0; i&lt;sha1len; i++)
+    printf(<B><FONT COLOR="#BC8F8F">&quot;%02x&quot;</FONT></B>, sha1val[i]);
+  printf(<B><FONT COLOR="#BC8F8F">&quot;\n&quot;</FONT></B>);  
+
+  EVP_MD_CTX_cleanup(&amp;md5ctx);
+  EVP_MD_CTX_cleanup(&amp;sha1ctx);
+
+  <B><FONT COLOR="#A020F0">return</FONT></B> 0;  
+
+} <I><FONT COLOR="#B22222">/* end func main */</FONT></I>
+
+</PRE>
+<HR \/>
+<ADDRESS>Generated by <A HREF="http://www.iki.fi/~mtr/genscript/">GNU Enscript 1.6.5.2</A>.</ADDRESS>
+</BODY>
+</HTML>

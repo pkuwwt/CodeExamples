@@ -1,0 +1,207 @@
+<!DOCTYPE html PUBLIC "-//IETF//DTD HTML 2.0//EN">
+<HTML>
+<HEAD>
+<TITLE>fltk/glutWithFltkInput.cpp</TITLE>
+</HEAD>
+<BODY BGCOLOR="#FFFFFF" TEXT="#000000" LINK="#1F00FF" ALINK="#FF0000" VLINK="#9900DD">
+<A NAME="top"> </A>
+<A NAME="file1"> </A>
+<H1><a href="glutWithFltkInput.cpp">glutWithFltkInput.cpp</a></H1>
+
+<PRE>
+<I><FONT COLOR="#B22222">// -*- Mode:C++; Coding:us-ascii-unix; fill-column:132 -*-
+</FONT></I><I><FONT COLOR="#B22222">/**********************************************************************************************************************************/</FONT></I>
+<I><FONT COLOR="#B22222">/**
+   @file      glutWithFltkInput.cpp
+   @author    Mitch Richling &lt;http://www.mitchr.me/&gt;
+   @Copyright Copyright 2003 by Mitch Richling.  All rights reserved.
+   @brief     Simple GLUT-like code with FLTK interaction code@EOL
+   @Keywords  none
+   @Std       C++98 FLTKv1.3
+
+   FLTK has an effective GLUT compatibility mode, but this functionality is more than just for compatibility.  This program
+   demonstrates how to use FLTK's I/O facilities and windowing control with the goodness of GLUT.
+***********************************************************************************************************************************/</FONT></I>
+
+<I><FONT COLOR="#B22222">/**********************************************************************************************************************************/</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;stdlib.h&gt;</FONT></B>             <I><FONT COLOR="#B22222">/* Standard Lib    ISOC  */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;stdio.h&gt;</FONT></B>              <I><FONT COLOR="#B22222">/* I/O lib         ISOC  */</FONT></I>
+
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;FL/Fl.H&gt;</FONT></B>              <I><FONT COLOR="#B22222">/* FLTK main       FLTK  */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;FL/Fl_Window.H&gt;</FONT></B>       <I><FONT COLOR="#B22222">/* FLTK window     FLTK  */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;FL/Fl_Box.H&gt;</FONT></B>          <I><FONT COLOR="#B22222">/* FLTK box        FLTK  */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;FL/Fl_Button.H&gt;</FONT></B>       <I><FONT COLOR="#B22222">/* FLTK button     FLTK  */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;FL/Fl_Gl_Window.H&gt;</FONT></B>    <I><FONT COLOR="#B22222">/* FLTK OpenGL     FLTK  */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;FL/gl.h&gt;</FONT></B>              <I><FONT COLOR="#B22222">/* FLTK OpenGL     FLTK  */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;FL/glu.h&gt;</FONT></B>              <I><FONT COLOR="#B22222">/* FLTK OpenGL     FLTK  */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;FL/glut.H&gt;</FONT></B>            <I><FONT COLOR="#B22222">/* FLTK GLUT       FLTK  */</FONT></I>
+
+#<B><FONT COLOR="#5F9EA0">ifdef</FONT></B> <FONT COLOR="#B8860B">__APPLE__</FONT>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;OpenGL/glu.h&gt;</FONT></B>         <I><FONT COLOR="#B22222">/* Open GL Stuff   APPLE */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">else</FONT></B>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;GL/glu.h&gt;</FONT></B>             <I><FONT COLOR="#B22222">/* Open GL Stuff   Linux */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">endif</FONT></B>
+
+<I><FONT COLOR="#B22222">/**********************************************************************************************************************************/</FONT></I>
+<B><FONT COLOR="#228B22">class</FONT></B> myGLwindow : <B><FONT COLOR="#228B22">public</FONT></B> Fl_Gl_Window {
+  <B><FONT COLOR="#228B22">void</FONT></B> computeCurve();
+  <B><FONT COLOR="#228B22">int</FONT></B> handle(<B><FONT COLOR="#228B22">int</FONT></B> event);
+  <B><FONT COLOR="#228B22">void</FONT></B> draw();
+<B><FONT COLOR="#228B22">public</FONT></B>:
+  myGLwindow(<B><FONT COLOR="#228B22">int</FONT></B> x,<B><FONT COLOR="#228B22">int</FONT></B> y,<B><FONT COLOR="#228B22">int</FONT></B> w,<B><FONT COLOR="#228B22">int</FONT></B> h,<B><FONT COLOR="#228B22">const</FONT></B> <B><FONT COLOR="#228B22">char</FONT></B> *l=0) : Fl_Gl_Window(x,y,w,h,l) {
+  }
+};
+
+<I><FONT COLOR="#B22222">/**********************************************************************************************************************************/</FONT></I>
+<B><FONT COLOR="#228B22">void</FONT></B> <B><FONT COLOR="#0000FF">myGLwindow::draw</FONT></B>() {
+  <B><FONT COLOR="#A020F0">if</FONT></B>(!valid()) {  <I><FONT COLOR="#B22222">//valid() is magic set after first draw() call.
+</FONT></I>    glEnable(GL_DEPTH_TEST);
+    glMatrixMode(GL_PROJECTION);
+    glLoadIdentity();
+    gluPerspective(40, 1, 10, 120);
+
+    glMatrixMode(GL_MODELVIEW);
+    glLoadIdentity();
+    gluLookAt(0, 0, 50, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0);
+    glScalef(.3,.3,.3);
+    
+    computeCurve();
+  }
+  glClearColor(0.0, 0.0, 0.0, 0.0);
+  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+  glCallList(1);
+}
+
+<I><FONT COLOR="#B22222">/**********************************************************************************************************************************/</FONT></I>
+<B><FONT COLOR="#228B22">int</FONT></B> <B><FONT COLOR="#0000FF">myGLwindow::handle</FONT></B>(<B><FONT COLOR="#228B22">int</FONT></B> event) {
+  <B><FONT COLOR="#228B22">static</FONT></B> <B><FONT COLOR="#228B22">int</FONT></B> x, y;
+  <B><FONT COLOR="#228B22">static</FONT></B> <B><FONT COLOR="#228B22">float</FONT></B> rx, ry;
+  <B><FONT COLOR="#A020F0">switch</FONT></B>(event) {
+  <B><FONT COLOR="#A020F0">case</FONT></B> <B><FONT COLOR="#5F9EA0">FL_PUSH</FONT></B>:
+    <I><FONT COLOR="#B22222">// mouse down pos in Fl::event_x() and Fl::event_y()
+</FONT></I>    x = Fl::event_x();
+    y = Fl::event_y();
+    <B><FONT COLOR="#A020F0">return</FONT></B> 1;
+  <B><FONT COLOR="#A020F0">case</FONT></B> <B><FONT COLOR="#5F9EA0">FL_DRAG</FONT></B>: 
+  {
+    <B><FONT COLOR="#228B22">int</FONT></B> cx = Fl::event_x();
+    <B><FONT COLOR="#228B22">int</FONT></B> cy = Fl::event_y();
+    <B><FONT COLOR="#A020F0">if</FONT></B>(abs(x-cx)&lt;100 &amp;&amp; abs(y-cy)&lt;100) {
+      rx += -(x-cx)*0.5;
+      ry += -(y-cy)*0.5;
+      
+      glMatrixMode(GL_MODELVIEW);
+      glLoadIdentity();
+      gluLookAt(0, 0, 50, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0);
+      glScalef(.3,.3,.3);
+      glRotatef(ry, 1, 0, 0);
+      glRotatef(rx, 0, 1, 0);
+      redraw();
+    }
+    x = cx;
+    y = cy;
+  }
+    <B><FONT COLOR="#A020F0">return</FONT></B> 1;
+  <B><FONT COLOR="#A020F0">case</FONT></B> <B><FONT COLOR="#5F9EA0">FL_RELEASE</FONT></B>:
+    <B><FONT COLOR="#A020F0">return</FONT></B> 1;
+  <B><FONT COLOR="#A020F0">case</FONT></B> <B><FONT COLOR="#5F9EA0">FL_FOCUS</FONT></B>:
+    <B><FONT COLOR="#A020F0">return</FONT></B> 1;  <I><FONT COLOR="#B22222">// return 1 to get keyboard events
+</FONT></I>  <B><FONT COLOR="#A020F0">case</FONT></B> <B><FONT COLOR="#5F9EA0">FL_UNFOCUS</FONT></B>:
+    <B><FONT COLOR="#A020F0">return</FONT></B> 1;  <I><FONT COLOR="#B22222">// Return 1 to get keyboard events
+</FONT></I>  <B><FONT COLOR="#A020F0">case</FONT></B> <B><FONT COLOR="#5F9EA0">FL_KEYBOARD</FONT></B>:
+    <I><FONT COLOR="#B22222">// key in Fl::event_key(), ascii in Fl::event_text()
+</FONT></I>    printf(<B><FONT COLOR="#BC8F8F">&quot;Key: %s\n&quot;</FONT></B>, Fl::event_text());
+    <B><FONT COLOR="#A020F0">return</FONT></B> 0;  <I><FONT COLOR="#B22222">// return 1 input was understood
+</FONT></I>  <B><FONT COLOR="#A020F0">case</FONT></B> <B><FONT COLOR="#5F9EA0">FL_SHORTCUT</FONT></B>:
+    <I><FONT COLOR="#B22222">// key in Fl::event_key(), ascii in Fl::event_text()
+</FONT></I>    <B><FONT COLOR="#A020F0">return</FONT></B> 0;  <I><FONT COLOR="#B22222">// return 1 input was understood
+</FONT></I>  <B><FONT COLOR="#5F9EA0">default</FONT></B>:
+    <B><FONT COLOR="#A020F0">return</FONT></B> 1;
+  }
+}
+
+<I><FONT COLOR="#B22222">/**********************************************************************************************************************************/</FONT></I>
+<B><FONT COLOR="#228B22">void</FONT></B> <B><FONT COLOR="#0000FF">myGLwindow::computeCurve</FONT></B>() {
+  <B><FONT COLOR="#228B22">int</FONT></B> maxBalls    = 5000;
+  <B><FONT COLOR="#228B22">double</FONT></B> tDelta   = 0.01;
+  <B><FONT COLOR="#228B22">double</FONT></B> x = 0.11;
+  <B><FONT COLOR="#228B22">double</FONT></B> y = 0.0;
+  <B><FONT COLOR="#228B22">double</FONT></B> z = 0;
+  <B><FONT COLOR="#228B22">double</FONT></B> a = 10;
+  <B><FONT COLOR="#228B22">double</FONT></B> b = 28;
+  <B><FONT COLOR="#228B22">double</FONT></B> c = 8.0 / 3.0;
+  <B><FONT COLOR="#228B22">int</FONT></B> numBalls;
+  <B><FONT COLOR="#228B22">double</FONT></B> xNew, yNew, zNew;
+
+  glNewList(1, GL_COMPILE);
+  glColor3f(1,1,1);
+  glPointSize(1.0);
+  glBegin(GL_LINE_STRIP);
+  <B><FONT COLOR="#A020F0">for</FONT></B>(numBalls=0;numBalls&lt;maxBalls;numBalls++) {
+    xNew = x + a*(y-x)*tDelta;
+    yNew = y + (x*(b-z)-y)*tDelta;
+    zNew = z + (x*y-c*z)*tDelta;
+    glColor3f(1.0*numBalls/maxBalls, 0.2, 1.0-numBalls/maxBalls);
+    glVertex3f(xNew, yNew, zNew);
+    x=xNew;
+    y=yNew;
+    z=zNew;
+  }
+  glEnd();
+
+<I><FONT COLOR="#B22222">// Draw the x/y/z axis
+</FONT></I>  glBegin(GL_LINE_STRIP);
+  glColor3f(1, 0, 0);
+  glVertex3f(0, 0, 0);
+  glVertex3f(40, 0, 0);
+  glVertex3f(0, 0, 0);
+  glColor3f(0, 1, 0);
+  glVertex3f(0, 0, 0);
+  glVertex3f(0, 40, 0);
+  glVertex3f(0, 0, 0);
+  glColor3f(0, 0, 1);
+  glVertex3f(0, 0,  0);
+  glVertex3f(0, 0, 40);
+  glEnd();
+
+<I><FONT COLOR="#B22222">// Draw the box
+</FONT></I>  glBegin(GL_LINE_STRIP);
+  glColor3f(1, 1, 1);
+  glVertex3f( 40, -40, -40);
+  glVertex3f( 40,  40, -40);
+  glVertex3f(-40,  40, -40);
+  glVertex3f(-40, -40, -40);
+  glVertex3f( 40, -40, -40);
+
+  glVertex3f( 40, -40,  40);
+  glVertex3f( 40,  40,  40);
+  glVertex3f(-40,  40,  40);
+  glVertex3f(-40, -40,  40);
+  glVertex3f( 40, -40,  40);
+
+  glVertex3f( 40,  40,  40);
+  glVertex3f( 40,  40, -40);
+
+  glVertex3f(-40,  40, -40);
+  glVertex3f(-40,  40,  40);
+
+  glVertex3f(-40, -40,  40);
+  glVertex3f(-40, -40, -40);
+
+  glEnd();
+
+  glEndList();
+}
+
+<I><FONT COLOR="#B22222">/**********************************************************************************************************************************/</FONT></I>
+<B><FONT COLOR="#228B22">int</FONT></B> <B><FONT COLOR="#0000FF">main</FONT></B>() {
+  myGLwindow theGLwin(50, 50, 500, 500, <B><FONT COLOR="#BC8F8F">&quot;Interactive Lorenz Demo Program&quot;</FONT></B>);
+  theGLwin.show();
+
+  <B><FONT COLOR="#A020F0">return</FONT></B> Fl::run();
+}
+</PRE>
+<HR \/>
+<ADDRESS>Generated by <A HREF="http://www.iki.fi/~mtr/genscript/">GNU Enscript 1.6.5.90</A>.</ADDRESS>
+</BODY>
+</HTML>

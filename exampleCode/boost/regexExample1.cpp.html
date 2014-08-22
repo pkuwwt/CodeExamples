@@ -1,0 +1,74 @@
+<!DOCTYPE html PUBLIC "-//IETF//DTD HTML 2.0//EN">
+<HTML>
+<HEAD>
+<TITLE>boost/regexExample1.cpp</TITLE>
+</HEAD>
+<BODY BGCOLOR="#FFFFFF" TEXT="#000000" LINK="#1F00FF" ALINK="#FF0000" VLINK="#9900DD">
+<A NAME="top"> </A>
+<A NAME="file1"> </A>
+<H1><a href="regexExample1.cpp">regexExample1.cpp</a></H1>
+
+<PRE>
+<I><FONT COLOR="#B22222">// -*- Mode:C++; Coding:us-ascii-unix; fill-column:132 -*-
+</FONT></I><I><FONT COLOR="#B22222">////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+</FONT></I><I><FONT COLOR="#B22222">/**
+   @file      regexExample1.cpp
+   @author    Mitch Richling &lt;http://www.mitchr.me/&gt;
+   @Copyright Copyright 2004 by Mitch Richling.  All rights reserved.
+   @brief     Boost regular expression example@EOL
+   @Keywords  none
+   @Std       C++98 Boost
+
+   Simple, but complete, example showing the most typical use of the Boost regular expression library.
+              
+*/</FONT></I>
+
+<I><FONT COLOR="#B22222">//----------------------------------------------------------------------------------------------------------------------------------
+</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;iostream&gt;</FONT></B>                <I><FONT COLOR="#B22222">/* C++ iostream            C++98/11 */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;string&gt;</FONT></B>                  <I><FONT COLOR="#B22222">/* C++ strings             C++98/11 */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;boost/regex.hpp&gt;</FONT></B>                           <I><FONT COLOR="#B22222">/* RegEx                   Boost  */</FONT></I>
+
+<B><FONT COLOR="#228B22">int</FONT></B> <B><FONT COLOR="#0000FF">main</FONT></B>() {
+
+  <I><FONT COLOR="#B22222">/* Our strings and string forms for the regualr expressions. */</FONT></I>
+  <B><FONT COLOR="#228B22">char</FONT></B> <B><FONT COLOR="#228B22">const</FONT></B>* s1  = <B><FONT COLOR="#BC8F8F">&quot;hello, world&quot;</FONT></B>;
+  <B><FONT COLOR="#228B22">char</FONT></B> <B><FONT COLOR="#228B22">const</FONT></B>* s2  = <B><FONT COLOR="#BC8F8F">&quot;hello, world!  hello, bob!&quot;</FONT></B>;
+  <B><FONT COLOR="#228B22">char</FONT></B> <B><FONT COLOR="#228B22">const</FONT></B>* es1 = <B><FONT COLOR="#BC8F8F">&quot;hello&quot;</FONT></B>;
+  <B><FONT COLOR="#228B22">char</FONT></B> <B><FONT COLOR="#228B22">const</FONT></B>* es2 = <B><FONT COLOR="#BC8F8F">&quot;.*hello.*&quot;</FONT></B>;
+  <B><FONT COLOR="#228B22">char</FONT></B> <B><FONT COLOR="#228B22">const</FONT></B>* es3 = <B><FONT COLOR="#BC8F8F">&quot;.*(hello).*(world).*&quot;</FONT></B>;
+
+  <I><FONT COLOR="#B22222">/* Build (compile) our regular expressions */</FONT></I>
+  <B><FONT COLOR="#5F9EA0">boost</FONT></B>::regex e1(es1);
+  <B><FONT COLOR="#5F9EA0">boost</FONT></B>::regex e2(es2);
+  <B><FONT COLOR="#5F9EA0">boost</FONT></B>::regex e3(es3);
+
+  <I><FONT COLOR="#B22222">/* A place to put matchs (and sub-matchs) */</FONT></I>
+  <B><FONT COLOR="#5F9EA0">boost</FONT></B>::cmatch what;     
+
+  <I><FONT COLOR="#B22222">/* The thing to note is that the re must match the ENTIRE string. */</FONT></I>
+  <B><FONT COLOR="#5F9EA0">std</FONT></B>::cout &lt;&lt; <B><FONT COLOR="#BC8F8F">&quot;regex_match(s1, e1): &quot;</FONT></B> &lt;&lt; boost::regex_match(s1, e1) &lt;&lt; std::endl;
+  <B><FONT COLOR="#5F9EA0">std</FONT></B>::cout &lt;&lt; <B><FONT COLOR="#BC8F8F">&quot;regex_match(s1, e2): &quot;</FONT></B> &lt;&lt; boost::regex_match(s1, e2) &lt;&lt; std::endl;
+
+  <I><FONT COLOR="#B22222">/* We can find sub-expressions with regex_match too */</FONT></I>
+  <B><FONT COLOR="#5F9EA0">std</FONT></B>::cout &lt;&lt; <B><FONT COLOR="#BC8F8F">&quot;regex_match(s1, what, e3): &quot;</FONT></B> &lt;&lt; boost::regex_match(s1, what, e3) &lt;&lt; std::endl;
+  <B><FONT COLOR="#5F9EA0">std</FONT></B>::cout &lt;&lt; <B><FONT COLOR="#BC8F8F">&quot;what[0] = &quot;</FONT></B> &lt;&lt; std::string(what[0].first, what[0].second) &lt;&lt; std::endl;
+  <B><FONT COLOR="#5F9EA0">std</FONT></B>::cout &lt;&lt; <B><FONT COLOR="#BC8F8F">&quot;what[1] = &quot;</FONT></B> &lt;&lt; std::string(what[1].first, what[1].second) &lt;&lt; std::endl;
+  <B><FONT COLOR="#5F9EA0">std</FONT></B>::cout &lt;&lt; <B><FONT COLOR="#BC8F8F">&quot;what[2] = &quot;</FONT></B> &lt;&lt; std::string(what[2].first, what[2].second) &lt;&lt; std::endl;
+
+  <I><FONT COLOR="#B22222">/* You can use regex_format to build perl-like subistitution rules. */</FONT></I>
+  <B><FONT COLOR="#5F9EA0">std</FONT></B>::cout &lt;&lt; <B><FONT COLOR="#BC8F8F">&quot;Perl like expand ('$1-$2') = &quot;</FONT></B> &lt;&lt;  regex_format(what, <B><FONT COLOR="#BC8F8F">&quot;$1-$2&quot;</FONT></B>) &lt;&lt; std::endl;
+
+  <I><FONT COLOR="#B22222">/* regex_match can be used much like the s// operator in perl */</FONT></I>
+  <B><FONT COLOR="#5F9EA0">std</FONT></B>::cout &lt;&lt; <B><FONT COLOR="#BC8F8F">&quot;perlish s2=~s/e1/HELLO/g: &quot;</FONT></B> &lt;&lt;   regex_merge(std::string(s2), e1, <B><FONT COLOR="#BC8F8F">&quot;HELLO&quot;</FONT></B>) &lt;&lt; std::endl;
+
+  <I><FONT COLOR="#B22222">/* Note that with regex_search, we don't have to match the whole line. */</FONT></I>
+  <B><FONT COLOR="#5F9EA0">std</FONT></B>::cout &lt;&lt; <B><FONT COLOR="#BC8F8F">&quot;regex_search(s1, what, e1): &quot;</FONT></B> &lt;&lt; boost::regex_search(s1, what, e1) &lt;&lt; std::endl;
+  <B><FONT COLOR="#5F9EA0">std</FONT></B>::cout &lt;&lt; <B><FONT COLOR="#BC8F8F">&quot;what[0] = &quot;</FONT></B> &lt;&lt; std::string(what[0].first, what[0].second) &lt;&lt; std::endl;
+
+}
+</PRE>
+<HR \/>
+<ADDRESS>Generated by <A HREF="http://www.iki.fi/~mtr/genscript/">GNU Enscript 1.6.5.90</A>.</ADDRESS>
+</BODY>
+</HTML>

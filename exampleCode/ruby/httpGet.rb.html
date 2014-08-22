@@ -1,0 +1,110 @@
+<!DOCTYPE html PUBLIC "-//IETF//DTD HTML 2.0//EN">
+<HTML>
+<HEAD>
+<TITLE>ruby/httpGet.rb</TITLE>
+</HEAD>
+<BODY BGCOLOR="#FFFFFF" TEXT="#000000" LINK="#1F00FF" ALINK="#FF0000" VLINK="#9900DD">
+<A NAME="top"> </A>
+<A NAME="file1"> </A>
+<H1><a href="httpGet.rb">httpGet.rb</a></H1>
+
+<PRE>
+<I><FONT COLOR="#B22222">#!/usr/local/bin/ruby
+</FONT></I>
+<I><FONT COLOR="#B22222">##
+</FONT></I><I><FONT COLOR="#B22222"># @file      getURL.rb
+</FONT></I><I><FONT COLOR="#B22222"># @author    Mitch Richling &lt;http://www.mitchr.me/&gt;
+</FONT></I><I><FONT COLOR="#B22222"># @Copyright Copyright 2008 by Mitch Richling.  All rights reserved.
+</FONT></I><I><FONT COLOR="#B22222"># @brief     How to act as a HTTP client via Net::HTTP.@EOL
+</FONT></I><I><FONT COLOR="#B22222"># @Keywords  
+</FONT></I><I><FONT COLOR="#B22222"># @Std       Ruby 1.8
+</FONT></I><I><FONT COLOR="#B22222">#
+</FONT></I><I><FONT COLOR="#B22222">#            Various ways to interact with web servers
+</FONT></I><I><FONT COLOR="#B22222">#            Test this script with webServerWEBrickTEST.rb as the web server.
+</FONT></I>
+<B><FONT COLOR="#5F9EA0">require</FONT></B> <B><FONT COLOR="#BC8F8F">'uri'</FONT></B>
+<B><FONT COLOR="#5F9EA0">require</FONT></B> <B><FONT COLOR="#BC8F8F">'net/http'</FONT></B>
+<B><FONT COLOR="#5F9EA0">require</FONT></B> <B><FONT COLOR="#BC8F8F">'net/https'</FONT></B>
+
+<I><FONT COLOR="#B22222"># The easy way to do a GET (works with both http and https):
+</FONT></I>res = Net::HTTP.get_response(URI.parse(<B><FONT COLOR="#BC8F8F">'http://127.0.0.1:8080/test?foo=bar'</FONT></B>))
+puts(<B><FONT COLOR="#BC8F8F">&quot;Received #{res.body.length} bytes\n  #{res.body.inspect}&quot;</FONT></B>)
+
+<I><FONT COLOR="#B22222"># It works over https too:
+</FONT></I>res = Net::HTTP.get_response(URI.parse(<B><FONT COLOR="#BC8F8F">'https://127.0.0.1:8080/test?foo=bar'</FONT></B>))
+puts(<B><FONT COLOR="#BC8F8F">&quot;Received #{res.body.length} bytes\n  #{res.body.inspect}&quot;</FONT></B>)
+
+<I><FONT COLOR="#B22222"># The easy way to do a POST:
+</FONT></I>res = Net::HTTP.post_form(URI.parse(<B><FONT COLOR="#BC8F8F">'http://127.0.0.1:8080/test'</FONT></B>), { <B><FONT COLOR="#BC8F8F">&quot;foo&quot;</FONT></B> =&gt; <B><FONT COLOR="#BC8F8F">&quot;bar&quot;</FONT></B> })
+puts(<B><FONT COLOR="#BC8F8F">&quot;Received #{res.body.length} bytes\n  #{res.body.inspect}&quot;</FONT></B>)
+
+<I><FONT COLOR="#B22222"># We can open a connection, and then perform multiple actions.
+</FONT></I>Net::HTTP.start(<B><FONT COLOR="#BC8F8F">'127.0.0.1'</FONT></B>, 8080) <B><FONT COLOR="#A020F0">do</FONT></B> |http|
+  res = http.get(<B><FONT COLOR="#BC8F8F">'/test?foo=bar'</FONT></B>)
+  puts(<B><FONT COLOR="#BC8F8F">&quot;Received #{res.body.length} bytes\n  #{res.body.inspect}&quot;</FONT></B>)
+  
+  res = http.get(<B><FONT COLOR="#BC8F8F">'/test?foo=boobar'</FONT></B>)
+  puts(<B><FONT COLOR="#BC8F8F">&quot;Received #{res.body.length} bytes\n  #{res.body.inspect}&quot;</FONT></B>)
+<B><FONT COLOR="#A020F0">end</FONT></B>
+
+<I><FONT COLOR="#B22222"># One can construct a request object for more control.  The URI object is a
+</FONT></I><I><FONT COLOR="#B22222"># handy way to pass things around.  Net::HTTPRequest has a ton of subclasses for
+</FONT></I><I><FONT COLOR="#B22222"># diffrent request types includeing: Net::HTTP::Get, Net::HTTP::Head,
+</FONT></I><I><FONT COLOR="#B22222"># Net::HTTP::Post, Net::HTTP::Put, Net::HTTP::Proppatch, Net::HTTP::Lock,
+</FONT></I><I><FONT COLOR="#B22222"># Net::HTTP::Unlock, Net::HTTP::Options, Net::HTTP::Propfind, Net::HTTP::Delete,
+</FONT></I><I><FONT COLOR="#B22222"># Net::HTTP::Move, Net::HTTP::Copy, Net::HTTP::Mkcol, Net::HTTP::Trace.
+</FONT></I>aURL = URI.parse(<B><FONT COLOR="#BC8F8F">'http://127.0.0.1:8080/test?foo=bar'</FONT></B>)
+req = Net::HTTP::Get.new(aURL.path)
+req.basic_auth(<B><FONT COLOR="#BC8F8F">'user'</FONT></B>, <B><FONT COLOR="#BC8F8F">'password'</FONT></B>)
+req.set_form_data({<B><FONT COLOR="#BC8F8F">'boober'</FONT></B>=&gt;<B><FONT COLOR="#BC8F8F">'bober'</FONT></B>}, <B><FONT COLOR="#BC8F8F">';'</FONT></B>)
+Net::HTTP.start(aURL.host, aURL.port) <B><FONT COLOR="#A020F0">do</FONT></B> |http|
+  res = http.request(req)
+  <I><FONT COLOR="#B22222"># It worked if res is an instance of Net::HTTPSuccess or Net::HTTPRedirection...
+</FONT></I>  <B><FONT COLOR="#A020F0">if</FONT></B> (Net::HTTPSuccess === res) || (Net::HTTPRedirection === res) <B><FONT COLOR="#A020F0">then</FONT></B>
+    puts(<B><FONT COLOR="#BC8F8F">&quot;Received #{res.body.length} bytes\n  #{res.body.inspect}&quot;</FONT></B>)
+    <I><FONT COLOR="#B22222"># Net::HTTPSuccess provides other methods:
+</FONT></I>    <I><FONT COLOR="#B22222">#   .message.inspect -- a string. 'OK' for a good get
+</FONT></I>    <I><FONT COLOR="#B22222">#   .code.inspect -- a string. 200 for good get, 404 for a &quot;not found&quot;, ...
+</FONT></I>    <I><FONT COLOR="#B22222">#   .code_type.class -- a result code object (Net::HTTPOK for a good get)
+</FONT></I>  <B><FONT COLOR="#A020F0">else</FONT></B>
+    puts(res.error!.inspect)
+  <B><FONT COLOR="#A020F0">end</FONT></B>
+<B><FONT COLOR="#A020F0">end</FONT></B>
+
+<I><FONT COLOR="#B22222"># Use HTTPS in a similar way:
+</FONT></I>aURL = URI.parse(<B><FONT COLOR="#BC8F8F">'https://127.0.0.1:8181/test?foo=bar'</FONT></B>)
+req = Net::HTTP::Get.new(aURL.path)
+req.basic_auth(<B><FONT COLOR="#BC8F8F">'user'</FONT></B>, <B><FONT COLOR="#BC8F8F">'password'</FONT></B>)
+req.set_form_data({<B><FONT COLOR="#BC8F8F">'boober'</FONT></B>=&gt;<B><FONT COLOR="#BC8F8F">'bober'</FONT></B>}, <B><FONT COLOR="#BC8F8F">';'</FONT></B>)
+http = Net::HTTP.new(aURL.host, aURL.port)
+http.use_ssl = <B><FONT COLOR="#A020F0">true</FONT></B>
+http.start <B><FONT COLOR="#A020F0">do</FONT></B>
+  res = http.request(req)
+  <B><FONT COLOR="#A020F0">if</FONT></B> (Net::HTTPSuccess === res) || (Net::HTTPRedirection === res) <B><FONT COLOR="#A020F0">then</FONT></B>
+    puts(<B><FONT COLOR="#BC8F8F">&quot;Received #{res.body.length} bytes\n  #{res.body.inspect}&quot;</FONT></B>)
+  <B><FONT COLOR="#A020F0">else</FONT></B>
+    puts(res.error!.inspect)
+  <B><FONT COLOR="#A020F0">end</FONT></B>
+<B><FONT COLOR="#A020F0">end</FONT></B>
+
+<I><FONT COLOR="#B22222"># Use the http_proxy environment variable (similar to curl, wget, &amp; lynx)
+</FONT></I>proxyHost, proxyPort = <B><FONT COLOR="#A020F0">if</FONT></B> (ENV.member?(<B><FONT COLOR="#BC8F8F">'http_proxy'</FONT></B>)) <B><FONT COLOR="#A020F0">then</FONT></B>
+                         aURL = URI.parse(ENV[<B><FONT COLOR="#BC8F8F">'http_proxy'</FONT></B>])
+                         [ aURL.host, aURL.port ]
+                       <B><FONT COLOR="#A020F0">else</FONT></B>
+                         [ <B><FONT COLOR="#A020F0">nil</FONT></B>, 80 ]
+                       <B><FONT COLOR="#A020F0">end</FONT></B>
+puts(<B><FONT COLOR="#BC8F8F">&quot;proxy host: #{proxyHost.inspect}&quot;</FONT></B>)
+puts(<B><FONT COLOR="#BC8F8F">&quot;proxy port: #{proxyPort.inspect}&quot;</FONT></B>)
+
+<I><FONT COLOR="#B22222"># This is how we can go through a proxy.  If proxyHost is nil, then
+</FONT></I><I><FONT COLOR="#B22222"># Net::HTTP::Proxy returns Net::HTTP so code below still works.
+</FONT></I>Net::HTTP::Proxy(proxyHost, proxyHost).start(<B><FONT COLOR="#BC8F8F">'127.0.0.1'</FONT></B>, 8080) <B><FONT COLOR="#A020F0">do</FONT></B> |http|
+  res = http.get(<B><FONT COLOR="#BC8F8F">'/test'</FONT></B>)
+  puts(<B><FONT COLOR="#BC8F8F">&quot;Received #{res.body.length} bytes\n  #{res.body.inspect}&quot;</FONT></B>)
+<B><FONT COLOR="#A020F0">end</FONT></B>
+</PRE>
+<HR \/>
+<ADDRESS>Generated by <A HREF="http://www.iki.fi/~mtr/genscript/">GNU Enscript 1.6.5.2</A>.</ADDRESS>
+</BODY>
+</HTML>

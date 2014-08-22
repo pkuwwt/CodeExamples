@@ -1,0 +1,124 @@
+<!DOCTYPE html PUBLIC "-//IETF//DTD HTML 2.0//EN">
+<HTML>
+<HEAD>
+<TITLE>ruby/yamlEx.rb</TITLE>
+</HEAD>
+<BODY BGCOLOR="#FFFFFF" TEXT="#000000" LINK="#1F00FF" ALINK="#FF0000" VLINK="#9900DD">
+<A NAME="top"> </A>
+<A NAME="file1"> </A>
+<H1><a href="yamlEx.rb">yamlEx.rb</a></H1>
+
+<PRE>
+<I><FONT COLOR="#B22222">#!/usr/local/bin/ruby
+</FONT></I>
+<I><FONT COLOR="#B22222">##
+</FONT></I><I><FONT COLOR="#B22222"># @file      yamlEx.rb
+</FONT></I><I><FONT COLOR="#B22222"># @author    Mitch Richling &lt;http://www.mitchr.me/&gt;
+</FONT></I><I><FONT COLOR="#B22222"># @Copyright Copyright 2008 by Mitch Richling.  All rights reserved.
+</FONT></I><I><FONT COLOR="#B22222"># @Revision  $Revision$ 
+</FONT></I><I><FONT COLOR="#B22222"># @SCMdate   $Date$
+</FONT></I><I><FONT COLOR="#B22222"># @brief     Using the YAML module.@EOL
+</FONT></I><I><FONT COLOR="#B22222"># @Keywords  ruby yaml
+</FONT></I><I><FONT COLOR="#B22222"># @Std       Ruby 1.8
+</FONT></I><I><FONT COLOR="#B22222">#
+</FONT></I><I><FONT COLOR="#B22222">#            YAML is a &quot;markup language&quot; well suited for representing
+</FONT></I><I><FONT COLOR="#B22222">#            the list and dictionary data structures commonly used in
+</FONT></I><I><FONT COLOR="#B22222">#            modern programming languages.  YAML uses a simple,
+</FONT></I><I><FONT COLOR="#B22222">#            efficient syntax requiring little adornment of
+</FONT></I><I><FONT COLOR="#B22222">#            represented data types and structures.  YAML's ability to
+</FONT></I><I><FONT COLOR="#B22222">#            represent sophisticated hierarchical data structures
+</FONT></I><I><FONT COLOR="#B22222">#            without the complexity of XML make it a popular choice.
+</FONT></I><I><FONT COLOR="#B22222">#            When CSV is too little, and XML is too much, YAML may be
+</FONT></I><I><FONT COLOR="#B22222">#            the perfect choice -- data serialization in scripting
+</FONT></I><I><FONT COLOR="#B22222">#            languages is a good example.
+</FONT></I><I><FONT COLOR="#B22222">#            
+</FONT></I><I><FONT COLOR="#B22222">#            JSON, which uses javascript syntax, is a very similar
+</FONT></I><I><FONT COLOR="#B22222">#            language designed for data serialization.  In most
+</FONT></I><I><FONT COLOR="#B22222">#            respects, JSON is a subset of YAML consisting of YAML's
+</FONT></I><I><FONT COLOR="#B22222">#            &quot;inline&quot; notation.
+</FONT></I>
+
+<B><FONT COLOR="#5F9EA0">require</FONT></B> <B><FONT COLOR="#BC8F8F">&quot;yaml&quot;</FONT></B>
+
+pfxStr = <B><FONT COLOR="#BC8F8F">&quot;  &gt;  &quot;</FONT></B>
+
+theObj = [<B><FONT COLOR="#BC8F8F">&quot;one&quot;</FONT></B>, 2, <B><FONT COLOR="#BC8F8F">&quot;three&quot;</FONT></B>, { <B><FONT COLOR="#BC8F8F">&quot;the answer&quot;</FONT></B> =&gt; [ 4, 2 ], <B><FONT COLOR="#BC8F8F">&quot;brown&quot;</FONT></B> =&gt; <B><FONT COLOR="#BC8F8F">&quot;cow&quot;</FONT></B> }, <B><FONT COLOR="#BC8F8F">'last'</FONT></B> ]
+
+puts(<B><FONT COLOR="#BC8F8F">&quot;Starting Object:&quot;</FONT></B>)
+puts(pfxStr + theObj.inspect)
+
+yamlString = YAML::dump(theObj)
+puts(<B><FONT COLOR="#BC8F8F">&quot;The YAML String:&quot;</FONT></B>)
+puts(yamlString.gsub(/^/, pfxStr))
+
+yamlString = <B><FONT COLOR="#BC8F8F">&quot;---\n- 1\n- 2\n---\n- one\n- two\n&quot;</FONT></B>
+
+YAML::each_document(yamlString) <B><FONT COLOR="#A020F0">do</FONT></B> |anObj|
+  puts(<B><FONT COLOR="#BC8F8F">&quot;Decoded Object:&quot;</FONT></B>)
+  puts(pfxStr + anObj.inspect)
+<B><FONT COLOR="#A020F0">end</FONT></B>
+
+<I><FONT COLOR="#B22222"># Most of the time, only a hand full of API elements are required for YAML use:
+</FONT></I><I><FONT COLOR="#B22222">#
+</FONT></I><I><FONT COLOR="#B22222">#  - .load(io)                 -- load FIRST document from I/O stream or string
+</FONT></I><I><FONT COLOR="#B22222">#  - .load_documents(io, proc) -- load all docs, passing each in turn to proc
+</FONT></I><I><FONT COLOR="#B22222">#  - .each_document            -- same
+</FONT></I><I><FONT COLOR="#B22222">#  - .load_file(fileName)      -- load FIRST document from named file
+</FONT></I><I><FONT COLOR="#B22222">#  - .dump(obj, io=nil)        -- dump object to I/O stream (or return string if io==nil)
+</FONT></I>
+<I><FONT COLOR="#B22222"># Example YAML Documents
+</FONT></I><I><FONT COLOR="#B22222">#
+</FONT></I><I><FONT COLOR="#B22222"># # --- # List Of Numbers
+</FONT></I><I><FONT COLOR="#B22222"># # - 1
+</FONT></I><I><FONT COLOR="#B22222"># # - 2
+</FONT></I><I><FONT COLOR="#B22222"># # - 3
+</FONT></I><I><FONT COLOR="#B22222"># 
+</FONT></I><I><FONT COLOR="#B22222"># # --- # List Of Strings 1
+</FONT></I><I><FONT COLOR="#B22222"># # - &quot;1&quot;
+</FONT></I><I><FONT COLOR="#B22222"># # - &quot;2&quot;
+</FONT></I><I><FONT COLOR="#B22222"># # - &quot;3&quot;
+</FONT></I><I><FONT COLOR="#B22222"># 
+</FONT></I><I><FONT COLOR="#B22222"># # --- # List Of Strings 2
+</FONT></I><I><FONT COLOR="#B22222"># # - &quot;1&quot;
+</FONT></I><I><FONT COLOR="#B22222"># # - two
+</FONT></I><I><FONT COLOR="#B22222"># # - &quot;3&quot;
+</FONT></I><I><FONT COLOR="#B22222"># 
+</FONT></I><I><FONT COLOR="#B22222"># # --- # Hash (string keys, number values)
+</FONT></I><I><FONT COLOR="#B22222"># # - one: 1
+</FONT></I><I><FONT COLOR="#B22222"># # - two: 2
+</FONT></I><I><FONT COLOR="#B22222"># 
+</FONT></I><I><FONT COLOR="#B22222"># # --- # Hash (number keys, string values)
+</FONT></I><I><FONT COLOR="#B22222"># # - 1: one
+</FONT></I><I><FONT COLOR="#B22222"># # - 2: two
+</FONT></I><I><FONT COLOR="#B22222"># 
+</FONT></I><I><FONT COLOR="#B22222"># # --- # Hash (everything is a string)
+</FONT></I><I><FONT COLOR="#B22222"># # - &quot;1&quot;: one
+</FONT></I><I><FONT COLOR="#B22222"># # - two: &quot;2&quot;
+</FONT></I><I><FONT COLOR="#B22222"># # ...
+</FONT></I><I><FONT COLOR="#B22222"># 
+</FONT></I><I><FONT COLOR="#B22222"># # --- # List of lists
+</FONT></I><I><FONT COLOR="#B22222"># # - 1
+</FONT></I><I><FONT COLOR="#B22222"># # - 2
+</FONT></I><I><FONT COLOR="#B22222"># # - 
+</FONT></I><I><FONT COLOR="#B22222"># #   - one
+</FONT></I><I><FONT COLOR="#B22222"># #   - two
+</FONT></I><I><FONT COLOR="#B22222"># 
+</FONT></I><I><FONT COLOR="#B22222"># # --- # Hash containing a list
+</FONT></I><I><FONT COLOR="#B22222"># # description: balls
+</FONT></I><I><FONT COLOR="#B22222"># # items:
+</FONT></I><I><FONT COLOR="#B22222"># #   - red ball
+</FONT></I><I><FONT COLOR="#B22222"># #   - blue ball
+</FONT></I><I><FONT COLOR="#B22222"># #   - green ball
+</FONT></I><I><FONT COLOR="#B22222"># 
+</FONT></I><I><FONT COLOR="#B22222"># # --- # list containing hashes
+</FONT></I><I><FONT COLOR="#B22222"># # - name: ball
+</FONT></I><I><FONT COLOR="#B22222"># #   color: red
+</FONT></I><I><FONT COLOR="#B22222"># # - name: bat
+</FONT></I><I><FONT COLOR="#B22222"># #   color: brown
+</FONT></I><I><FONT COLOR="#B22222"># # - name: glove
+</FONT></I><I><FONT COLOR="#B22222"># #   color: black
+</FONT></I></PRE>
+<HR \/>
+<ADDRESS>Generated by <A HREF="http://www.iki.fi/~mtr/genscript/">GNU Enscript 1.6.5.2</A>.</ADDRESS>
+</BODY>
+</HTML>

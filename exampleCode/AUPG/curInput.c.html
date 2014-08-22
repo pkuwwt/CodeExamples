@@ -1,0 +1,105 @@
+<!DOCTYPE html PUBLIC "-//IETF//DTD HTML 2.0//EN">
+<HTML>
+<HEAD>
+<TITLE>AUPG/curInput.c</TITLE>
+</HEAD>
+<BODY BGCOLOR="#FFFFFF" TEXT="#000000" LINK="#1F00FF" ALINK="#FF0000" VLINK="#9900DD">
+<A NAME="top"> </A>
+<A NAME="file1"> </A>
+<H1><a href="curInput.c">curInput.c</a></H1>
+
+<PRE>
+<I><FONT COLOR="#B22222">/* -*- Mode:C; Coding:us-ascii-unix; fill-column:132 -*- */</FONT></I>
+<I><FONT COLOR="#B22222">/**********************************************************************************************************************************/</FONT></I>
+<I><FONT COLOR="#B22222">/**
+   @file      curInput.c
+   @author    Mitch Richling &lt;http://www.mitchr.me/&gt;
+   @Copyright Copyright 1999 by Mitch Richling.  All rights reserved.
+   @brief     How to do unbuffered I/O and key identification@EOL
+   @Keywords  ncurses
+   @Std       C89
+
+   Demonstrates how to do non-buffered input with ncurses and how to identify keys.              
+***********************************************************************************************************************************/</FONT></I>
+
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;ncurses.h&gt;</FONT></B>            <I><FONT COLOR="#B22222">/* Popular Curses  ????  */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;stdlib.h&gt;</FONT></B>             <I><FONT COLOR="#B22222">/* Standard Lib    C89   */</FONT></I>
+
+<I><FONT COLOR="#B22222">/**********************************************************************************************************************************/</FONT></I>
+<B><FONT COLOR="#228B22">int</FONT></B> <B><FONT COLOR="#0000FF">main</FONT></B>(<B><FONT COLOR="#228B22">int</FONT></B> argc, <B><FONT COLOR="#228B22">char</FONT></B> *argv[]) {
+  <B><FONT COLOR="#228B22">int</FONT></B> ch;
+
+  initscr();
+
+  <I><FONT COLOR="#B22222">/* &quot;unbuffered&quot; terminal mode.  Ctrl-C and it's buddies still work with cbreak().  To change that, use raw().  To get
+     semi-asynchronous keyboard I/O, use halfdelay(). */</FONT></I>
+  cbreak();
+
+  <I><FONT COLOR="#B22222">/* We do the echo, we don't need the term to do it for us! */</FONT></I>
+  noecho();
+
+  <I><FONT COLOR="#B22222">/* Enable special keys (like F1 &amp; arrow keys) */</FONT></I>
+  keypad(stdscr, TRUE);
+
+  <I><FONT COLOR="#B22222">/* Print the instructions. */</FONT></I>
+  printw(<B><FONT COLOR="#BC8F8F">&quot;Press 'q' to quit!&quot;</FONT></B>);
+  refresh();
+
+  <I><FONT COLOR="#B22222">/* Loop for input */</FONT></I>
+  <B><FONT COLOR="#A020F0">while</FONT></B>(1) {
+    ch = getch();
+    mvprintw(5, 5, <B><FONT COLOR="#BC8F8F">&quot;You pressed: &quot;</FONT></B>);
+    <B><FONT COLOR="#A020F0">switch</FONT></B>(ch) {
+      <B><FONT COLOR="#A020F0">case</FONT></B> <B><FONT COLOR="#5F9EA0">KEY_DOWN</FONT></B>      : printw(<B><FONT COLOR="#BC8F8F">&quot;down-arrow key&quot;</FONT></B>);             <B><FONT COLOR="#A020F0">break</FONT></B>;
+      <B><FONT COLOR="#A020F0">case</FONT></B> <B><FONT COLOR="#5F9EA0">KEY_UP</FONT></B>        : printw(<B><FONT COLOR="#BC8F8F">&quot;up-arrow key&quot;</FONT></B>);               <B><FONT COLOR="#A020F0">break</FONT></B>;
+      <B><FONT COLOR="#A020F0">case</FONT></B> <B><FONT COLOR="#5F9EA0">KEY_LEFT</FONT></B>      : printw(<B><FONT COLOR="#BC8F8F">&quot;left-arrow key&quot;</FONT></B>);             <B><FONT COLOR="#A020F0">break</FONT></B>;
+      <B><FONT COLOR="#A020F0">case</FONT></B> <B><FONT COLOR="#5F9EA0">KEY_RIGHT</FONT></B>     : printw(<B><FONT COLOR="#BC8F8F">&quot;right-arrow key&quot;</FONT></B>);            <B><FONT COLOR="#A020F0">break</FONT></B>;
+      <B><FONT COLOR="#A020F0">case</FONT></B> <B><FONT COLOR="#5F9EA0">KEY_HOME</FONT></B>      : printw(<B><FONT COLOR="#BC8F8F">&quot;home key&quot;</FONT></B>);                   <B><FONT COLOR="#A020F0">break</FONT></B>;
+      <B><FONT COLOR="#A020F0">case</FONT></B> <B><FONT COLOR="#5F9EA0">KEY_BACKSPACE</FONT></B> : printw(<B><FONT COLOR="#BC8F8F">&quot;backspace key&quot;</FONT></B>);              <B><FONT COLOR="#A020F0">break</FONT></B>;
+      <B><FONT COLOR="#A020F0">case</FONT></B> <B><FONT COLOR="#5F9EA0">KEY_F</FONT></B>(1)      : printw(<B><FONT COLOR="#BC8F8F">&quot;Value of function key 1&quot;</FONT></B>);    <B><FONT COLOR="#A020F0">break</FONT></B>;
+      <B><FONT COLOR="#A020F0">case</FONT></B> <B><FONT COLOR="#5F9EA0">KEY_F</FONT></B>(2)      : printw(<B><FONT COLOR="#BC8F8F">&quot;Value of function key 2&quot;</FONT></B>);    <B><FONT COLOR="#A020F0">break</FONT></B>;
+      <B><FONT COLOR="#A020F0">case</FONT></B> <B><FONT COLOR="#5F9EA0">KEY_F</FONT></B>(3)      : printw(<B><FONT COLOR="#BC8F8F">&quot;Value of function key 3&quot;</FONT></B>);    <B><FONT COLOR="#A020F0">break</FONT></B>;
+      <B><FONT COLOR="#A020F0">case</FONT></B> <B><FONT COLOR="#5F9EA0">KEY_F</FONT></B>(4)      : printw(<B><FONT COLOR="#BC8F8F">&quot;Value of function key 4&quot;</FONT></B>);    <B><FONT COLOR="#A020F0">break</FONT></B>;
+      <B><FONT COLOR="#A020F0">case</FONT></B> <B><FONT COLOR="#5F9EA0">KEY_F</FONT></B>(5)      : printw(<B><FONT COLOR="#BC8F8F">&quot;Value of function key 5&quot;</FONT></B>);    <B><FONT COLOR="#A020F0">break</FONT></B>;
+      <B><FONT COLOR="#A020F0">case</FONT></B> <B><FONT COLOR="#5F9EA0">KEY_F</FONT></B>(6)      : printw(<B><FONT COLOR="#BC8F8F">&quot;Value of function key 6&quot;</FONT></B>);    <B><FONT COLOR="#A020F0">break</FONT></B>;
+      <B><FONT COLOR="#A020F0">case</FONT></B> <B><FONT COLOR="#5F9EA0">KEY_F</FONT></B>(7)      : printw(<B><FONT COLOR="#BC8F8F">&quot;Value of function key 7&quot;</FONT></B>);    <B><FONT COLOR="#A020F0">break</FONT></B>;
+      <B><FONT COLOR="#A020F0">case</FONT></B> <B><FONT COLOR="#5F9EA0">KEY_F</FONT></B>(8)      : printw(<B><FONT COLOR="#BC8F8F">&quot;Value of function key 8&quot;</FONT></B>);    <B><FONT COLOR="#A020F0">break</FONT></B>;
+      <B><FONT COLOR="#A020F0">case</FONT></B> <B><FONT COLOR="#5F9EA0">KEY_F</FONT></B>(9)      : printw(<B><FONT COLOR="#BC8F8F">&quot;Value of function key 9&quot;</FONT></B>);    <B><FONT COLOR="#A020F0">break</FONT></B>;
+      <B><FONT COLOR="#A020F0">case</FONT></B> <B><FONT COLOR="#5F9EA0">KEY_F</FONT></B>(10)     : printw(<B><FONT COLOR="#BC8F8F">&quot;Value of function key 10&quot;</FONT></B>);   <B><FONT COLOR="#A020F0">break</FONT></B>;
+      <B><FONT COLOR="#A020F0">case</FONT></B> <B><FONT COLOR="#5F9EA0">KEY_F</FONT></B>(11)     : printw(<B><FONT COLOR="#BC8F8F">&quot;Value of function key 11&quot;</FONT></B>);   <B><FONT COLOR="#A020F0">break</FONT></B>;
+      <B><FONT COLOR="#A020F0">case</FONT></B> <B><FONT COLOR="#5F9EA0">KEY_F</FONT></B>(12)     : printw(<B><FONT COLOR="#BC8F8F">&quot;Value of function key 12&quot;</FONT></B>);   <B><FONT COLOR="#A020F0">break</FONT></B>;
+      <B><FONT COLOR="#A020F0">case</FONT></B> <B><FONT COLOR="#5F9EA0">KEY_DL</FONT></B>        : printw(<B><FONT COLOR="#BC8F8F">&quot;delete-line key&quot;</FONT></B>);            <B><FONT COLOR="#A020F0">break</FONT></B>;
+      <B><FONT COLOR="#A020F0">case</FONT></B> <B><FONT COLOR="#5F9EA0">KEY_IL</FONT></B>        : printw(<B><FONT COLOR="#BC8F8F">&quot;insert-line key&quot;</FONT></B>);            <B><FONT COLOR="#A020F0">break</FONT></B>;
+      <B><FONT COLOR="#A020F0">case</FONT></B> <B><FONT COLOR="#5F9EA0">KEY_DC</FONT></B>        : printw(<B><FONT COLOR="#BC8F8F">&quot;delete-character key&quot;</FONT></B>);       <B><FONT COLOR="#A020F0">break</FONT></B>;
+      <B><FONT COLOR="#A020F0">case</FONT></B> <B><FONT COLOR="#5F9EA0">KEY_CLEAR</FONT></B>     : printw(<B><FONT COLOR="#BC8F8F">&quot;clear-screen or erase key&quot;</FONT></B>);  <B><FONT COLOR="#A020F0">break</FONT></B>;
+      <B><FONT COLOR="#A020F0">case</FONT></B> <B><FONT COLOR="#5F9EA0">KEY_EOS</FONT></B>       : printw(<B><FONT COLOR="#BC8F8F">&quot;clear-to-end-of-screen key&quot;</FONT></B>); <B><FONT COLOR="#A020F0">break</FONT></B>;
+      <B><FONT COLOR="#A020F0">case</FONT></B> <B><FONT COLOR="#5F9EA0">KEY_EOL</FONT></B>       : printw(<B><FONT COLOR="#BC8F8F">&quot;clear-to-end-of-line key&quot;</FONT></B>);   <B><FONT COLOR="#A020F0">break</FONT></B>;
+      <B><FONT COLOR="#A020F0">case</FONT></B> <B><FONT COLOR="#5F9EA0">KEY_SF</FONT></B>        : printw(<B><FONT COLOR="#BC8F8F">&quot;scroll-forward key&quot;</FONT></B>);         <B><FONT COLOR="#A020F0">break</FONT></B>;
+      <B><FONT COLOR="#A020F0">case</FONT></B> <B><FONT COLOR="#5F9EA0">KEY_SR</FONT></B>        : printw(<B><FONT COLOR="#BC8F8F">&quot;scroll-backward key&quot;</FONT></B>);        <B><FONT COLOR="#A020F0">break</FONT></B>;
+      <B><FONT COLOR="#A020F0">case</FONT></B> <B><FONT COLOR="#5F9EA0">KEY_NPAGE</FONT></B>     : printw(<B><FONT COLOR="#BC8F8F">&quot;next-page key&quot;</FONT></B>);              <B><FONT COLOR="#A020F0">break</FONT></B>;
+      <B><FONT COLOR="#A020F0">case</FONT></B> <B><FONT COLOR="#5F9EA0">KEY_PPAGE</FONT></B>     : printw(<B><FONT COLOR="#BC8F8F">&quot;previous-page key&quot;</FONT></B>);          <B><FONT COLOR="#A020F0">break</FONT></B>;
+      <B><FONT COLOR="#A020F0">case</FONT></B> <B><FONT COLOR="#5F9EA0">KEY_ENTER</FONT></B>     : printw(<B><FONT COLOR="#BC8F8F">&quot;enter/send key&quot;</FONT></B>);             <B><FONT COLOR="#A020F0">break</FONT></B>;
+      <B><FONT COLOR="#A020F0">case</FONT></B> <B><FONT COLOR="#5F9EA0">KEY_PRINT</FONT></B>     : printw(<B><FONT COLOR="#BC8F8F">&quot;print key&quot;</FONT></B>);                  <B><FONT COLOR="#A020F0">break</FONT></B>;
+      <B><FONT COLOR="#A020F0">case</FONT></B> <B><FONT COLOR="#5F9EA0">KEY_LL</FONT></B>        : printw(<B><FONT COLOR="#BC8F8F">&quot;lower-left key (home down)&quot;</FONT></B>); <B><FONT COLOR="#A020F0">break</FONT></B>;
+      <B><FONT COLOR="#A020F0">case</FONT></B> <B><FONT COLOR="#5F9EA0">KEY_A1</FONT></B>        : printw(<B><FONT COLOR="#BC8F8F">&quot;upper left of keypad&quot;</FONT></B>);       <B><FONT COLOR="#A020F0">break</FONT></B>;
+      <B><FONT COLOR="#A020F0">case</FONT></B> <B><FONT COLOR="#5F9EA0">KEY_A3</FONT></B>        : printw(<B><FONT COLOR="#BC8F8F">&quot;upper right of keypad&quot;</FONT></B>);      <B><FONT COLOR="#A020F0">break</FONT></B>;
+      <B><FONT COLOR="#A020F0">case</FONT></B> <B><FONT COLOR="#5F9EA0">KEY_B2</FONT></B>        : printw(<B><FONT COLOR="#BC8F8F">&quot;center of keypad&quot;</FONT></B>);           <B><FONT COLOR="#A020F0">break</FONT></B>;
+      <B><FONT COLOR="#A020F0">case</FONT></B> <B><FONT COLOR="#5F9EA0">KEY_C1</FONT></B>        : printw(<B><FONT COLOR="#BC8F8F">&quot;lower left of keypad&quot;</FONT></B>);       <B><FONT COLOR="#A020F0">break</FONT></B>;
+      <B><FONT COLOR="#A020F0">case</FONT></B> <B><FONT COLOR="#5F9EA0">KEY_C3</FONT></B>        : printw(<B><FONT COLOR="#BC8F8F">&quot;lower right of keypad&quot;</FONT></B>);      <B><FONT COLOR="#A020F0">break</FONT></B>;
+      <B><FONT COLOR="#A020F0">case</FONT></B> <B><FONT COLOR="#5F9EA0">KEY_END</FONT></B>       : printw(<B><FONT COLOR="#BC8F8F">&quot;end key&quot;</FONT></B>);                    <B><FONT COLOR="#A020F0">break</FONT></B>;         
+      <B><FONT COLOR="#A020F0">case</FONT></B> <B><FONT COLOR="#BC8F8F">'q'</FONT></B>           : endwin(); exit(1);         
+      <B><FONT COLOR="#A020F0">default</FONT></B>            : printw(<B><FONT COLOR="#BC8F8F">&quot;%c&quot;</FONT></B>, ch);                     <B><FONT COLOR="#A020F0">break</FONT></B>;         
+    } <I><FONT COLOR="#B22222">/* end switch */</FONT></I>
+    printw(<B><FONT COLOR="#BC8F8F">&quot;                                 &quot;</FONT></B>);
+    refresh();
+  } <I><FONT COLOR="#B22222">/* end while */</FONT></I>
+
+  <I><FONT COLOR="#B22222">/* We never get here, but we still &quot;return&quot; to quiet the compiler */</FONT></I>
+  <B><FONT COLOR="#A020F0">return</FONT></B> 0;
+} <I><FONT COLOR="#B22222">/* end func main */</FONT></I>
+
+</PRE>
+<HR \/>
+<ADDRESS>Generated by <A HREF="http://www.iki.fi/~mtr/genscript/">GNU Enscript 1.6.5.90</A>.</ADDRESS>
+</BODY>
+</HTML>

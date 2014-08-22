@@ -1,0 +1,120 @@
+<!DOCTYPE html PUBLIC "-//IETF//DTD HTML 2.0//EN">
+<HTML>
+<HEAD>
+<TITLE>mpi/reduceC.c</TITLE>
+</HEAD>
+<BODY BGCOLOR="#FFFFFF" TEXT="#000000" LINK="#1F00FF" ALINK="#FF0000" VLINK="#9900DD">
+<A NAME="top"> </A>
+<A NAME="file1"> </A>
+<H1><a href="reduceC.c">reduceC.c</a></H1>
+
+<PRE>
+<I><FONT COLOR="#B22222">/**
+   @file      reduceC.c
+   @author    Mitch Richling &lt;http://www.mitchr.me/&gt;
+   @Copyright Copyright 1999 by Mitch Richling.  All rights reserved.
+   @brief     Demo the MPI functions bcast and reduce.@EOL
+   @Keywords  LAM MIPCH MPI
+   @Std       C99 MPI1
+
+              sum(i=2,n,sum(j=0,i,j))
+
+              This program computes the silly nested sum above in
+              order to demonstrate the following functions:
+
+                    MPI_Bcast
+                    MPI_Reduce
+                    MPI_Gather
+
+              This code assumes that the environment provides
+              stdin/stdout for the rank 0 process. While most MPI
+              implementations do provide this functionality, if yours
+              doesn't then this code will fail.
+*/</FONT></I>
+ 
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;stdio.h&gt;</FONT></B>              <I><FONT COLOR="#B22222">/* I/O lib         ISOC  */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;mpi.h&gt;</FONT></B>                <I><FONT COLOR="#B22222">/* MPI Std         MPI   */</FONT></I>
+
+<B><FONT COLOR="#228B22">int</FONT></B> <B><FONT COLOR="#0000FF">main</FONT></B>(<B><FONT COLOR="#228B22">int</FONT></B> argc, <B><FONT COLOR="#228B22">char</FONT></B> *argv[]) {
+  <B><FONT COLOR="#228B22">int</FONT></B> rank, size, n, i, j;
+  <B><FONT COLOR="#228B22">double</FONT></B> locSum, sum;
+  <B><FONT COLOR="#228B22">double</FONT></B> allLocSums[1024];  <I><FONT COLOR="#B22222">// We assume not more than 1024 processes...
+</FONT></I>
+  MPI_Init(&amp;argc, &amp;argv);
+
+  MPI_Comm_rank(MPI_COMM_WORLD, &amp;rank);
+  MPI_Comm_size(MPI_COMM_WORLD, &amp;size);
+  <I><FONT COLOR="#B22222">/*printf(&quot;I am %d of %d\n&quot;, rank, size);*/</FONT></I>
+
+  <B><FONT COLOR="#A020F0">while</FONT></B>(1) {
+    <B><FONT COLOR="#A020F0">if</FONT></B>(rank == 0) {
+      <I><FONT COLOR="#B22222">/* Newline is required for OpenMPI */</FONT></I>
+      printf(<B><FONT COLOR="#BC8F8F">&quot;Enter an integer less than %d (0 to quit): \n&quot;</FONT></B>, size);
+      scanf(<B><FONT COLOR="#BC8F8F">&quot;%d&quot;</FONT></B>, &amp;n);
+      <B><FONT COLOR="#A020F0">if</FONT></B>(n&gt;=size) {
+        printf(<B><FONT COLOR="#BC8F8F">&quot;Integer too big. Using n=%d instead!\n&quot;</FONT></B>, size);
+        n = size;
+      } <I><FONT COLOR="#B22222">/* end if */</FONT></I>
+    } <I><FONT COLOR="#B22222">/* end if */</FONT></I>
+
+    <I><FONT COLOR="#B22222">/* Bcast is a strange function in that it broadcasts data and
+       receives it!  Arg #4 determines if a process is sending or
+       receiving. */</FONT></I>
+    MPI_Bcast(&amp;n, 1, MPI_INT,   <I><FONT COLOR="#B22222">// ptr to data, num elements, type
+</FONT></I>              0,                <I><FONT COLOR="#B22222">// process with master copy
+</FONT></I>              MPI_COMM_WORLD);  <I><FONT COLOR="#B22222">// group to send data too
+</FONT></I>    <B><FONT COLOR="#A020F0">if</FONT></B>(n==0)
+      <B><FONT COLOR="#A020F0">break</FONT></B>;
+    <B><FONT COLOR="#A020F0">else</FONT></B> {
+      <I><FONT COLOR="#B22222">/* Task of rank will compute: sum(j=0, rank, j/rank) (if rank&lt;=n) */</FONT></I>
+      locSum=0;
+      <B><FONT COLOR="#A020F0">if</FONT></B>(rank &lt;= n) {
+        <B><FONT COLOR="#A020F0">for</FONT></B>(j=0;j&lt;=rank;j++) {
+          locSum += j;
+        } <I><FONT COLOR="#B22222">/* end for */</FONT></I>
+      } <I><FONT COLOR="#B22222">/* end if */</FONT></I>
+
+      <I><FONT COLOR="#B22222">/* Just for fun (and to demonstrate gather), we collect the
+         partial sums computed by the various slaves.  One might be
+         tempted to use gather and sum up what is returned; however,
+         this is very bad practice (a rather common bad practice
+         unfortunately).  One should use reduce, as demonstrated
+         later, for this application.  The reason is that a high
+         performance MPI implementations will be able to use tree
+         algorithms combined with knowledge of the topological
+         considerations of the network to gain higher performance.
+         Gather takes the locSum variables from every process and
+         places them in the allLocSums array, in the process specified
+         arg#7.*/</FONT></I>
+      MPI_Gather(&amp;locSum,    1, MPI_DOUBLE,  <I><FONT COLOR="#B22222">// Var to gather, length, type
+</FONT></I>                 allLocSums, 1, MPI_DOUBLE,  <I><FONT COLOR="#B22222">// Array to gather into, length, type
+</FONT></I>                 0,                          <I><FONT COLOR="#B22222">// Task to gather into
+</FONT></I>                 MPI_COMM_WORLD);            <I><FONT COLOR="#B22222">// Group of processes from which to gather
+</FONT></I>      <B><FONT COLOR="#A020F0">if</FONT></B>(rank==0)
+        <B><FONT COLOR="#A020F0">for</FONT></B>(j=0;j&lt;size;j++) 
+          printf(<B><FONT COLOR="#BC8F8F">&quot;Process %d computed %f\n&quot;</FONT></B>, j, allLocSums[j]);
+
+
+      <I><FONT COLOR="#B22222">/* This function illustrates some of the special features only
+         found in scientific message passing libs -- you won't find
+         this stuff in the sockets API.  MPI_Reduce takes the locSum
+         variables from every process except the one specified by arg
+         #6 and places the sum in the process specified by arg#6. */</FONT></I>
+      MPI_Reduce(&amp;locSum,             <I><FONT COLOR="#B22222">// Data to sum
+</FONT></I>                 &amp;sum, 1, MPI_DOUBLE, <I><FONT COLOR="#B22222">// Place to put sum, number of data points, type
+</FONT></I>                 MPI_SUM,             <I><FONT COLOR="#B22222">// Operation (sum in this case)
+</FONT></I>                 0,                   <I><FONT COLOR="#B22222">// Process to get the sum (&amp;sum)
+</FONT></I>                 MPI_COMM_WORLD);     <I><FONT COLOR="#B22222">// The group of processes from which to sum
+</FONT></I>      <B><FONT COLOR="#A020F0">if</FONT></B>(rank==0)
+        printf(<B><FONT COLOR="#BC8F8F">&quot;The sum is: %f\n&quot;</FONT></B>, sum);
+    } <I><FONT COLOR="#B22222">/* end if/else */</FONT></I>
+  } <I><FONT COLOR="#B22222">/* end while */</FONT></I>
+
+  MPI_Finalize();
+  <B><FONT COLOR="#A020F0">return</FONT></B> 0;
+} <I><FONT COLOR="#B22222">/* end func main */</FONT></I>
+</PRE>
+<HR \/>
+<ADDRESS>Generated by <A HREF="http://www.iki.fi/~mtr/genscript/">GNU Enscript 1.6.5.2</A>.</ADDRESS>
+</BODY>
+</HTML>

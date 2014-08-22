@@ -1,0 +1,245 @@
+<!DOCTYPE html PUBLIC "-//IETF//DTD HTML 2.0//EN">
+<HTML>
+<HEAD>
+<TITLE>HDF5/mjrHDF5.c</TITLE>
+</HEAD>
+<BODY BGCOLOR="#FFFFFF" TEXT="#000000" LINK="#1F00FF" ALINK="#FF0000" VLINK="#9900DD">
+<A NAME="top"> </A>
+<A NAME="file1"> </A>
+<H1><a href="mjrHDF5.c">mjrHDF5.c</a></H1>
+
+<PRE>
+<I><FONT COLOR="#B22222">/* -*- Mode:C; Coding:us-ascii-unix; fill-column:132 -*- */</FONT></I>
+<I><FONT COLOR="#B22222">/* ****************************************************************************************************************************** */</FONT></I>
+<I><FONT COLOR="#B22222">/**
+   @file      mjrHDF5.c
+   @author    Mitch Richling &lt;http://www.mitchr.me/&gt;
+   @Copyright Copyright 1997 by Mitch Richling.  All rights reserved.
+   @brief     hello   @EOL
+   @Keywords  none
+   @Std       C89
+
+   Some simple helper functions to make life with HDF5 a little bit less tedious.
+              
+*/</FONT></I>
+<I><FONT COLOR="#B22222">/* ------------------------------------------------------------------------------------------------------------------------------ */</FONT></I>
+
+<I><FONT COLOR="#B22222">/* ****************************************************************************************************************************** */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;hdf5.h&gt;</FONT></B>               <I><FONT COLOR="#B22222">/* HDF5 files            */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&quot;mjrHDF5.h&quot;</FONT></B>
+
+<I><FONT COLOR="#B22222">/* ****************************************************************************************************************************** */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;stdio.h&gt;</FONT></B>              <I><FONT COLOR="#B22222">/* I/O lib         ISOC  */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;stdlib.h&gt;</FONT></B>             <I><FONT COLOR="#B22222">/* Standard Lib    ISOC  */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;string.h&gt;</FONT></B>             <I><FONT COLOR="#B22222">/* Strings         ISOC  */</FONT></I>
+
+
+<I><FONT COLOR="#B22222">/* ****************************************************************************************************************************** */</FONT></I>
+<I><FONT COLOR="#B22222">// /* A note about the HDF5 Lite API... */
+</FONT></I><I><FONT COLOR="#B22222">//
+</FONT></I><I><FONT COLOR="#B22222">// /* Need to include this one for all the high level APIs */
+</FONT></I><I><FONT COLOR="#B22222">// #include &lt;hdf5_hl.h&gt;
+</FONT></I><I><FONT COLOR="#B22222">// 
+</FONT></I><I><FONT COLOR="#B22222">// char    strDatO[32] = &quot;Hello, Ma!&quot;;
+</FONT></I><I><FONT COLOR="#B22222">// int     intDatO[32] = {1,2,3,4,5};
+</FONT></I><I><FONT COLOR="#B22222">// char    strDatI[32];
+</FONT></I><I><FONT COLOR="#B22222">// int     intDatI[32];
+</FONT></I><I><FONT COLOR="#B22222">// 
+</FONT></I><I><FONT COLOR="#B22222">// /* Write and read a string attribute -- note we need to know the size of the attribute for the read */
+</FONT></I><I><FONT COLOR="#B22222">// hErrVal = H5LTset_attribute_string(fileId, &quot;dataSetName&quot;, &quot;attrName&quot;, strDatO);
+</FONT></I><I><FONT COLOR="#B22222">// hErrVal = H5LTget_attribute_string(fileId, &quot;dataSetName&quot;, &quot;attrName&quot;, strDatI);
+</FONT></I><I><FONT COLOR="#B22222">// printf(&quot;String: %s\n&quot;, strDatI);
+</FONT></I><I><FONT COLOR="#B22222">// 
+</FONT></I><I><FONT COLOR="#B22222">// /* Write and read an int array attribute -- note we need to know the size of the attribute for the read */
+</FONT></I><I><FONT COLOR="#B22222">// hErrVal = H5LTset_attribute_int(fileId, &quot;dataSetName&quot;, &quot;attrName&quot;, intDatO, 5);
+</FONT></I><I><FONT COLOR="#B22222">// hErrVal = H5LTget_attribute_int(fileId, &quot;dataSetName&quot;, &quot;attrName&quot;, intDatI);
+</FONT></I><I><FONT COLOR="#B22222">// printf(&quot;Ints:   &quot;);
+</FONT></I><I><FONT COLOR="#B22222">// int i;
+</FONT></I><I><FONT COLOR="#B22222">// for(i=0; i&lt;5; i++ )
+</FONT></I><I><FONT COLOR="#B22222">//   printf(&quot;%d &quot;, intDatI[i]);
+</FONT></I><I><FONT COLOR="#B22222">// printf(&quot;\n&quot;);
+</FONT></I><I><FONT COLOR="#B22222">/* ****************************************************************************************************************************** */</FONT></I>
+
+
+<I><FONT COLOR="#B22222">/* ****************************************************************************************************************************** */</FONT></I>
+<I><FONT COLOR="#B22222">/* This is a wrapper for the mjrHDF5_put_att_oneFCstr() function to aid in the creation of &quot;global&quot; string valued attributes.
+
+   Note HDF5 files have a hierarchical structure with subdirectory-like &quot;groups&quot; with leaf-node groups corresponding roughly to an
+   entire NetCDF file.  Because of this organizational sophistication, a NetCDF-like &quot;global&quot; attribute generally should correspond
+   to an HDF attribute attached to the &quot;group&quot; containing the data. For simple applications with one group, this is the &quot;/&quot; (root)
+   group.
+
+   Even for complex applications, convention suggests that globally oriented attributes should simply be attached to the root group
+   object -- i.e attributes related to an entire &quot;tree&quot; of groups, should be attached to the root node of the subtree. */</FONT></I>
+herr_t <B><FONT COLOR="#0000FF">mjrHDF5_put_gblAtt_oneFCstr</FONT></B>(hid_t fileID, <B><FONT COLOR="#228B22">char</FONT></B> *name, <B><FONT COLOR="#228B22">char</FONT></B> *value) {
+  hid_t rootGroupID;
+
+  <I><FONT COLOR="#B22222">/* Get the ID for the &quot;root&quot; group -- every HDF5 has one (it is created as part of the H5Fcreate() function). */</FONT></I>
+  rootGroupID = H5Gopen(fileID, <B><FONT COLOR="#BC8F8F">&quot;/&quot;</FONT></B>, H5P_DEFAULT);
+  <B><FONT COLOR="#A020F0">if</FONT></B>(rootGroupID &lt; 0)
+    <B><FONT COLOR="#A020F0">return</FONT></B> rootGroupID;
+
+  <B><FONT COLOR="#A020F0">return</FONT></B> mjrHDF5_put_att_oneFCstr(rootGroupID, name, value);
+} <I><FONT COLOR="#B22222">/* end func mjrHDF5_put_att_oneFCstr */</FONT></I>
+
+
+<I><FONT COLOR="#B22222">/* ****************************************************************************************************************************** */</FONT></I>
+<I><FONT COLOR="#B22222">/* This is a little function to encapsulate the steps required to add a correctly sized string attribute to an object (Create a
+   correctly sized string type, and call mjrHDF5_put_att_sclr() to create the attribute). */</FONT></I>
+herr_t <B><FONT COLOR="#0000FF">mjrHDF5_put_att_oneFCstr</FONT></B>(hid_t objectID, <B><FONT COLOR="#228B22">char</FONT></B> *name, <B><FONT COLOR="#228B22">char</FONT></B> *value) {
+  herr_t status;
+  hid_t  str_type;
+
+  <I><FONT COLOR="#B22222">/* Create a data type, and set its length. */</FONT></I>
+  str_type = H5Tcopy(H5T_C_S1);
+  <B><FONT COLOR="#A020F0">if</FONT></B>(str_type &lt; 0)
+    <B><FONT COLOR="#A020F0">return</FONT></B> str_type;
+
+  status = H5Tset_size(str_type, strlen(value)+2);
+  <B><FONT COLOR="#A020F0">if</FONT></B>(status &lt; 0) 
+    <B><FONT COLOR="#A020F0">return</FONT></B> status;
+
+  <B><FONT COLOR="#A020F0">return</FONT></B> mjrHDF5_put_att_sclr(objectID, str_type, name, value, str_type);
+
+} <I><FONT COLOR="#B22222">/* end func mjrHDF5_put_att_oneFCstr */</FONT></I>
+
+<I><FONT COLOR="#B22222">/* ****************************************************************************************************************************** */</FONT></I>
+<I><FONT COLOR="#B22222">/* This is a little function to encapsulate the steps required to add a scalar attribute to an object. */</FONT></I>
+herr_t <B><FONT COLOR="#0000FF">mjrHDF5_put_att_sclr</FONT></B>(hid_t objectID, hid_t attr_type, <B><FONT COLOR="#228B22">char</FONT></B> *name, <B><FONT COLOR="#228B22">void</FONT></B> *value, hid_t value_type) {
+  hid_t attr_dataspaceID, attributeID;
+  herr_t status;
+
+  <I><FONT COLOR="#B22222">/* Create the data space for the attribute. */</FONT></I>
+  attr_dataspaceID = H5Screate(H5S_SCALAR);
+  <B><FONT COLOR="#A020F0">if</FONT></B>(attr_dataspaceID &lt; 0) 
+    <B><FONT COLOR="#A020F0">return</FONT></B> attr_dataspaceID;
+   
+  <I><FONT COLOR="#B22222">/* Create a dataset attribute. */</FONT></I>
+  attributeID = H5Acreate(objectID,
+                          name,
+                          attr_type,
+                          attr_dataspaceID,
+                          H5P_DEFAULT,
+                          H5P_DEFAULT);
+  <B><FONT COLOR="#A020F0">if</FONT></B>(attributeID &lt; 0) 
+    <B><FONT COLOR="#A020F0">return</FONT></B> attributeID;
+
+  <I><FONT COLOR="#B22222">/* Write the attribute data. */</FONT></I>
+  status = H5Awrite(attributeID, 
+                    value_type,
+                    value);
+  <B><FONT COLOR="#A020F0">if</FONT></B>(status &lt; 0) 
+    <B><FONT COLOR="#A020F0">return</FONT></B> status;
+   
+  <I><FONT COLOR="#B22222">/* Close the attribute. */</FONT></I>
+  status = H5Aclose(attributeID);
+  <B><FONT COLOR="#A020F0">if</FONT></B>(status &lt; 0) 
+    <B><FONT COLOR="#A020F0">return</FONT></B> status;
+   
+  <I><FONT COLOR="#B22222">/* Close the dataspace. */</FONT></I>
+  status = H5Sclose(attr_dataspaceID);
+  <B><FONT COLOR="#A020F0">if</FONT></B>(status &lt; 0) 
+    <B><FONT COLOR="#A020F0">return</FONT></B> status;
+
+  <B><FONT COLOR="#A020F0">return</FONT></B> 0;
+} <I><FONT COLOR="#B22222">/* end func mjrHDF5_put_att_sclr */</FONT></I>
+
+<I><FONT COLOR="#B22222">/* ****************************************************************************************************************************** */</FONT></I>
+<I><FONT COLOR="#B22222">/* Most HDF5 functions return a negative number upon error -- even functions that return IDs.  This uniformity makes it easy to
+   check for errors.  In this example we simply exit -- note HDF5 has sophisticated error handling facilities. */</FONT></I>
+<B><FONT COLOR="#228B22">void</FONT></B> <B><FONT COLOR="#0000FF">mjrHDF5_chkError</FONT></B>(<B><FONT COLOR="#228B22">int</FONT></B> status) {
+  <B><FONT COLOR="#A020F0">if</FONT></B> (status &lt; 0) {
+    fprintf(stderr, <B><FONT COLOR="#BC8F8F">&quot;HDF5 ERROR: \n&quot;</FONT></B>);
+    H5Eprint(H5E_DEFAULT, stderr);
+    exit(1); 
+  } <I><FONT COLOR="#B22222">/* end if */</FONT></I>
+} <I><FONT COLOR="#B22222">/* end func mjrHDF5_chkError */</FONT></I>
+
+
+<I><FONT COLOR="#B22222">/* ****************************************************************************************************************************** */</FONT></I>
+<I><FONT COLOR="#B22222">/* This is a little function to encapsulate the steps required to add a 1D array attribute containing variable length data elements
+   to an object. The most common use for this is to create arrays of variable length strings via the mjrHDF5_put_att_arrVCstr()
+   function.*/</FONT></I>
+herr_t <B><FONT COLOR="#0000FF">mjrHDF5_put_att_arry</FONT></B>(hid_t objectID, hid_t attr_type, <B><FONT COLOR="#228B22">char</FONT></B> *name, <B><FONT COLOR="#228B22">void</FONT></B> *values, hid_t value_type, hsize_t rank) {
+  hid_t attr_dataspaceID, attributeID;
+  herr_t status;
+
+  <I><FONT COLOR="#B22222">/* Create the data space for the attribute. */</FONT></I>
+  attr_dataspaceID = H5Screate_simple(1, &amp;rank, NULL);
+  <B><FONT COLOR="#A020F0">if</FONT></B>(attr_dataspaceID &lt; 0) 
+    <B><FONT COLOR="#A020F0">return</FONT></B> attr_dataspaceID;
+
+  <I><FONT COLOR="#B22222">/* Create a dataset attribute. */</FONT></I>  
+  attributeID = H5Acreate(objectID,
+                          name,
+                          attr_type,
+                          attr_dataspaceID, 
+                          H5P_DEFAULT,
+                          H5P_DEFAULT);
+  <B><FONT COLOR="#A020F0">if</FONT></B>(attributeID &lt; 0) 
+    <B><FONT COLOR="#A020F0">return</FONT></B> attributeID;
+
+  <I><FONT COLOR="#B22222">/* Write the attribute data. */</FONT></I>
+  status = H5Awrite(attributeID, 
+                    value_type,
+                    values);
+  <B><FONT COLOR="#A020F0">if</FONT></B>(status &lt; 0) 
+    <B><FONT COLOR="#A020F0">return</FONT></B> status;
+   
+  <I><FONT COLOR="#B22222">/* Close the attribute. */</FONT></I>
+  status = H5Aclose(attributeID);
+  <B><FONT COLOR="#A020F0">if</FONT></B>(status &lt; 0) 
+    <B><FONT COLOR="#A020F0">return</FONT></B> status;
+   
+  <I><FONT COLOR="#B22222">/* Close the dataspace. */</FONT></I>
+  status = H5Sclose(attr_dataspaceID);
+  <B><FONT COLOR="#A020F0">if</FONT></B>(status &lt; 0) 
+    <B><FONT COLOR="#A020F0">return</FONT></B> status;
+
+  <B><FONT COLOR="#A020F0">return</FONT></B> 0;
+}  <I><FONT COLOR="#B22222">/* end func mjrHDF5_put_att_arry */</FONT></I>
+
+
+<I><FONT COLOR="#B22222">/* ****************************************************************************************************************************** */</FONT></I>
+<I><FONT COLOR="#B22222">/* This is a little function to encapsulate the steps required to add an attribute containing a list of variable length strings. */</FONT></I>
+herr_t <B><FONT COLOR="#0000FF">mjrHDF5_put_att_arrVCstr</FONT></B>(hid_t objectID, <B><FONT COLOR="#228B22">char</FONT></B> *name, <B><FONT COLOR="#228B22">char</FONT></B> **values,  hsize_t rank) {
+  hid_t attr_type;
+  herr_t  status;
+
+  attr_type = H5Tcopy(H5T_C_S1);
+  <B><FONT COLOR="#A020F0">if</FONT></B>(attr_type &lt; 0) 
+    <B><FONT COLOR="#A020F0">return</FONT></B> attr_type;
+
+  status = H5Tset_size(attr_type, H5T_VARIABLE);
+  <B><FONT COLOR="#A020F0">if</FONT></B>(status &lt; 0) 
+    <B><FONT COLOR="#A020F0">return</FONT></B> status;
+
+  <B><FONT COLOR="#A020F0">return</FONT></B> mjrHDF5_put_att_arry(objectID, attr_type, name, values, attr_type, rank);
+} <I><FONT COLOR="#B22222">/* end func mjrHDF5_put_att_arrVCstr */</FONT></I>
+
+
+<I><FONT COLOR="#B22222">/* Convert an H5T_Tclass_t to a string.  Pointer must point to a space
+   at least 16 chars long. */</FONT></I>
+<B><FONT COLOR="#228B22">void</FONT></B> <B><FONT COLOR="#0000FF">mjrHDF5_Tclass2str</FONT></B>(H5T_class_t class, <B><FONT COLOR="#228B22">char</FONT></B> *classStr) {
+  <B><FONT COLOR="#A020F0">switch</FONT></B>(class) {
+    <B><FONT COLOR="#A020F0">case</FONT></B> <B><FONT COLOR="#5F9EA0">H5T_NO_CLASS</FONT></B>   : strcpy(classStr, <B><FONT COLOR="#BC8F8F">&quot;NO_CLASS  &quot;</FONT></B>); <B><FONT COLOR="#A020F0">break</FONT></B>;
+    <B><FONT COLOR="#A020F0">case</FONT></B> <B><FONT COLOR="#5F9EA0">H5T_INTEGER</FONT></B>    : strcpy(classStr, <B><FONT COLOR="#BC8F8F">&quot;INTEGER   &quot;</FONT></B>); <B><FONT COLOR="#A020F0">break</FONT></B>;
+    <B><FONT COLOR="#A020F0">case</FONT></B> <B><FONT COLOR="#5F9EA0">H5T_FLOAT</FONT></B>      : strcpy(classStr, <B><FONT COLOR="#BC8F8F">&quot;FLOAT     &quot;</FONT></B>); <B><FONT COLOR="#A020F0">break</FONT></B>;
+    <B><FONT COLOR="#A020F0">case</FONT></B> <B><FONT COLOR="#5F9EA0">H5T_TIME</FONT></B>       : strcpy(classStr, <B><FONT COLOR="#BC8F8F">&quot;TIME      &quot;</FONT></B>); <B><FONT COLOR="#A020F0">break</FONT></B>;
+    <B><FONT COLOR="#A020F0">case</FONT></B> <B><FONT COLOR="#5F9EA0">H5T_STRING</FONT></B>     : strcpy(classStr, <B><FONT COLOR="#BC8F8F">&quot;STRING    &quot;</FONT></B>); <B><FONT COLOR="#A020F0">break</FONT></B>;
+    <B><FONT COLOR="#A020F0">case</FONT></B> <B><FONT COLOR="#5F9EA0">H5T_BITFIELD</FONT></B>   : strcpy(classStr, <B><FONT COLOR="#BC8F8F">&quot;BITFIELD  &quot;</FONT></B>); <B><FONT COLOR="#A020F0">break</FONT></B>;
+    <B><FONT COLOR="#A020F0">case</FONT></B> <B><FONT COLOR="#5F9EA0">H5T_OPAQUE</FONT></B>     : strcpy(classStr, <B><FONT COLOR="#BC8F8F">&quot;OPAQUE    &quot;</FONT></B>); <B><FONT COLOR="#A020F0">break</FONT></B>;
+    <B><FONT COLOR="#A020F0">case</FONT></B> <B><FONT COLOR="#5F9EA0">H5T_COMPOUND</FONT></B>   : strcpy(classStr, <B><FONT COLOR="#BC8F8F">&quot;COMPOUND  &quot;</FONT></B>); <B><FONT COLOR="#A020F0">break</FONT></B>;
+    <B><FONT COLOR="#A020F0">case</FONT></B> <B><FONT COLOR="#5F9EA0">H5T_REFERENCE</FONT></B>  : strcpy(classStr, <B><FONT COLOR="#BC8F8F">&quot;REFERENCE &quot;</FONT></B>); <B><FONT COLOR="#A020F0">break</FONT></B>;
+    <B><FONT COLOR="#A020F0">case</FONT></B> <B><FONT COLOR="#5F9EA0">H5T_ENUM</FONT></B>       : strcpy(classStr, <B><FONT COLOR="#BC8F8F">&quot;ENUM      &quot;</FONT></B>); <B><FONT COLOR="#A020F0">break</FONT></B>;
+    <B><FONT COLOR="#A020F0">case</FONT></B> <B><FONT COLOR="#5F9EA0">H5T_VLEN</FONT></B>       : strcpy(classStr, <B><FONT COLOR="#BC8F8F">&quot;VLEN      &quot;</FONT></B>); <B><FONT COLOR="#A020F0">break</FONT></B>;
+    <B><FONT COLOR="#A020F0">case</FONT></B> <B><FONT COLOR="#5F9EA0">H5T_ARRAY</FONT></B>      : strcpy(classStr, <B><FONT COLOR="#BC8F8F">&quot;ARRAY     &quot;</FONT></B>); <B><FONT COLOR="#A020F0">break</FONT></B>;
+    <B><FONT COLOR="#A020F0">case</FONT></B> <B><FONT COLOR="#5F9EA0">H5T_NCLASSES</FONT></B>   : strcpy(classStr, <B><FONT COLOR="#BC8F8F">&quot;NCLASSES  &quot;</FONT></B>); <B><FONT COLOR="#A020F0">break</FONT></B>;
+    <B><FONT COLOR="#A020F0">default</FONT></B>             : strcpy(classStr, <B><FONT COLOR="#BC8F8F">&quot;          &quot;</FONT></B>); <B><FONT COLOR="#A020F0">break</FONT></B>;
+  } <I><FONT COLOR="#B22222">/* end switch */</FONT></I>
+} <I><FONT COLOR="#B22222">/* end func mjrHDF5_Tclass2str */</FONT></I>
+</PRE>
+<HR \/>
+<ADDRESS>Generated by <A HREF="http://www.iki.fi/~mtr/genscript/">GNU Enscript 1.6.5.90</A>.</ADDRESS>
+</BODY>
+</HTML>

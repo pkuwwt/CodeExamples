@@ -1,0 +1,96 @@
+<!DOCTYPE html PUBLIC "-//IETF//DTD HTML 2.0//EN">
+<HTML>
+<HEAD>
+<TITLE>AUPG/rlimit.c</TITLE>
+</HEAD>
+<BODY BGCOLOR="#FFFFFF" TEXT="#000000" LINK="#1F00FF" ALINK="#FF0000" VLINK="#9900DD">
+<A NAME="top"> </A>
+<A NAME="file1"> </A>
+<H1><a href="rlimit.c">rlimit.c</a></H1>
+
+<PRE>
+<I><FONT COLOR="#B22222">/* -*- Mode:C; Coding:us-ascii-unix; fill-column:132 -*- */</FONT></I>
+<I><FONT COLOR="#B22222">/**********************************************************************************************************************************/</FONT></I>
+<I><FONT COLOR="#B22222">/**
+   @file      rlimit.c
+   @author    Mitch Richling &lt;http://www.mitchr.me/&gt;
+   @Copyright Copyright 1999 by Mitch Richling.  All rights reserved.
+   @brief     How to access rlimit values@EOL
+   @Keywords  UNIX rlimit ulimit limit
+   @Std       XSI
+   @Tested    
+              - MacOS X.4
+
+   This C program is intended to illustrate how one can query and modify resource limits (see ulimit &amp; limit).  Not all systems
+   support all limits, so we have lots of #ifdef's in this code. :(
+***********************************************************************************************************************************/</FONT></I>
+
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;stdlib.h&gt;</FONT></B>             <I><FONT COLOR="#B22222">/* Standard Lib    C89   */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;stdio.h&gt;</FONT></B>              <I><FONT COLOR="#B22222">/* I/O lib         C89   */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;string.h&gt;</FONT></B>             <I><FONT COLOR="#B22222">/* Strings         C89   */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;sys/resource.h&gt;</FONT></B>       <I><FONT COLOR="#B22222">/* limits          SUS   */</FONT></I>
+
+<I><FONT COLOR="#B22222">/**********************************************************************************************************************************/</FONT></I>
+<B><FONT COLOR="#228B22">void</FONT></B> <B><FONT COLOR="#0000FF">printLimit</FONT></B>(<B><FONT COLOR="#228B22">int</FONT></B> theLimitNum, <B><FONT COLOR="#228B22">char</FONT></B> *theLimitStr);
+
+<I><FONT COLOR="#B22222">/**********************************************************************************************************************************/</FONT></I>
+<B><FONT COLOR="#228B22">int</FONT></B> <B><FONT COLOR="#0000FF">main</FONT></B>(<B><FONT COLOR="#228B22">int</FONT></B> argc, <B><FONT COLOR="#228B22">char</FONT></B> *argv[]) {
+
+#<B><FONT COLOR="#5F9EA0">ifdef</FONT></B> <FONT COLOR="#B8860B">RLIMIT_CPU</FONT>
+  printLimit(RLIMIT_CPU, <B><FONT COLOR="#BC8F8F">&quot;RLIMIT_CPU (cpu time)&quot;</FONT></B>);
+#<B><FONT COLOR="#5F9EA0">endif</FONT></B>
+#<B><FONT COLOR="#5F9EA0">ifdef</FONT></B> <FONT COLOR="#B8860B">RLIMIT_FSIZE</FONT>
+  printLimit(RLIMIT_FSIZE, <B><FONT COLOR="#BC8F8F">&quot;RLIMIT_FSIZE (file size)&quot;</FONT></B>);
+#<B><FONT COLOR="#5F9EA0">endif</FONT></B>
+#<B><FONT COLOR="#5F9EA0">ifdef</FONT></B> <FONT COLOR="#B8860B">RLIMIT_DATA</FONT>
+  printLimit(RLIMIT_DATA, <B><FONT COLOR="#BC8F8F">&quot;RLIMIT_DATA (data seg size)&quot;</FONT></B>);
+#<B><FONT COLOR="#5F9EA0">endif</FONT></B>
+#<B><FONT COLOR="#5F9EA0">ifdef</FONT></B> <FONT COLOR="#B8860B">RLIMIT_STACK</FONT>
+  printLimit(RLIMIT_STACK, <B><FONT COLOR="#BC8F8F">&quot;RLIMIT_STACK (stack size)&quot;</FONT></B>);
+#<B><FONT COLOR="#5F9EA0">endif</FONT></B>
+#<B><FONT COLOR="#5F9EA0">ifdef</FONT></B> <FONT COLOR="#B8860B">RLIMIT_CORE</FONT>
+  printLimit(RLIMIT_CORE, <B><FONT COLOR="#BC8F8F">&quot;RLIMIT_CORE (core file size)&quot;</FONT></B>);
+#<B><FONT COLOR="#5F9EA0">endif</FONT></B>
+#<B><FONT COLOR="#5F9EA0">ifdef</FONT></B> <FONT COLOR="#B8860B">RLIMIT_AS</FONT>
+  printLimit(RLIMIT_AS, <B><FONT COLOR="#BC8F8F">&quot;RLIMIT_AS (resident set size)&quot;</FONT></B>);
+#<B><FONT COLOR="#5F9EA0">endif</FONT></B>
+#<B><FONT COLOR="#5F9EA0">ifdef</FONT></B> <FONT COLOR="#B8860B">RLIMIT_RSS</FONT>
+  printLimit(RLIMIT_RSS, <B><FONT COLOR="#BC8F8F">&quot;RLIMIT_RSS (resident set size)&quot;</FONT></B>);
+#<B><FONT COLOR="#5F9EA0">endif</FONT></B>
+#<B><FONT COLOR="#5F9EA0">ifdef</FONT></B> <FONT COLOR="#B8860B">RLIMIT_MEMLOCK</FONT>
+  printLimit(RLIMIT_MEMLOCK, <B><FONT COLOR="#BC8F8F">&quot;RLIMIT_MEMLOCK (locked memory)&quot;</FONT></B>);
+#<B><FONT COLOR="#5F9EA0">endif</FONT></B>
+#<B><FONT COLOR="#5F9EA0">ifdef</FONT></B> <FONT COLOR="#B8860B">RLIMIT_NPROC</FONT>
+  printLimit(RLIMIT_NPROC, <B><FONT COLOR="#BC8F8F">&quot;RLIMIT_NPROC (user processes)&quot;</FONT></B>);
+#<B><FONT COLOR="#5F9EA0">endif</FONT></B>
+#<B><FONT COLOR="#5F9EA0">ifdef</FONT></B> <FONT COLOR="#B8860B">RLIMIT_NOFILE</FONT>
+  printLimit(RLIMIT_NOFILE, <B><FONT COLOR="#BC8F8F">&quot;RLIMIT_NOFILE (open files)&quot;</FONT></B>);
+#<B><FONT COLOR="#5F9EA0">endif</FONT></B>
+
+  <B><FONT COLOR="#A020F0">return</FONT></B> 0;
+} <I><FONT COLOR="#B22222">/* end func main */</FONT></I>
+
+<I><FONT COLOR="#B22222">/**********************************************************************************************************************************/</FONT></I>
+<B><FONT COLOR="#228B22">void</FONT></B> <B><FONT COLOR="#0000FF">printLimit</FONT></B>(<B><FONT COLOR="#228B22">int</FONT></B> theLimitNum, <B><FONT COLOR="#228B22">char</FONT></B> *theLimitStr) {
+  <B><FONT COLOR="#228B22">struct</FONT></B> rlimit rlimitStruct;
+  <B><FONT COLOR="#A020F0">if</FONT></B>(getrlimit(theLimitNum, &amp;rlimitStruct) == -1) {
+    printf(<B><FONT COLOR="#BC8F8F">&quot;ERROR: getrlimit failure %s\n&quot;</FONT></B>, theLimitStr);
+    <B><FONT COLOR="#A020F0">return</FONT></B>;
+  } <I><FONT COLOR="#B22222">/* end if */</FONT></I>
+  printf(<B><FONT COLOR="#BC8F8F">&quot;%-32s   &quot;</FONT></B>, theLimitStr);
+  <B><FONT COLOR="#A020F0">if</FONT></B>(rlimitStruct.rlim_cur == RLIM_INFINITY) 
+    printf(<B><FONT COLOR="#BC8F8F">&quot;cur: %15s   &quot;</FONT></B>, <B><FONT COLOR="#BC8F8F">&quot;INFINITY&quot;</FONT></B>);
+  <B><FONT COLOR="#A020F0">else</FONT></B>
+    printf(<B><FONT COLOR="#BC8F8F">&quot;cur: %15lld   &quot;</FONT></B>, (<B><FONT COLOR="#228B22">long</FONT></B> <B><FONT COLOR="#228B22">long</FONT></B>)rlimitStruct.rlim_cur);
+  <B><FONT COLOR="#A020F0">if</FONT></B>(rlimitStruct.rlim_max == RLIM_INFINITY) 
+    printf(<B><FONT COLOR="#BC8F8F">&quot;max: %15s   &quot;</FONT></B>, <B><FONT COLOR="#BC8F8F">&quot;INFINITY&quot;</FONT></B>);
+  <B><FONT COLOR="#A020F0">else</FONT></B>
+    printf(<B><FONT COLOR="#BC8F8F">&quot;max: %15lld   &quot;</FONT></B>, (<B><FONT COLOR="#228B22">long</FONT></B> <B><FONT COLOR="#228B22">long</FONT></B>)rlimitStruct.rlim_max);
+  printf(<B><FONT COLOR="#BC8F8F">&quot;\n&quot;</FONT></B>);
+
+} <I><FONT COLOR="#B22222">/* end func printLimit */</FONT></I>
+</PRE>
+<HR \/>
+<ADDRESS>Generated by <A HREF="http://www.iki.fi/~mtr/genscript/">GNU Enscript 1.6.5.90</A>.</ADDRESS>
+</BODY>
+</HTML>

@@ -1,0 +1,168 @@
+<!DOCTYPE html PUBLIC "-//IETF//DTD HTML 2.0//EN">
+<HTML>
+<HEAD>
+<TITLE>HDF5/hdf5NewFile.c</TITLE>
+</HEAD>
+<BODY BGCOLOR="#FFFFFF" TEXT="#000000" LINK="#1F00FF" ALINK="#FF0000" VLINK="#9900DD">
+<A NAME="top"> </A>
+<A NAME="file1"> </A>
+<H1><a href="hdf5NewFile.c">hdf5NewFile.c</a></H1>
+
+<PRE>
+<I><FONT COLOR="#B22222">/* -*- Mode:C; Coding:us-ascii-unix; fill-column:132 -*- */</FONT></I>
+<I><FONT COLOR="#B22222">/* ****************************************************************************************************************************** */</FONT></I>
+<I><FONT COLOR="#B22222">/**
+   @file      hdf5NewFile.c
+   @author    Mitch Richling &lt;http://www.mitchr.me/&gt;
+   @Copyright Copyright 1998 by Mitch Richling.  All rights reserved.
+   @brief     Create and annotate one 3D data set in an HDF5 file.@EOL
+   @Keywords  none
+   @Std       C89
+
+   This program serves as an example (and template) for how to create a well documented HDF5 file from scratch.
+
+   The design of the HDF5 API requires a bit of code repetitiveness (the C++ version is not as bad). This is particularly true for
+   simple things like adding an attribute.  To help with this, much of the &quot;meat&quot; for the attribute code is contained in functions
+   (see mjrHDF5.[hc]).  The error checking for this program is quite simplistic, and doesn't even scratch the surface of the error
+   checking that HDF5 is capable of.  Aside from the attribute and error checking functions, this source code is self contained.
+   HDF5 is interesting in that a dataspace &amp; dataset can be created independently from the existing of any data -- for completeness,
+   this example also fills the data file with some random data.
+   
+   In a nutshell, this program creates and annotates one 3D data set.
+
+     Data:
+
+       - A 3D data set: temperature at grid (lat, lon, time) points
+
+     Annotations:
+
+       - File: author, title
+       - Data: name, units, pressure at which measurement was made
+       - Dims: names, units, start, and step values.
+              
+*/</FONT></I>
+<I><FONT COLOR="#B22222">/* ------------------------------------------------------------------------------------------------------------------------------ */</FONT></I>
+
+<I><FONT COLOR="#B22222">/* ****************************************************************************************************************************** */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;stdio.h&gt;</FONT></B>              <I><FONT COLOR="#B22222">/* I/O lib         ISOC  */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;stdlib.h&gt;</FONT></B>             <I><FONT COLOR="#B22222">/* Standard Lib    ISOC  */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;string.h&gt;</FONT></B>             <I><FONT COLOR="#B22222">/* Strings         ISOC  */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;hdf5.h&gt;</FONT></B>               <I><FONT COLOR="#B22222">/* HDF5 files            */</FONT></I>
+
+<I><FONT COLOR="#B22222">/* ****************************************************************************************************************************** */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&quot;mjrHDF5.h&quot;</FONT></B>
+
+<I><FONT COLOR="#B22222">/* ****************************************************************************************************************************** */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">define</FONT></B> <FONT COLOR="#B8860B">MAX_X</FONT> 10
+#<B><FONT COLOR="#5F9EA0">define</FONT></B> <FONT COLOR="#B8860B">MAX_Y</FONT> 20
+#<B><FONT COLOR="#5F9EA0">define</FONT></B> <FONT COLOR="#B8860B">MAX_T</FONT> 24
+
+#<B><FONT COLOR="#5F9EA0">define</FONT></B> <FONT COLOR="#B8860B">TST_FILE_NAME</FONT> <B><FONT COLOR="#BC8F8F">&quot;a3DtestFile.h5&quot;</FONT></B>
+
+<I><FONT COLOR="#B22222">/* ****************************************************************************************************************************** */</FONT></I>
+<B><FONT COLOR="#228B22">int</FONT></B> <B><FONT COLOR="#0000FF">main</FONT></B>(<B><FONT COLOR="#228B22">int</FONT></B> argc, <B><FONT COLOR="#228B22">char</FONT></B> *argv[]) {
+  hid_t   fileID, datasetID, dataspaceID;
+  hsize_t dims[3] = {MAX_X, MAX_Y, MAX_T};
+  herr_t  hErrVal;
+  <B><FONT COLOR="#228B22">float</FONT></B>   floatDataPoint[10];
+  <B><FONT COLOR="#228B22">int</FONT></B>     id, i, j, k;
+  <B><FONT COLOR="#228B22">float</FONT></B>   temp[MAX_X][MAX_Y][MAX_T];
+  <B><FONT COLOR="#228B22">char</FONT></B>    *strPerDim[3];
+  <B><FONT COLOR="#228B22">float</FONT></B>   valPerDim[3];
+
+  <I><FONT COLOR="#B22222">/* Create phony data. */</FONT></I>
+  <B><FONT COLOR="#A020F0">for</FONT></B>(i=0,id=0; i&lt;MAX_X; i++)
+    <B><FONT COLOR="#A020F0">for</FONT></B>(j=0; j&lt;MAX_Y; j++)
+      <B><FONT COLOR="#A020F0">for</FONT></B>(k=0; k&lt;MAX_T; k++)
+        temp[i][j][k] = id++;
+   
+  <I><FONT COLOR="#B22222">/* Load the library -- not required on most platforms. */</FONT></I>
+  hErrVal = H5open();
+  mjrHDF5_chkError(hErrVal);
+
+  <I><FONT COLOR="#B22222">/* Create a new file using default properties. */</FONT></I>
+  fileID = H5Fcreate(TST_FILE_NAME, H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT);
+  mjrHDF5_chkError(fileID);
+
+  hErrVal = mjrHDF5_put_gblAtt_oneFCstr(fileID, <B><FONT COLOR="#BC8F8F">&quot;Author&quot;</FONT></B>, <B><FONT COLOR="#BC8F8F">&quot;Mitch Richling&quot;</FONT></B>);
+  mjrHDF5_chkError(hErrVal);
+  hErrVal = mjrHDF5_put_gblAtt_oneFCstr(fileID, <B><FONT COLOR="#BC8F8F">&quot;title&quot;</FONT></B>,  <B><FONT COLOR="#BC8F8F">&quot;Example File&quot;</FONT></B>);
+  mjrHDF5_chkError(hErrVal);
+
+  <I><FONT COLOR="#B22222">/* Create the data space for the dataset. */</FONT></I>
+  dataspaceID = H5Screate_simple(3, dims, NULL);
+  mjrHDF5_chkError(dataspaceID);
+
+  <I><FONT COLOR="#B22222">/* Create the dataset. */</FONT></I>
+  datasetID = H5Dcreate(fileID, <B><FONT COLOR="#BC8F8F">&quot;/dset&quot;</FONT></B>, H5T_IEEE_F32BE, dataspaceID, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+  mjrHDF5_chkError(datasetID);
+
+  <I><FONT COLOR="#B22222">/*  Try to use standard unit names and formats... */</FONT></I>
+  hErrVal = mjrHDF5_put_att_oneFCstr(datasetID, <B><FONT COLOR="#BC8F8F">&quot;units&quot;</FONT></B>, <B><FONT COLOR="#BC8F8F">&quot;Celsius&quot;</FONT></B>);
+  mjrHDF5_chkError(hErrVal);
+
+  <I><FONT COLOR="#B22222">/* Use this value for labeling plots and the like by programs that
+     also support netCDF */</FONT></I>
+  hErrVal = mjrHDF5_put_att_oneFCstr(datasetID, <B><FONT COLOR="#BC8F8F">&quot;long_name&quot;</FONT></B>, <B><FONT COLOR="#BC8F8F">&quot;Some Name For Plots&quot;</FONT></B>);
+  mjrHDF5_chkError(hErrVal);
+
+  <I><FONT COLOR="#B22222">/* Add an array of strings to name each dim.*/</FONT></I>
+  strPerDim[0] = <B><FONT COLOR="#BC8F8F">&quot;lat&quot;</FONT></B>;
+  strPerDim[1] = <B><FONT COLOR="#BC8F8F">&quot;lon&quot;</FONT></B>;
+  strPerDim[2] = <B><FONT COLOR="#BC8F8F">&quot;temp&quot;</FONT></B>;
+  hErrVal = mjrHDF5_put_att_arrVCstr(datasetID, <B><FONT COLOR="#BC8F8F">&quot;dimNames&quot;</FONT></B>, strPerDim, 3);
+  mjrHDF5_chkError(hErrVal);
+
+  <I><FONT COLOR="#B22222">/* Add an array of strings to to give units for each dim.*/</FONT></I>
+  strPerDim[0] = <B><FONT COLOR="#BC8F8F">&quot;degrees&quot;</FONT></B>;
+  strPerDim[1] = <B><FONT COLOR="#BC8F8F">&quot;degrees&quot;</FONT></B>;
+  strPerDim[2] = <B><FONT COLOR="#BC8F8F">&quot;hours&quot;</FONT></B>;
+  hErrVal = mjrHDF5_put_att_arrVCstr(datasetID, <B><FONT COLOR="#BC8F8F">&quot;dimUnits&quot;</FONT></B>, strPerDim, 3);
+  mjrHDF5_chkError(hErrVal);
+
+  <I><FONT COLOR="#B22222">/* Add annotation describing minimum values for each dim. */</FONT></I>
+  valPerDim[0] = 0.0;
+  valPerDim[1] = 0.0;
+  valPerDim[2] = 0.0;
+  hErrVal = mjrHDF5_put_att_arry(datasetID, H5T_IEEE_F32BE, <B><FONT COLOR="#BC8F8F">&quot;dimStart&quot;</FONT></B>, valPerDim, H5T_NATIVE_FLOAT, 3);
+  mjrHDF5_chkError(hErrVal);
+
+  <I><FONT COLOR="#B22222">/* Add annotation describing the &quot;step&quot; between values on each dim. */</FONT></I>
+  valPerDim[0] = 10.0;
+  valPerDim[1] = 20.0;
+  valPerDim[2] = 24.0;
+  hErrVal = mjrHDF5_put_att_arry(datasetID, H5T_IEEE_F32BE, <B><FONT COLOR="#BC8F8F">&quot;dimStep&quot;</FONT></B>, valPerDim, H5T_NATIVE_FLOAT, 3);
+  mjrHDF5_chkError(hErrVal);
+
+  <I><FONT COLOR="#B22222">/* Just for fun, create a floating point attribute! */</FONT></I>
+  floatDataPoint[0] = 1.234;
+  mjrHDF5_put_att_sclr(datasetID, H5T_IEEE_F32BE, <B><FONT COLOR="#BC8F8F">&quot;Pressure&quot;</FONT></B>, floatDataPoint, H5T_NATIVE_FLOAT);
+
+  <I><FONT COLOR="#B22222">/* Write some data into our dataset. */</FONT></I>
+  hErrVal = H5Dwrite(datasetID, H5T_NATIVE_FLOAT, H5S_ALL, H5S_ALL, H5P_DEFAULT, temp);
+  mjrHDF5_chkError(hErrVal);
+
+  <I><FONT COLOR="#B22222">/* End access to the dataset and release resources used by it. */</FONT></I>
+  hErrVal = H5Dclose(datasetID);
+  mjrHDF5_chkError(hErrVal);
+
+  <I><FONT COLOR="#B22222">/* Terminate access to the data space. */</FONT></I> 
+  hErrVal = H5Sclose(dataspaceID);
+  mjrHDF5_chkError(hErrVal);
+  
+  <I><FONT COLOR="#B22222">/* Close the file. */</FONT></I>
+  hErrVal = H5Fclose(fileID);
+  mjrHDF5_chkError(hErrVal);
+
+  <I><FONT COLOR="#B22222">/* Unload the library and free any remaining resources. */</FONT></I>
+  hErrVal = H5close();
+  mjrHDF5_chkError(hErrVal);
+
+  <B><FONT COLOR="#A020F0">return</FONT></B> 0;
+} <I><FONT COLOR="#B22222">/* end func main */</FONT></I>
+
+</PRE>
+<HR \/>
+<ADDRESS>Generated by <A HREF="http://www.iki.fi/~mtr/genscript/">GNU Enscript 1.6.5.90</A>.</ADDRESS>
+</BODY>
+</HTML>

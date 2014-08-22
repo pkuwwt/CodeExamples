@@ -1,0 +1,132 @@
+<!DOCTYPE html PUBLIC "-//IETF//DTD HTML 2.0//EN">
+<HTML>
+<HEAD>
+<TITLE>AUPG/shmMake.c</TITLE>
+</HEAD>
+<BODY BGCOLOR="#FFFFFF" TEXT="#000000" LINK="#1F00FF" ALINK="#FF0000" VLINK="#9900DD">
+<A NAME="top"> </A>
+<A NAME="file1"> </A>
+<H1><a href="shmMake.c">shmMake.c</a></H1>
+
+<PRE>
+<I><FONT COLOR="#B22222">/* -*- Mode:C; Coding:us-ascii-unix; fill-column:132 -*- */</FONT></I>
+<I><FONT COLOR="#B22222">/**********************************************************************************************************************************/</FONT></I>
+<I><FONT COLOR="#B22222">/**
+   @file      shmMake.c
+   @author    Mitch Richling &lt;http://www.mitchr.me/&gt;
+   @Copyright Copyright 1998 by Mitch Richling.  All rights reserved.
+   @brief     How to create/use a shared memory segment@EOL
+   @Keywords  UNIX shared memory
+   @Std       ISOC
+   @Tested    
+              - Solaris 2.8
+              - MacOS X.2
+              - Linux (RH 7.3)
+
+   This C program is intended to illustrate how one can create/access shared memory segments in UNIX.
+***********************************************************************************************************************************/</FONT></I>
+
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;stdlib.h&gt;</FONT></B>             <I><FONT COLOR="#B22222">/* Standard Lib    C89   */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;stdio.h&gt;</FONT></B>              <I><FONT COLOR="#B22222">/* I/O lib         C89   */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;string.h&gt;</FONT></B>             <I><FONT COLOR="#B22222">/* Strings         C89   */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;unistd.h&gt;</FONT></B>             <I><FONT COLOR="#B22222">/* UNIX std stf    POSIX */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;errno.h&gt;</FONT></B>              <I><FONT COLOR="#B22222">/* error stf       POSIX */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;sys/stat.h&gt;</FONT></B>           <I><FONT COLOR="#B22222">/* UNIX stat       POSIX */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;sys/types.h&gt;</FONT></B>          <I><FONT COLOR="#B22222">/* UNIX types      POSIX */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;sys/ipc.h&gt;</FONT></B>            <I><FONT COLOR="#B22222">/* Need for IPC    POSIX */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;sys/shm.h&gt;</FONT></B>            <I><FONT COLOR="#B22222">/* Shared Mem      POSIX */</FONT></I>
+
+<I><FONT COLOR="#B22222">/**********************************************************************************************************************************/</FONT></I>
+<B><FONT COLOR="#228B22">int</FONT></B> <B><FONT COLOR="#0000FF">main</FONT></B>(<B><FONT COLOR="#228B22">int</FONT></B> argc, <B><FONT COLOR="#228B22">char</FONT></B> *argv[]) {
+  <B><FONT COLOR="#228B22">int</FONT></B> shmId;
+  <B><FONT COLOR="#228B22">void</FONT></B> *shmAdd;
+  key_t shmKey;
+
+  <I><FONT COLOR="#B22222">/* ftok is a handy way to generate a shared memory segment key (or a semaphore key).  On most platforms it works by using the
+     inode of the path given as the first arg -- so it will only be unique if the path used by all applications is on the same
+     volume (as inodes can be duplicated across different volumes).  For this reason it has become the de facto standard practice to
+     use /tmp (or a file in /tmp) to generate keys...  Note: always use a single byte char for the second argument. */</FONT></I>
+  shmKey = ftok(<B><FONT COLOR="#BC8F8F">&quot;/tmp&quot;</FONT></B>, <B><FONT COLOR="#BC8F8F">'m'</FONT></B>);
+  <B><FONT COLOR="#A020F0">if</FONT></B> (shmKey &lt; 0) {
+    <B><FONT COLOR="#A020F0">switch</FONT></B>(errno) {
+      <B><FONT COLOR="#A020F0">case</FONT></B> <B><FONT COLOR="#5F9EA0">EACCES</FONT></B>:       printf(<B><FONT COLOR="#BC8F8F">&quot;ftok failed: Search permission denied for a component of the path prefix.\n&quot;</FONT></B>);
+        <B><FONT COLOR="#A020F0">break</FONT></B>;
+      <B><FONT COLOR="#A020F0">case</FONT></B> <B><FONT COLOR="#5F9EA0">ELOOP</FONT></B>:        printf(<B><FONT COLOR="#BC8F8F">&quot;ftok failed: A loop exists in symbolic links in path argument or too many symlinks found.\n&quot;</FONT></B>);
+        <B><FONT COLOR="#A020F0">break</FONT></B>;
+      <B><FONT COLOR="#A020F0">case</FONT></B> <B><FONT COLOR="#5F9EA0">ENAMETOOLONG</FONT></B>: printf(<B><FONT COLOR="#BC8F8F">&quot;ftok failed: The length of path exceeds {PATH_MAX} or pathname component longer than {NAME_MAX}.\n&quot;</FONT></B>);
+        <B><FONT COLOR="#A020F0">break</FONT></B>;
+      <B><FONT COLOR="#A020F0">case</FONT></B> <B><FONT COLOR="#5F9EA0">ENOENT</FONT></B>:       printf(<B><FONT COLOR="#BC8F8F">&quot;ftok failed: A component of path does not name an existing file or path is an empty string.\n&quot;</FONT></B>);
+        <B><FONT COLOR="#A020F0">break</FONT></B>;
+      <B><FONT COLOR="#A020F0">case</FONT></B> <B><FONT COLOR="#5F9EA0">ENOTDIR</FONT></B>:      printf(<B><FONT COLOR="#BC8F8F">&quot;ftok failed: A component of the path not a directory.\n&quot;</FONT></B>);
+        <B><FONT COLOR="#A020F0">break</FONT></B>;
+      <B><FONT COLOR="#5F9EA0">default</FONT></B>:           printf(<B><FONT COLOR="#BC8F8F">&quot;ftok failed: Duno why! (errno: %d)\n&quot;</FONT></B>, errno);
+        <B><FONT COLOR="#A020F0">break</FONT></B>;
+    } <I><FONT COLOR="#B22222">/* end switch */</FONT></I>
+    exit(1);
+  } <I><FONT COLOR="#B22222">/* end if */</FONT></I>
+
+  <I><FONT COLOR="#B22222">/* We get a segment ID for our fixed key.  IPC_CREAT tells shmget to create a segment, and IPC_EXCL makes shmget fail if the key
+     is already in use.  The 0777 sets the perms of the segment (just like a disk file). */</FONT></I>
+  shmId = shmget(shmKey, 1024, IPC_CREAT | IPC_EXCL | S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH);
+  <B><FONT COLOR="#A020F0">if</FONT></B>(shmId &lt; 0) {
+    <I><FONT COLOR="#B22222">/* I have a case for all of the interesting cases, even the ones that can not happen in this situation... */</FONT></I>
+    <B><FONT COLOR="#A020F0">switch</FONT></B>(errno) {
+      <B><FONT COLOR="#A020F0">case</FONT></B> <B><FONT COLOR="#5F9EA0">EACCES</FONT></B>: printf(<B><FONT COLOR="#BC8F8F">&quot;shmget failed: key already in use permission denied\n&quot;</FONT></B>);
+        <B><FONT COLOR="#A020F0">break</FONT></B>;
+      <B><FONT COLOR="#A020F0">case</FONT></B> <B><FONT COLOR="#5F9EA0">EEXIST</FONT></B>: printf(<B><FONT COLOR="#BC8F8F">&quot;shmget failed: IPC_CREAT and IPC_EXCL and key is already in use.\n&quot;</FONT></B>);
+        <B><FONT COLOR="#A020F0">break</FONT></B>;
+      <B><FONT COLOR="#A020F0">case</FONT></B> <B><FONT COLOR="#5F9EA0">ENOSPC</FONT></B>: printf(<B><FONT COLOR="#BC8F8F">&quot;shmget failed: too many segments already!  Could not make another.\n&quot;</FONT></B>);
+        <B><FONT COLOR="#A020F0">break</FONT></B>;
+      <B><FONT COLOR="#A020F0">case</FONT></B> <B><FONT COLOR="#5F9EA0">ENOENT</FONT></B>: printf(<B><FONT COLOR="#BC8F8F">&quot;shmget failed: IPC_CREAT was not set and segment doesn't already exist.\n&quot;</FONT></B>);
+        <B><FONT COLOR="#A020F0">break</FONT></B>;
+      <B><FONT COLOR="#A020F0">case</FONT></B> <B><FONT COLOR="#5F9EA0">ENOMEM</FONT></B>: printf(<B><FONT COLOR="#BC8F8F">&quot;shmget failed: Not enough memory to create the segment!\n&quot;</FONT></B>);
+        <B><FONT COLOR="#A020F0">break</FONT></B>;
+      <B><FONT COLOR="#5F9EA0">default</FONT></B>:     printf(<B><FONT COLOR="#BC8F8F">&quot;shmget failed: Duno why! (errno: %d)\n&quot;</FONT></B>, errno);
+        <B><FONT COLOR="#A020F0">break</FONT></B>;
+    } <I><FONT COLOR="#B22222">/* end switch */</FONT></I>
+    exit(1);
+  } <I><FONT COLOR="#B22222">/* end if */</FONT></I>
+  printf(<B><FONT COLOR="#BC8F8F">&quot;shmget result: %d\n&quot;</FONT></B>, shmId);
+
+  <I><FONT COLOR="#B22222">/* We have the shared segment ID, now we map it into our address space. */</FONT></I>
+  shmAdd = shmat(shmId, NULL, 0);
+  <B><FONT COLOR="#A020F0">if</FONT></B>(((<B><FONT COLOR="#228B22">long</FONT></B>)shmAdd) == -1) {
+    <B><FONT COLOR="#A020F0">switch</FONT></B>(errno) {
+      <B><FONT COLOR="#A020F0">case</FONT></B> <B><FONT COLOR="#5F9EA0">EACCES</FONT></B>: printf(<B><FONT COLOR="#BC8F8F">&quot;shmat failed: permission denied\n&quot;</FONT></B>);
+        <B><FONT COLOR="#A020F0">break</FONT></B>;
+      <B><FONT COLOR="#A020F0">case</FONT></B> <B><FONT COLOR="#5F9EA0">ENOMEM</FONT></B>: printf(<B><FONT COLOR="#BC8F8F">&quot;shmat failed: Not enough data space to map the segment\n&quot;</FONT></B>);
+        <B><FONT COLOR="#A020F0">break</FONT></B>;
+      <B><FONT COLOR="#A020F0">case</FONT></B> <B><FONT COLOR="#5F9EA0">EINVAL</FONT></B>: printf(<B><FONT COLOR="#BC8F8F">&quot;shmat failed: Given shared memory identifier was not valid\n&quot;</FONT></B>);
+        <B><FONT COLOR="#A020F0">break</FONT></B>;
+      <B><FONT COLOR="#A020F0">case</FONT></B> <B><FONT COLOR="#5F9EA0">EMFILE</FONT></B>: printf(<B><FONT COLOR="#BC8F8F">&quot;shmat failed: Can't map because we have mapped too many already\n&quot;</FONT></B>);
+        <B><FONT COLOR="#A020F0">break</FONT></B>;
+      <B><FONT COLOR="#5F9EA0">default</FONT></B>:     printf(<B><FONT COLOR="#BC8F8F">&quot;shmat failed: Duno why! (errno: %d)\n&quot;</FONT></B>, errno);
+        <B><FONT COLOR="#A020F0">break</FONT></B>;
+    } <I><FONT COLOR="#B22222">/* end switch */</FONT></I>
+    exit(1);
+  } <B><FONT COLOR="#A020F0">else</FONT></B> {
+    printf(<B><FONT COLOR="#BC8F8F">&quot;Attached to shared mem segment: %ld\n&quot;</FONT></B>, (<B><FONT COLOR="#228B22">long</FONT></B>)shmAdd);
+  } <I><FONT COLOR="#B22222">/* end if/else */</FONT></I>
+
+  <I><FONT COLOR="#B22222">/* We copy some stuff into the segment so that we can read it out later... */</FONT></I>
+  strcpy(shmAdd, <B><FONT COLOR="#BC8F8F">&quot;Hello&quot;</FONT></B>);
+
+  <I><FONT COLOR="#B22222">/* One should detach from segments when done with them. */</FONT></I>
+  <B><FONT COLOR="#A020F0">if</FONT></B>(shmdt(shmAdd)) {
+    <B><FONT COLOR="#A020F0">switch</FONT></B>(errno) {
+      <B><FONT COLOR="#A020F0">case</FONT></B> <B><FONT COLOR="#5F9EA0">EACCES</FONT></B>: printf(<B><FONT COLOR="#BC8F8F">&quot;shmdt failed: given address is not a shared memory segment\n&quot;</FONT></B>);
+        <B><FONT COLOR="#A020F0">break</FONT></B>;
+      <B><FONT COLOR="#5F9EA0">default</FONT></B>:     printf(<B><FONT COLOR="#BC8F8F">&quot;shmdt failed: Duno why! (errno: %d)\n&quot;</FONT></B>, errno);
+        <B><FONT COLOR="#A020F0">break</FONT></B>;
+    } <I><FONT COLOR="#B22222">/* end switch */</FONT></I>
+  } <B><FONT COLOR="#A020F0">else</FONT></B> {
+    printf(<B><FONT COLOR="#BC8F8F">&quot;Detached from shared mem segment.\n&quot;</FONT></B>);
+  } <I><FONT COLOR="#B22222">/* end if/else */</FONT></I>
+
+  <B><FONT COLOR="#A020F0">return</FONT></B> 0;
+} <I><FONT COLOR="#B22222">/* end func main() */</FONT></I>
+</PRE>
+<HR \/>
+<ADDRESS>Generated by <A HREF="http://www.iki.fi/~mtr/genscript/">GNU Enscript 1.6.5.90</A>.</ADDRESS>
+</BODY>
+</HTML>

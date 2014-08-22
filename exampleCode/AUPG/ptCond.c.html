@@ -1,0 +1,153 @@
+<!DOCTYPE html PUBLIC "-//IETF//DTD HTML 2.0//EN">
+<HTML>
+<HEAD>
+<TITLE>AUPG/ptCond.c</TITLE>
+</HEAD>
+<BODY BGCOLOR="#FFFFFF" TEXT="#000000" LINK="#1F00FF" ALINK="#FF0000" VLINK="#9900DD">
+<A NAME="top"> </A>
+<A NAME="file1"> </A>
+<H1><a href="ptCond.c">ptCond.c</a></H1>
+
+<PRE>
+<I><FONT COLOR="#B22222">/* -*- Mode:C; Coding:us-ascii-unix; fill-column:132 -*- */</FONT></I>
+<I><FONT COLOR="#B22222">/**********************************************************************************************************************************/</FONT></I>
+<I><FONT COLOR="#B22222">/**
+   @file      ptCond.c
+   @author    Mitch Richling &lt;http://www.mitchr.me/&gt;
+   @Copyright Copyright 1998 by Mitch Richling.  All rights reserved.
+   @brief     Basic pthread programming@EOL
+   @Keywords  UNIX pthreads POSIX mutex
+   @Std       ISOC POSIX UNIX98 BSD4.3 SYSV3
+   @Tested    
+              - Solaris 2.8
+              - MacOS X.2        
+              - Linux (RH 7.3)
+
+   This C program is intended to illustrate simple use of condition variables in the POSIX threads API.  This code also demonstrates
+   how a thread may detach itself.
+***********************************************************************************************************************************/</FONT></I>
+
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;sys/types.h&gt;</FONT></B>          <I><FONT COLOR="#B22222">/* UNIX types      POSIX */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;stdio.h&gt;</FONT></B>              <I><FONT COLOR="#B22222">/* I/O lib         C89   */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;stdlib.h&gt;</FONT></B>             <I><FONT COLOR="#B22222">/* Standard Lib    C89   */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;string.h&gt;</FONT></B>             <I><FONT COLOR="#B22222">/* Strings         C89   */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;errno.h&gt;</FONT></B>              <I><FONT COLOR="#B22222">/* error stf       POSIX */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;utime.h&gt;</FONT></B>              <I><FONT COLOR="#B22222">/* utime           POSIX */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;sys/stat.h&gt;</FONT></B>           <I><FONT COLOR="#B22222">/* UNIX stat       POSIX */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;time.h&gt;</FONT></B>               <I><FONT COLOR="#B22222">/* time            C89   */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;pthread.h&gt;</FONT></B>            <I><FONT COLOR="#B22222">/* threads         POSIX */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;sched.h&gt;</FONT></B>              <I><FONT COLOR="#B22222">/* threads         POSIX */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;stdlib.h&gt;</FONT></B>             <I><FONT COLOR="#B22222">/* Standard Lib    C89   */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;unistd.h&gt;</FONT></B>             <I><FONT COLOR="#B22222">/* UNIX std stf    POSIX */</FONT></I>
+
+<I><FONT COLOR="#B22222">/**********************************************************************************************************************************/</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&quot;mtUtils.h&quot;</FONT></B>
+
+<I><FONT COLOR="#B22222">/**********************************************************************************************************************************/</FONT></I>
+pthread_mutex_t the_mutex = PTHREAD_MUTEX_INITIALIZER;
+pthread_cond_t  the_cond  = PTHREAD_COND_INITIALIZER;
+
+<I><FONT COLOR="#B22222">/**********************************************************************************************************************************/</FONT></I>
+<B><FONT COLOR="#228B22">void</FONT></B> <B><FONT COLOR="#0000FF">workThread</FONT></B>(<B><FONT COLOR="#228B22">void</FONT></B> *reqArg);
+
+<I><FONT COLOR="#B22222">/**********************************************************************************************************************************/</FONT></I>
+<I><FONT COLOR="#B22222">/* This is where it starts. :) */</FONT></I>
+<B><FONT COLOR="#228B22">int</FONT></B> <B><FONT COLOR="#0000FF">main</FONT></B>(<B><FONT COLOR="#228B22">int</FONT></B> argc, <B><FONT COLOR="#228B22">char</FONT></B> *argv[]) {
+  pthread_t thread;
+  <B><FONT COLOR="#228B22">int</FONT></B> *anIntPtr;
+  <B><FONT COLOR="#228B22">int</FONT></B> i;
+  <B><FONT COLOR="#228B22">int</FONT></B> mstrThrdNumber=0;
+
+  mtPrintf(<B><FONT COLOR="#BC8F8F">&quot;main: starting up.\n&quot;</FONT></B>);
+
+  <B><FONT COLOR="#A020F0">for</FONT></B>(i=0; i&lt;4; i++) {
+  <I><FONT COLOR="#B22222">/* We create a new int for each thread we create... */</FONT></I>
+  mallocNsetInt(&amp;anIntPtr, ++mstrThrdNumber);
+  <B><FONT COLOR="#A020F0">if</FONT></B>(pthread_create(&amp;thread, NULL, (PTHRFUNC*)workThread, (<B><FONT COLOR="#228B22">void</FONT></B> *)anIntPtr) != 0) {
+       mtPrintf(<B><FONT COLOR="#BC8F8F">&quot;ERROR: pthread_create() failed.\n&quot;</FONT></B>);
+       exit(1);
+     } <I><FONT COLOR="#B22222">/* end if */</FONT></I>
+  } <I><FONT COLOR="#B22222">/* end for */</FONT></I>
+
+  <B><FONT COLOR="#A020F0">for</FONT></B>(i=0; i&lt;4; i++) {
+    mtPrintf(<B><FONT COLOR="#BC8F8F">&quot;main: doing nothing. (%d)\n&quot;</FONT></B>, i);
+    sleep(1);
+  } <I><FONT COLOR="#B22222">/* end for */</FONT></I>
+
+  mtPrintf(<B><FONT COLOR="#BC8F8F">&quot;main: broadcasting.\n&quot;</FONT></B>, i);
+
+  <B><FONT COLOR="#A020F0">if</FONT></B>(pthread_mutex_lock(&amp;the_mutex)) {
+    mtPrintf(<B><FONT COLOR="#BC8F8F">&quot;ERROR: pthread_mutex_lock() failed.\n&quot;</FONT></B>);
+    exit(1);
+  } <I><FONT COLOR="#B22222">/* end if */</FONT></I>
+
+  <B><FONT COLOR="#A020F0">if</FONT></B>(pthread_cond_broadcast(&amp;the_cond)) {
+    mtPrintf(<B><FONT COLOR="#BC8F8F">&quot;ERROR: pthread_cond_broadcast() failed.\n&quot;</FONT></B>);
+    exit(1);
+  } <I><FONT COLOR="#B22222">/* end if */</FONT></I>
+
+  <I><FONT COLOR="#B22222">/* Replace: pthread_cond_broadcast(&amp;the_cond);
+     with:    pthread_cond_signal(&amp;the_cond);
+     and see what happens.  Only ONE thread will wake up.  Use signal
+     to wake up just one thread, and broadcast to wake them all up. */</FONT></I>
+
+  <B><FONT COLOR="#A020F0">for</FONT></B>(i=0; i&lt;4; i++) {
+    mtPrintf(<B><FONT COLOR="#BC8F8F">&quot;main:  doing nothing (still have the lock). (%d)\n&quot;</FONT></B>, i);
+    sleep(1);
+  } <I><FONT COLOR="#B22222">/* end for */</FONT></I>
+
+  mtPrintf(<B><FONT COLOR="#BC8F8F">&quot;main: Unlock.\n&quot;</FONT></B>, i);
+  <B><FONT COLOR="#A020F0">if</FONT></B>(pthread_mutex_unlock(&amp;the_mutex)) {
+    mtPrintf(<B><FONT COLOR="#BC8F8F">&quot;ERROR: pthread_mutex_unlock() failed.\n&quot;</FONT></B>);
+    exit(1);
+  } <I><FONT COLOR="#B22222">/* end if */</FONT></I>
+
+  <B><FONT COLOR="#A020F0">for</FONT></B>(i=0; i&lt;8; i++) {
+    mtPrintf(<B><FONT COLOR="#BC8F8F">&quot;main:  doing nothing (no lock lock).. (%d)\n&quot;</FONT></B>, i);
+    sleep(1);
+  } <I><FONT COLOR="#B22222">/* end for */</FONT></I>
+
+  <B><FONT COLOR="#A020F0">return</FONT></B> (0);
+} <I><FONT COLOR="#B22222">/* end func main */</FONT></I>
+
+<I><FONT COLOR="#B22222">/**********************************************************************************************************************************/</FONT></I>
+<B><FONT COLOR="#228B22">void</FONT></B> <B><FONT COLOR="#0000FF">workThread</FONT></B>(<B><FONT COLOR="#228B22">void</FONT></B> *reqArg) {
+
+  <I><FONT COLOR="#B22222">/* We detach the thread as it will never be joined. */</FONT></I>
+  pthread_detach(pthread_self());
+
+  mtPrintf(<B><FONT COLOR="#BC8F8F">&quot;thread %i startup.\n&quot;</FONT></B>, *(<B><FONT COLOR="#228B22">int</FONT></B> *)reqArg);
+
+  <I><FONT COLOR="#B22222">/* Get the lock  */</FONT></I>
+  <B><FONT COLOR="#A020F0">if</FONT></B>(pthread_mutex_lock(&amp;the_mutex)) {
+    mtPrintf(<B><FONT COLOR="#BC8F8F">&quot;ERROR: pthread_mutex_unlock() failed.\n&quot;</FONT></B>);
+    exit(1);
+  } <I><FONT COLOR="#B22222">/* end if */</FONT></I>
+
+  mtPrintf(<B><FONT COLOR="#BC8F8F">&quot;thread (%d) got 1st lock, gonna wait now...\n&quot;</FONT></B>, *(<B><FONT COLOR="#228B22">int</FONT></B> *)reqArg);
+
+  <I><FONT COLOR="#B22222">/* Wait on the cond */</FONT></I>
+  <B><FONT COLOR="#A020F0">if</FONT></B>(pthread_cond_wait(&amp;the_cond, &amp;the_mutex)) {
+    mtPrintf(<B><FONT COLOR="#BC8F8F">&quot;ERROR: pthread_cond_wait() failed.\n&quot;</FONT></B>);
+    exit(1);
+  } <I><FONT COLOR="#B22222">/* end if */</FONT></I>
+  mtPrintf(<B><FONT COLOR="#BC8F8F">&quot;thread (%d) wakeup..\n&quot;</FONT></B>, *(<B><FONT COLOR="#228B22">int</FONT></B> *)reqArg);
+
+  <I><FONT COLOR="#B22222">/* NOTE: We have the_mutex LOCKED at this point.  After waiting for a condition variable, you always get the lock after the
+     function returns. */</FONT></I>
+
+  <I><FONT COLOR="#B22222">/* unlock the mutex associated with the condition variable. */</FONT></I>
+  mtPrintf(<B><FONT COLOR="#BC8F8F">&quot;thread (%d) unlock..\n&quot;</FONT></B>, *(<B><FONT COLOR="#228B22">int</FONT></B> *)reqArg);
+  <B><FONT COLOR="#A020F0">if</FONT></B>(pthread_mutex_unlock(&amp;the_mutex)) {
+    mtPrintf(<B><FONT COLOR="#BC8F8F">&quot;ERROR: pthread_mutex_unlock() failed.\n&quot;</FONT></B>);
+    exit(1);
+  } <I><FONT COLOR="#B22222">/* end if */</FONT></I>
+
+  <I><FONT COLOR="#B22222">/* The argument given to this thread was &quot;malloced&quot; just for this thread, so we free it now. */</FONT></I>
+  free(reqArg);
+} <I><FONT COLOR="#B22222">/* end func workerThread */</FONT></I>
+</PRE>
+<HR \/>
+<ADDRESS>Generated by <A HREF="http://www.iki.fi/~mtr/genscript/">GNU Enscript 1.6.5.90</A>.</ADDRESS>
+</BODY>
+</HTML>

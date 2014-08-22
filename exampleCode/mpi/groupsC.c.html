@@ -1,0 +1,101 @@
+<!DOCTYPE html PUBLIC "-//IETF//DTD HTML 2.0//EN">
+<HTML>
+<HEAD>
+<TITLE>mpi/groupsC.c</TITLE>
+</HEAD>
+<BODY BGCOLOR="#FFFFFF" TEXT="#000000" LINK="#1F00FF" ALINK="#FF0000" VLINK="#9900DD">
+<A NAME="top"> </A>
+<A NAME="file1"> </A>
+<H1><a href="groupsC.c">groupsC.c</a></H1>
+
+<PRE>
+<I><FONT COLOR="#B22222">/**
+   @file      groupsC.c
+   @author    Mitch Richling &lt;http://www.mitchr.me/&gt;
+   @Copyright Copyright 1998 by Mitch Richling.  All rights reserved.
+   @brief     Typical use of communicators and groups in MPI.@EOL
+   @Keywords  MPI groups communicators
+   @Std       C99
+
+              This program illistrates a typical use of MPI
+              communicators and MPI groups.
+
+              Not all platforms allow console I/O on all MPI
+              processes.  On such platforms, this program can fail.
+*/</FONT></I>
+
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&quot;mpi.h&quot;</FONT></B>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;stdio.h&gt;</FONT></B>              <I><FONT COLOR="#B22222">/* I/O lib         ISOC  */</FONT></I>
+
+<B><FONT COLOR="#228B22">int</FONT></B> <B><FONT COLOR="#0000FF">main</FONT></B>(<B><FONT COLOR="#228B22">int</FONT></B> argc, <B><FONT COLOR="#228B22">char</FONT></B> *argv[]) {
+  <B><FONT COLOR="#228B22">int</FONT></B>        oldRank, newRank, oldSize, newSize;
+  <B><FONT COLOR="#228B22">int</FONT></B>        grpMembers1[1024], grpMembers2[1024]; <I><FONT COLOR="#B22222">// Assume &lt;1024 tasks
+</FONT></I>  <B><FONT COLOR="#228B22">int</FONT></B>        grpSize1, grpSize2;
+  <B><FONT COLOR="#228B22">int</FONT></B>        i, n;
+  MPI_Group  oldGroup, newGroup;
+  MPI_Comm   newComm;
+
+  <I><FONT COLOR="#B22222">/* initialize MPI.. */</FONT></I>
+  MPI_Init(&amp;argc,&amp;argv);
+  MPI_Comm_rank(MPI_COMM_WORLD, &amp;oldRank);
+  MPI_Comm_size(MPI_COMM_WORLD, &amp;oldSize);
+
+  <I><FONT COLOR="#B22222">/* Build our group membership lists. */</FONT></I>
+  <B><FONT COLOR="#A020F0">for</FONT></B>(i=grpSize1=grpSize2=0;i&lt;oldSize;i++)
+    <B><FONT COLOR="#A020F0">if</FONT></B>((i%2)==0)
+      grpMembers1[grpSize1++] = i;
+    <B><FONT COLOR="#A020F0">else</FONT></B>
+      grpMembers2[grpSize2++] = i;
+
+  <I><FONT COLOR="#B22222">/* Display the group memberships. */</FONT></I>
+  <B><FONT COLOR="#A020F0">if</FONT></B>(oldRank == 0) {
+    printf(<B><FONT COLOR="#BC8F8F">&quot;Group 1 (%d members): &quot;</FONT></B>, grpSize1);
+    <B><FONT COLOR="#A020F0">for</FONT></B>(i=0;i&lt;grpSize1;i++)
+      printf(<B><FONT COLOR="#BC8F8F">&quot;%d &quot;</FONT></B>, grpMembers1[i]);
+    printf(<B><FONT COLOR="#BC8F8F">&quot;\n&quot;</FONT></B>);
+
+    printf(<B><FONT COLOR="#BC8F8F">&quot;Group 2 (%d members): &quot;</FONT></B>, grpSize2);
+    <B><FONT COLOR="#A020F0">for</FONT></B>(i=0;i&lt;grpSize2;i++)
+      printf(<B><FONT COLOR="#BC8F8F">&quot;%d &quot;</FONT></B>, grpMembers2[i]);
+    printf(<B><FONT COLOR="#BC8F8F">&quot;\n&quot;</FONT></B>);
+  } <I><FONT COLOR="#B22222">/* end if */</FONT></I>
+
+  <I><FONT COLOR="#B22222">/* Figure out our current group. */</FONT></I>
+  MPI_Comm_group(MPI_COMM_WORLD, &amp;oldGroup);
+
+  <I><FONT COLOR="#B22222">/* Divide tasks into two groups based upon even/odd ranks. */</FONT></I>
+  <B><FONT COLOR="#A020F0">if</FONT></B> ((oldRank%2)==0)
+    MPI_Group_incl(oldGroup, grpSize1, grpMembers1, &amp;newGroup);
+  <B><FONT COLOR="#A020F0">else</FONT></B>
+    MPI_Group_incl(oldGroup, grpSize2, grpMembers2, &amp;newGroup);
+
+  <I><FONT COLOR="#B22222">/* Create new communicators */</FONT></I>
+  MPI_Comm_create(MPI_COMM_WORLD, newGroup, &amp;newComm);
+
+  <I><FONT COLOR="#B22222">/* Get our rank and the size of the new communicator groups. */</FONT></I>
+  MPI_Comm_rank(newComm, &amp;newRank);
+  MPI_Comm_size(newComm, &amp;newSize);
+
+  <I><FONT COLOR="#B22222">/* Bcast our original rank from the new rank zero(s) */</FONT></I>
+  n=oldRank;
+  MPI_Bcast(&amp;n, 1, MPI_INT, <I><FONT COLOR="#B22222">// ptr to data, num elements, type
+</FONT></I>            0,              <I><FONT COLOR="#B22222">// process with master copy
+</FONT></I>            newComm);       <I><FONT COLOR="#B22222">// group to send data too  
+</FONT></I>
+  <I><FONT COLOR="#B22222">/* Print out some stuff to help us understand what is going on. */</FONT></I>
+  printf(<B><FONT COLOR="#BC8F8F">&quot;oldRank=%03d/%03d newRank=%03d/%03d myRankZero=%03d\n&quot;</FONT></B>,oldRank, oldSize, newRank, newSize, n);
+
+  <I><FONT COLOR="#B22222">/* Free up our group and communicator.  It is common for programs to
+     not do this becasue the resources for groups and communciators
+     will be relesed upon program exit. */</FONT></I>
+  MPI_Group_free(&amp;newGroup);
+  MPI_Comm_free(&amp;newComm);
+
+  <I><FONT COLOR="#B22222">/* Finish up. */</FONT></I>
+  MPI_Finalize();
+} <I><FONT COLOR="#B22222">/* end func main */</FONT></I>
+</PRE>
+<HR \/>
+<ADDRESS>Generated by <A HREF="http://www.iki.fi/~mtr/genscript/">GNU Enscript 1.6.5.2</A>.</ADDRESS>
+</BODY>
+</HTML>

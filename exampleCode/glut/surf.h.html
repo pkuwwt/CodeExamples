@@ -1,0 +1,174 @@
+<!DOCTYPE html PUBLIC "-//IETF//DTD HTML 2.0//EN">
+<HTML>
+<HEAD>
+<TITLE>glut/surf.h</TITLE>
+</HEAD>
+<BODY BGCOLOR="#FFFFFF" TEXT="#000000" LINK="#1F00FF" ALINK="#FF0000" VLINK="#9900DD">
+<A NAME="top"> </A>
+<A NAME="file1"> </A>
+<H1><a href="surf.h">surf.h</a></H1>
+
+<PRE>
+<I><FONT COLOR="#B22222">/* -*- Mode:C; Coding:us-ascii-unix; fill-column:132 -*- */</FONT></I>
+<I><FONT COLOR="#B22222">/**********************************************************************************************************************************/</FONT></I>
+<I><FONT COLOR="#B22222">/**
+   @file      surf.h
+   @author    Mitch Richling &lt;http://www.mitchr.me&gt;
+   @Copyright Copyright 2014 by Mitch Richling.  All rights reserved.
+   @brief     Function that will generate a lorenz curve, bounding box, and x/y/z-axes.@EOL
+   @Keywords  none
+   @Std       C99
+***********************************************************************************************************************************/</FONT></I>
+
+<I><FONT COLOR="#B22222">/**********************************************************************************************************************************/</FONT></I>
+#<B><FONT COLOR="#5F9EA0">define</FONT></B> <FONT COLOR="#B8860B">RADIUS</FONT> 10
+#<B><FONT COLOR="#5F9EA0">define</FONT></B> <FONT COLOR="#B8860B">DRAW_MODE</FONT> 1
+#<B><FONT COLOR="#5F9EA0">define</FONT></B> <FONT COLOR="#B8860B">NUMS</FONT> 50
+
+<I><FONT COLOR="#B22222">/**********************************************************************************************************************************/</FONT></I>
+<B><FONT COLOR="#228B22">void</FONT></B> <B><FONT COLOR="#0000FF">computeGeometry</FONT></B>() {
+  <B><FONT COLOR="#228B22">double</FONT></B> x, y, z, Dx, Dy, Dz, lenD;
+  <B><FONT COLOR="#228B22">int</FONT></B>    xi, yi, xNum, yNum;
+  <B><FONT COLOR="#228B22">double</FONT></B> xMin, xMax, yMin, yMax, xDelta, yDelta;
+  <B><FONT COLOR="#228B22">double</FONT></B> zPoints[NUMS][NUMS], xPoints[NUMS], yPoints[NUMS];
+  <B><FONT COLOR="#228B22">double</FONT></B> DzPoints[NUMS][NUMS], DxPoints[NUMS], DyPoints[NUMS];
+
+  GLfloat mat_specular[] = { 1.0, 0.0, 1.0, 0.0 };    
+  GLfloat mat_diffuse[] = { 0.7, 0.0, 1.0, 0.0 };    
+  GLfloat mat_shininess[] = { 100.0 };    
+  <I><FONT COLOR="#B22222">//GLfloat light_position[] = { 1.0, 1.0, 15.0, 0.0 };    
+</FONT></I>  GLfloat light_position[] = { 0.0, 0.0, 6.0*RADIUS, 1.0 };    
+
+  glNewList(1, GL_COMPILE);
+  glColor3f(1,1,1);
+  glPointSize(2.0);
+
+  xMin = yMin = -15.0;
+  xMax = yMax =  15.0;
+  xNum = yNum = NUMS;
+  xDelta = (xMax - xMin) / xNum;
+  yDelta = (yMax - yMin) / yNum;
+
+  <B><FONT COLOR="#A020F0">for</FONT></B>(xi=0;xi&lt;xNum;xi++) {
+	x = xMin + xi * xDelta;
+	<B><FONT COLOR="#A020F0">for</FONT></B>(yi=0;yi&lt;yNum;yi++) {
+	  <I><FONT COLOR="#B22222">// Compute the function: sin(x)+cos(y)
+</FONT></I>	  y = yMin + yi * yDelta;
+	  z = sin(x)+cos(y);	
+	  z = sin(sqrt(x*x+y*y));
+	  zPoints[xi][yi] = z;
+	  xPoints[xi]     = x;
+	  yPoints[yi]     = y;
+	  <I><FONT COLOR="#B22222">// Compute the normal: [-dz/dx, -dz/dy, 1]
+</FONT></I>	  Dx = -sin(x);
+	  Dy = -cos(y);
+
+	  Dx = cos(sqrt(x*x+y*y))*2*x/sqrt(x*x+y*y);
+	  Dy = cos(sqrt(x*x+y*y))*2*y/sqrt(x*x+y*y);
+
+	  Dz = 1;
+	  lenD = sqrt(Dx*Dx+Dy*Dy+Dz*Dz);
+	  <B><FONT COLOR="#A020F0">if</FONT></B>(lenD &gt; 0) {
+		Dx /= lenD;
+		Dy /= lenD;
+		Dz /= lenD;
+	  } <I><FONT COLOR="#B22222">/* end if */</FONT></I>
+	  <I><FONT COLOR="#B22222">//Dx=Dy=0;Dz=1;
+</FONT></I>	  DzPoints[xi][yi] = Dz;
+	  DxPoints[xi]     = Dx;
+	  DyPoints[yi]     = Dy;
+	} <I><FONT COLOR="#B22222">/* end for */</FONT></I>
+  } <I><FONT COLOR="#B22222">/* end for */</FONT></I>
+
+  glShadeModel(GL_SMOOTH);
+  glLightfv(GL_LIGHT0, GL_POSITION, light_position);
+  glEnable(GL_LIGHTING);
+  glEnable(GL_LIGHT0);
+
+  <I><FONT COLOR="#B22222">//glPolygonMode(GL_FRONT, GL_LINE);
+</FONT></I>  <I><FONT COLOR="#B22222">//glPolygonMode(GL_BACK,  GL_LINE);
+</FONT></I>  glMaterialfv(GL_FRONT, GL_DIFFUSE, mat_diffuse);
+  glMaterialfv(GL_FRONT, GL_SPECULAR, mat_specular);
+  glMaterialfv(GL_FRONT, GL_SHININESS, mat_shininess);
+
+  <B><FONT COLOR="#A020F0">for</FONT></B>(yi=0;yi&lt;yNum-1;yi++) {
+	glBegin(GL_TRIANGLE_STRIP);
+	<B><FONT COLOR="#A020F0">for</FONT></B>(xi=0;xi&lt;xNum;xi++) {
+	  glColor3f(1, 0, 1);
+	  glNormal3f(DxPoints[xi], DyPoints[yi],   DzPoints[xi][yi]);
+	  glVertex3f(xPoints[xi],  yPoints[yi],    zPoints[xi][yi]);
+	  glNormal3f(DxPoints[xi], DyPoints[yi+1], DzPoints[xi][yi+1]);
+	  glVertex3f(xPoints[xi],  yPoints[yi+1],  zPoints[xi][yi+1]);
+	} <I><FONT COLOR="#B22222">/* end for */</FONT></I>
+	glEnd();
+  } <I><FONT COLOR="#B22222">/* end for */</FONT></I>
+
+<I><FONT COLOR="#B22222">//  glBegin(GL_POINTS);
+</FONT></I><I><FONT COLOR="#B22222">//  for(xi=0;xi&lt;xNum;xi++) {
+</FONT></I><I><FONT COLOR="#B22222">//   for(yi=0;yi&lt;yNum;yi++) {
+</FONT></I><I><FONT COLOR="#B22222">// 	 glColor3f(1, 1, 0);
+</FONT></I><I><FONT COLOR="#B22222">//	 glVertex3f(xPoints[xi], yPoints[yi], zPoints[xi][yi]);
+</FONT></I><I><FONT COLOR="#B22222">//   }
+</FONT></I><I><FONT COLOR="#B22222">//  }
+</FONT></I><I><FONT COLOR="#B22222">//  glEnd();
+</FONT></I>
+  glShadeModel(GL_FLAT);
+  glDisable(GL_LIGHTING);
+
+
+  <I><FONT COLOR="#B22222">/* Draw the x/y/z axis */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">if</FONT></B> 1
+  glBegin(GL_LINE_STRIP);
+  glColor3f(1, 0, 0);
+  glVertex3f( 0, 0, 0);
+  glVertex3f(15, 0, 0);
+  glVertex3f( 0, 0, 0);
+
+  glColor3f(0, 1, 0);
+  glVertex3f( 0, 0, 0);
+  glVertex3f(0, 15, 0);
+  glVertex3f( 0, 0, 0);
+
+  glColor3f(0, 0, 1);
+  glVertex3f(0, 0,  0);
+  glVertex3f(0, 0, 15);
+  glEnd();
+#<B><FONT COLOR="#5F9EA0">endif</FONT></B>
+
+  <I><FONT COLOR="#B22222">/* Draw the box */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">if</FONT></B> 1
+  glBegin(GL_LINE_STRIP);
+
+  glColor3f(1, 1, 1);
+
+  glVertex3f( 15, -15, -15);
+  glVertex3f( 15,  15, -15);
+  glVertex3f(-15,  15, -15);
+  glVertex3f(-15, -15, -15);
+  glVertex3f( 15, -15, -15);
+
+  glVertex3f( 15, -15,  15);
+  glVertex3f( 15,  15,  15);
+  glVertex3f(-15,  15,  15);
+  glVertex3f(-15, -15,  15);
+  glVertex3f( 15, -15,  15);
+
+  glVertex3f( 15,  15,  15);
+  glVertex3f( 15,  15, -15);
+
+  glVertex3f(-15,  15, -15);
+  glVertex3f(-15,  15,  15);
+
+  glVertex3f(-15, -15,  15);
+  glVertex3f(-15, -15, -15);
+
+  glEnd();
+#<B><FONT COLOR="#5F9EA0">endif</FONT></B>
+
+  glEndList();
+} <I><FONT COLOR="#B22222">/* end func computeGeometry */</FONT></I>
+</PRE>
+<HR \/>
+<ADDRESS>Generated by <A HREF="http://www.iki.fi/~mtr/genscript/">GNU Enscript 1.6.5.90</A>.</ADDRESS>
+</BODY>
+</HTML>

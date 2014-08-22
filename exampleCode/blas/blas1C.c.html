@@ -1,0 +1,92 @@
+<!DOCTYPE html PUBLIC "-//IETF//DTD HTML 2.0//EN">
+<HTML>
+<HEAD>
+<TITLE>blas/blas1C.c</TITLE>
+</HEAD>
+<BODY BGCOLOR="#FFFFFF" TEXT="#000000" LINK="#1F00FF" ALINK="#FF0000" VLINK="#9900DD">
+<A NAME="top"> </A>
+<A NAME="file1"> </A>
+<H1><a href="blas1C.c">blas1C.c</a></H1>
+
+<PRE>
+<I><FONT COLOR="#B22222">/* -*- Mode:C; Coding:us-ascii-unix; fill-column:132 -*- */</FONT></I>
+<I><FONT COLOR="#B22222">/* ****************************************************************************************************************************** */</FONT></I>
+<I><FONT COLOR="#B22222">/**
+   @file      blas1C.c
+   @author    Mitch Richling &lt;http://www.mitchr.me/&gt;
+   @Copyright Copyright 1997 by Mitch Richling.  All rights reserved.
+   @breif     Demonstrate Level 1 BLAS.@EOL
+   @Keywords  blas cblas C FORTRAN numerical linear algebra vector matrix
+   @Std       C89
+
+   This is a simple program intended to illustrate how to make use of several level 1 blas functions found in the cblas (ATLAS).
+   Functions illustrated:
+
+      - dswap           
+      - dcopy
+      - daxpy
+      - ddotu
+      - ddot
+      - dnrm2
+      - dasum     
+      - dscal
+      - ddotc
+      - idmax
+              
+*/</FONT></I>
+
+<I><FONT COLOR="#B22222">/* ------------------------------------------------------------------------------------------------------------------------------ */</FONT></I>
+
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;stdio.h&gt;</FONT></B>              <I><FONT COLOR="#B22222">/* I/O lib         ISOC     */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;stdlib.h&gt;</FONT></B>             <I><FONT COLOR="#B22222">/* Standard Lib    ISOC     */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&quot;blaio.h&quot;</FONT></B>              <I><FONT COLOR="#B22222">/* Basic Linear Algebra I/O */</FONT></I>
+
+<B><FONT COLOR="#228B22">int</FONT></B> <B><FONT COLOR="#0000FF">main</FONT></B>(<B><FONT COLOR="#228B22">int</FONT></B> argc, <B><FONT COLOR="#228B22">char</FONT></B> **argv) {
+  <B><FONT COLOR="#228B22">double</FONT></B> x[4] = {2, 3, 4, 5};
+  <B><FONT COLOR="#228B22">double</FONT></B> y[4] = {5, 4, 9, 2};
+  <B><FONT COLOR="#228B22">double</FONT></B> d[4];
+
+  printVector(4, x, 3, 1, NULL, NULL, NULL, <B><FONT COLOR="#BC8F8F">&quot;            x = &quot;</FONT></B>);
+  printVector(4, y, 3, 1, NULL, NULL, NULL, <B><FONT COLOR="#BC8F8F">&quot;            y = &quot;</FONT></B>);
+   
+           <I><FONT COLOR="#B22222">/* lenX X  incX Y  incY*/</FONT></I>
+  cblas_dswap(4,   x, 1,   y, 1);
+
+  printf(<B><FONT COLOR="#BC8F8F">&quot;After Swap..\n&quot;</FONT></B>);
+  printVector(4, x, 3, 1, NULL, NULL, NULL, <B><FONT COLOR="#BC8F8F">&quot;            x = &quot;</FONT></B>);
+  printVector(4, y, 3, 1, NULL, NULL, NULL, <B><FONT COLOR="#BC8F8F">&quot;            y = &quot;</FONT></B>);
+
+           <I><FONT COLOR="#B22222">/* lenX X  incX Y  incY*/</FONT></I>
+  cblas_dcopy(4,   x, 1,   d, 1);
+  printf(<B><FONT COLOR="#BC8F8F">&quot;After Copy (d=x)..\n&quot;</FONT></B>);
+  printVector(4, d, 3, 1, NULL, NULL, NULL, <B><FONT COLOR="#BC8F8F">&quot;       d &lt;- x = &quot;</FONT></B>);
+
+
+           <I><FONT COLOR="#B22222">/* lenX alpha X  incX */</FONT></I>
+  cblas_dscal(4,   2.0,  y, 1);
+  printf(<B><FONT COLOR="#BC8F8F">&quot;After Scale (2*y)..\n&quot;</FONT></B>);
+  printVector(4, y, 3, 1, NULL, NULL, NULL, <B><FONT COLOR="#BC8F8F">&quot;        2.0*y = &quot;</FONT></B>);
+
+           <I><FONT COLOR="#B22222">/* lenX alpha X  incX y  incY*/</FONT></I>
+  cblas_daxpy(4,   3.0,  x, 1,   y, 1);
+  printf(<B><FONT COLOR="#BC8F8F">&quot;After Add (y=3*x+y)..\n&quot;</FONT></B>);
+  printVector(4, y, 3, 1, NULL, NULL, NULL, <B><FONT COLOR="#BC8F8F">&quot; y &lt;- 3.0*x+y = &quot;</FONT></B>);
+  
+                                                     <I><FONT COLOR="#B22222">/* lenX X  incX */</FONT></I>
+  printf(<B><FONT COLOR="#BC8F8F">&quot;2-norm   of y = %0.2f\n&quot;</FONT></B>,  (<B><FONT COLOR="#228B22">float</FONT></B>)cblas_dnrm2(4,   y, 1));
+  printf(<B><FONT COLOR="#BC8F8F">&quot;sum-norm of y = %0.2f\n&quot;</FONT></B>,  (<B><FONT COLOR="#228B22">float</FONT></B>)cblas_dasum(4,   y, 1));
+
+  <I><FONT COLOR="#B22222">/* Note, the i#amax norm returns the INDEX of the element that corresponds to the max-norm value. */</FONT></I>
+                                                     <I><FONT COLOR="#B22222">/* lenX X  incX */</FONT></I>
+  printf(<B><FONT COLOR="#BC8F8F">&quot;max-norm of y = |y[%d]|\n&quot;</FONT></B>, (<B><FONT COLOR="#228B22">int</FONT></B>)cblas_idamax(4,   y, 1));   
+
+                                                     <I><FONT COLOR="#B22222">/* lenX X  incX Y  incY */</FONT></I>
+  printf(<B><FONT COLOR="#BC8F8F">&quot;      y dot y = %0.2f\n&quot;</FONT></B>,   (<B><FONT COLOR="#228B22">float</FONT></B>)cblas_ddot(4,   y, 1,   y, 1));
+
+  <B><FONT COLOR="#A020F0">return</FONT></B> 0;
+} <I><FONT COLOR="#B22222">/* end func main */</FONT></I>
+</PRE>
+<HR \/>
+<ADDRESS>Generated by <A HREF="http://www.iki.fi/~mtr/genscript/">GNU Enscript 1.6.5.90</A>.</ADDRESS>
+</BODY>
+</HTML>

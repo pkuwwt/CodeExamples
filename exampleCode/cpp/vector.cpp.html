@@ -1,0 +1,108 @@
+<!DOCTYPE html PUBLIC "-//IETF//DTD HTML 2.0//EN">
+<HTML>
+<HEAD>
+<TITLE>cpp/vector.cpp</TITLE>
+</HEAD>
+<BODY BGCOLOR="#FFFFFF" TEXT="#000000" LINK="#1F00FF" ALINK="#FF0000" VLINK="#9900DD">
+<A NAME="top"> </A>
+<A NAME="file1"> </A>
+<H1><a href="vector.cpp">vector.cpp</a></H1>
+
+<PRE>
+<I><FONT COLOR="#B22222">// -*- Mode:C++; Coding:us-ascii-unix; fill-column:132 -*-
+</FONT></I><I><FONT COLOR="#B22222">/**********************************************************************************************************************************/</FONT></I>
+<I><FONT COLOR="#B22222">/**
+   @file      vector.cpp
+   @author    Mitch Richling &lt;http://www.mitchr.me&gt;
+   @Copyright Copyright 2000 by Mitch Richling.  All rights reserved.
+   @brief     Example of how to use vectors in the STL specified by C++ 98.@EOL
+   @Keywords  Standard C++ STL vector
+   @Std       C++98
+
+   This program is an example of how use the vector template in the STL of C++ 98.
+
+   The std::vector template is variable sized, array-like container -- probably the most used container in the STL.  While
+   array-like indexing is allowed, vectors will not automatically grow to make out of bounds indexes valid nor will they do the
+   right thing if an element is retrieved with an out of bounds index (this is no doubt a serious disappointment for Perl and Ruby
+   programmers) In order to grow a vector, the safe members like push_back() and insert() should be used.
+
+   Methods are also provided to directly manipulate the storage capacity of a vector.
+***********************************************************************************************************************************/</FONT></I>
+
+<I><FONT COLOR="#B22222">////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+</FONT></I>#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;vector&gt;</FONT></B>                  <I><FONT COLOR="#B22222">/* STL vector              C++98/11 */</FONT></I> 
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;iostream&gt;</FONT></B>                <I><FONT COLOR="#B22222">/* C++ iostream            C++98/11 */</FONT></I>
+
+<I><FONT COLOR="#B22222">////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+</FONT></I><B><FONT COLOR="#228B22">int</FONT></B> <B><FONT COLOR="#0000FF">main</FONT></B>() {
+  <I><FONT COLOR="#B22222">// Default construction leads to an empty vector with unknown allocated storage.
+</FONT></I>  <B><FONT COLOR="#5F9EA0">std</FONT></B>::vector&lt;<B><FONT COLOR="#228B22">int</FONT></B>&gt; demoVec01;  
+
+  <I><FONT COLOR="#B22222">// You can pre-allocate a vector and fill it with default values:
+</FONT></I>  <B><FONT COLOR="#5F9EA0">std</FONT></B>::vector&lt;<B><FONT COLOR="#228B22">int</FONT></B>&gt; demoVec02(10);
+
+  <I><FONT COLOR="#B22222">// You can pre-allocate a vector, and fill it with a specific constant (-1):
+</FONT></I>  <B><FONT COLOR="#5F9EA0">std</FONT></B>::vector&lt;<B><FONT COLOR="#228B22">int</FONT></B>&gt; demoVec03(10, -1);
+
+  <I><FONT COLOR="#B22222">// The fastest way to see if a vector is empty is with empty():
+</FONT></I>  <B><FONT COLOR="#A020F0">if</FONT></B>(demoVec01.empty())
+    <B><FONT COLOR="#5F9EA0">std</FONT></B>::cout &lt;&lt; <B><FONT COLOR="#BC8F8F">&quot;demoVec01 is empty.  That's how vectors start life...&quot;</FONT></B> &lt;&lt; std::endl;
+  <B><FONT COLOR="#A020F0">if</FONT></B>( !(demoVec02.empty()))
+    <B><FONT COLOR="#5F9EA0">std</FONT></B>::cout &lt;&lt; <B><FONT COLOR="#BC8F8F">&quot;demoVec02 is NOT empty as we used a constructor...&quot;</FONT></B> &lt;&lt; std::endl;
+
+  <I><FONT COLOR="#B22222">// Insert at the beginning, which is SLOW.  The vector will grow as required.
+</FONT></I>  <B><FONT COLOR="#A020F0">for</FONT></B>(std::vector&lt;<B><FONT COLOR="#228B22">int</FONT></B>&gt;::size_type i=0; i&lt;5; i++)
+    demoVec01.insert(demoVec01.begin(), i);
+
+  <I><FONT COLOR="#B22222">// Insert at the end, which is FAST.  The vector will grow as required.
+</FONT></I>  <B><FONT COLOR="#A020F0">for</FONT></B>(std::vector&lt;<B><FONT COLOR="#228B22">int</FONT></B>&gt;::size_type i=6; i&lt;11; i++)
+    demoVec01.insert(demoVec01.end(), i);
+
+  <I><FONT COLOR="#B22222">// push_back is a more common way to insert at the end (It is FAST too):
+</FONT></I>  <B><FONT COLOR="#A020F0">for</FONT></B>(std::vector&lt;<B><FONT COLOR="#228B22">int</FONT></B>&gt;::size_type i=12; i&lt;20; i++) 
+    demoVec01.push_back(i);
+
+  <I><FONT COLOR="#B22222">// We can assign elements with the [] operator, but never use an index that doesn't exist:
+</FONT></I>  demoVec01[2] = 30;
+
+  <I><FONT COLOR="#B22222">// Space can be allocated with reserve(), and reported with capacity()
+</FONT></I>  <B><FONT COLOR="#5F9EA0">std</FONT></B>::cout &lt;&lt; <B><FONT COLOR="#BC8F8F">&quot;pre-reserve demoVec01 Size:      &quot;</FONT></B> &lt;&lt; demoVec01.size()     &lt;&lt; std::endl;
+  <B><FONT COLOR="#5F9EA0">std</FONT></B>::cout &lt;&lt; <B><FONT COLOR="#BC8F8F">&quot;pre-reserve demoVec01 Capacity:  &quot;</FONT></B> &lt;&lt; demoVec01.capacity() &lt;&lt; std::endl;
+  demoVec01.reserve(demoVec01.capacity()+100);
+  <B><FONT COLOR="#5F9EA0">std</FONT></B>::cout &lt;&lt; <B><FONT COLOR="#BC8F8F">&quot;post-reserve demoVec01 Size:     &quot;</FONT></B> &lt;&lt; demoVec01.size()     &lt;&lt; std::endl;
+  <B><FONT COLOR="#5F9EA0">std</FONT></B>::cout &lt;&lt; <B><FONT COLOR="#BC8F8F">&quot;post-reserve demoVec01 Capacity: &quot;</FONT></B> &lt;&lt; demoVec01.capacity() &lt;&lt; std::endl;
+
+  <I><FONT COLOR="#B22222">// We can extract a value with the [] operator, but don't use an index that is out of bounds:
+</FONT></I>  <B><FONT COLOR="#5F9EA0">std</FONT></B>::cout &lt;&lt; <B><FONT COLOR="#BC8F8F">&quot;demoVec01[2]=&quot;</FONT></B> &lt;&lt; demoVec01[2] &lt;&lt; std::endl;
+
+  <I><FONT COLOR="#B22222">// We can traverse the whole thing, with an iterator, like this:
+</FONT></I>  <B><FONT COLOR="#5F9EA0">std</FONT></B>::cout &lt;&lt; <B><FONT COLOR="#BC8F8F">&quot;All the elements of the vector: &quot;</FONT></B>;
+  <B><FONT COLOR="#A020F0">for</FONT></B>(std::vector&lt;<B><FONT COLOR="#228B22">int</FONT></B>&gt;::iterator demoVec01Iter = demoVec01.begin(); demoVec01Iter != demoVec01.end(); ++demoVec01Iter)
+    <B><FONT COLOR="#5F9EA0">std</FONT></B>::cout &lt;&lt; *demoVec01Iter &lt;&lt; <B><FONT COLOR="#BC8F8F">&quot; &quot;</FONT></B>;
+  <B><FONT COLOR="#5F9EA0">std</FONT></B>::cout &lt;&lt; std::endl;
+
+  <I><FONT COLOR="#B22222">// Remove the last value from the vector.  This is a FAST operation.
+</FONT></I>  <B><FONT COLOR="#5F9EA0">std</FONT></B>::cout &lt;&lt; <B><FONT COLOR="#BC8F8F">&quot;Size of demoVec01 before pop: &quot;</FONT></B> &lt;&lt; demoVec01.size() &lt;&lt; std::endl;
+  demoVec01.pop_back();
+  <B><FONT COLOR="#5F9EA0">std</FONT></B>::cout &lt;&lt; <B><FONT COLOR="#BC8F8F">&quot;Size of demoVec01 after pop: &quot;</FONT></B>  &lt;&lt; demoVec01.size() &lt;&lt; std::endl;
+
+  <I><FONT COLOR="#B22222">// We can wack the last element with erase().  Note the '-1' used with the random access iterator returned by end().
+</FONT></I>  demoVec01.erase(demoVec01.end()-1);
+  <B><FONT COLOR="#5F9EA0">std</FONT></B>::cout &lt;&lt; <B><FONT COLOR="#BC8F8F">&quot;Size of demoVec01 after erase (end): &quot;</FONT></B> &lt;&lt; demoVec01.size() &lt;&lt; std::endl;
+
+  <I><FONT COLOR="#B22222">// We can wack the FIRST element as well with erase(), but it is VERY slow.
+</FONT></I>  demoVec01.erase(demoVec01.begin());
+  <B><FONT COLOR="#5F9EA0">std</FONT></B>::cout &lt;&lt; <B><FONT COLOR="#BC8F8F">&quot;Size of demoVec01 after erase (begin): &quot;</FONT></B> &lt;&lt; demoVec01.size() &lt;&lt; std::endl;
+  
+  <I><FONT COLOR="#B22222">// We can traverse the whole thing using [] notation:
+</FONT></I>  <B><FONT COLOR="#5F9EA0">std</FONT></B>::cout &lt;&lt; <B><FONT COLOR="#BC8F8F">&quot;All the elements of the vector: &quot;</FONT></B>;
+  <B><FONT COLOR="#A020F0">for</FONT></B>(std::vector&lt;<B><FONT COLOR="#228B22">int</FONT></B>&gt;::size_type i=0; i&lt;demoVec01.size(); i++)
+    <B><FONT COLOR="#5F9EA0">std</FONT></B>::cout &lt;&lt; demoVec01[i] &lt;&lt; <B><FONT COLOR="#BC8F8F">&quot; &quot;</FONT></B>;
+  <B><FONT COLOR="#5F9EA0">std</FONT></B>::cout &lt;&lt; std::endl;
+
+} <I><FONT COLOR="#B22222">// end func main
+</FONT></I></PRE>
+<HR \/>
+<ADDRESS>Generated by <A HREF="http://www.iki.fi/~mtr/genscript/">GNU Enscript 1.6.5.90</A>.</ADDRESS>
+</BODY>
+</HTML>

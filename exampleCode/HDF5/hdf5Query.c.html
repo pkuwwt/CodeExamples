@@ -1,0 +1,263 @@
+<!DOCTYPE html PUBLIC "-//IETF//DTD HTML 2.0//EN">
+<HTML>
+<HEAD>
+<TITLE>HDF5/hdf5Query.c</TITLE>
+</HEAD>
+<BODY BGCOLOR="#FFFFFF" TEXT="#000000" LINK="#1F00FF" ALINK="#FF0000" VLINK="#9900DD">
+<A NAME="top"> </A>
+<A NAME="file1"> </A>
+<H1><a href="hdf5Query.c">hdf5Query.c</a></H1>
+
+<PRE>
+<I><FONT COLOR="#B22222">/* -*- Mode:C; Coding:us-ascii-unix; fill-column:132 -*- */</FONT></I>
+<I><FONT COLOR="#B22222">/* ****************************************************************************************************************************** */</FONT></I>
+<I><FONT COLOR="#B22222">/**
+   @file      hdf5Query.c
+   @author    Mitch Richling &lt;http://www.mitchr.me/&gt;
+   @Copyright Copyright 1998 by Mitch Richling.  All rights reserved.
+   @brief     How to extract various bits of info from an HDF5 file.@EOL
+   @Keywords  none
+   @Std       C99 HDF5
+
+   While most HDF5 applications must only work with HDF5 files with a relatively well defined format, it is often necessary to
+   discover various bits of meta-data at run time.  For example, many applications know the names, data types, ranks, and locations
+   of required datasets, but may need to discover dim sizes.
+              
+*/</FONT></I>
+<I><FONT COLOR="#B22222">/* ------------------------------------------------------------------------------------------------------------------------------ */</FONT></I>
+
+<I><FONT COLOR="#B22222">/* ****************************************************************************************************************************** */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;stdio.h&gt;</FONT></B>              <I><FONT COLOR="#B22222">/* I/O lib         ISOC  */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;stdlib.h&gt;</FONT></B>             <I><FONT COLOR="#B22222">/* Standard Lib    ISOC  */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;string.h&gt;</FONT></B>             <I><FONT COLOR="#B22222">/* Strings         ISOC  */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;hdf5.h&gt;</FONT></B>               <I><FONT COLOR="#B22222">/* HDF5 files            */</FONT></I>
+
+<I><FONT COLOR="#B22222">/* ****************************************************************************************************************************** */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&quot;mjrHDF5.h&quot;</FONT></B>
+
+<I><FONT COLOR="#B22222">/* ****************************************************************************************************************************** */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">define</FONT></B> <FONT COLOR="#B8860B">MAX_X</FONT> 10
+#<B><FONT COLOR="#5F9EA0">define</FONT></B> <FONT COLOR="#B8860B">MAX_Y</FONT> 20
+#<B><FONT COLOR="#5F9EA0">define</FONT></B> <FONT COLOR="#B8860B">MAX_T</FONT> 24
+
+#<B><FONT COLOR="#5F9EA0">define</FONT></B> <FONT COLOR="#B8860B">TST_FILE_NAME</FONT> <B><FONT COLOR="#BC8F8F">&quot;a3DtestFile.h5&quot;</FONT></B>
+
+<I><FONT COLOR="#B22222">/* ****************************************************************************************************************************** */</FONT></I>
+<B><FONT COLOR="#228B22">int</FONT></B> <B><FONT COLOR="#0000FF">main</FONT></B>(<B><FONT COLOR="#228B22">int</FONT></B> argc, <B><FONT COLOR="#228B22">char</FONT></B> *argv[]) {
+  hid_t   fileID, dataSetID;
+  herr_t  hErrVal;
+  <B><FONT COLOR="#228B22">int</FONT></B>     i;
+  hsize_t dims[1024], maxDims[1024];
+  H5T_class_t class;
+  <B><FONT COLOR="#228B22">char</FONT></B> classStr[32];
+  hid_t dataTypeID;
+  size_t dataSize;
+  H5T_order_t order;
+  <B><FONT COLOR="#228B22">int</FONT></B> rank; <I><FONT COLOR="#B22222">/* Note this is an int, not an hssize_t */</FONT></I>
+  <B><FONT COLOR="#228B22">int</FONT></B> intVal;
+  hid_t dataSpaceID;
+  hid_t rootGroupID;
+  hsize_t numInRootGrp, firstDataSetIdx, foundFirstDataSet;
+  <B><FONT COLOR="#228B22">char</FONT></B> attrName[1024], firstDataSetName[1024];
+  ssize_t objectNameSize, attrNameSize;
+  H5G_stat_t objectStatInfo;
+  <B><FONT COLOR="#228B22">int</FONT></B> numAttrs;
+  <B><FONT COLOR="#228B22">int</FONT></B> curAttrIdx;
+  hid_t attrID;
+  hsize_t numDataPoints;
+  <B><FONT COLOR="#228B22">unsigned</FONT></B> majnum, minnum, relnum;
+
+  <I><FONT COLOR="#B22222">/* Load the library -- not required most platforms. */</FONT></I>
+  hErrVal = H5open();
+  mjrHDF5_chkError(hErrVal);
+
+  <I><FONT COLOR="#B22222">/* Get the library version */</FONT></I>
+  hErrVal = H5get_libversion(&amp;majnum, &amp;minnum, &amp;relnum);
+  mjrHDF5_chkError(hErrVal);
+  printf(<B><FONT COLOR="#BC8F8F">&quot;Lib Version: v%lu.%lur%lu\n&quot;</FONT></B>, (<B><FONT COLOR="#228B22">unsigned</FONT></B> <B><FONT COLOR="#228B22">long</FONT></B>)majnum, (<B><FONT COLOR="#228B22">unsigned</FONT></B> <B><FONT COLOR="#228B22">long</FONT></B>)minnum, (<B><FONT COLOR="#228B22">unsigned</FONT></B> <B><FONT COLOR="#228B22">long</FONT></B>)relnum);
+
+  <I><FONT COLOR="#B22222">/*  Open an existing file. */</FONT></I>
+  fileID = H5Fopen(TST_FILE_NAME, H5F_ACC_RDWR, H5P_DEFAULT);
+  mjrHDF5_chkError(fileID);
+
+  <I><FONT COLOR="#B22222">/*  Get the ID for the &quot;root&quot; group -- every HDF5 has one */</FONT></I>
+  rootGroupID = H5Gopen(fileID, <B><FONT COLOR="#BC8F8F">&quot;/&quot;</FONT></B>, H5P_DEFAULT);
+  mjrHDF5_chkError(rootGroupID);
+
+  <I><FONT COLOR="#B22222">/* Get the number of objects in the root group. */</FONT></I>
+  hErrVal = H5Gget_num_objs(rootGroupID, &amp;numInRootGrp);
+  mjrHDF5_chkError(hErrVal);
+
+  printf(<B><FONT COLOR="#BC8F8F">&quot;The root group contains %lu object%c\n&quot;</FONT></B>, (<B><FONT COLOR="#228B22">unsigned</FONT></B> <B><FONT COLOR="#228B22">long</FONT></B>)numInRootGrp, (numInRootGrp==1?<B><FONT COLOR="#BC8F8F">' '</FONT></B>:<B><FONT COLOR="#BC8F8F">'s'</FONT></B>));
+
+  <B><FONT COLOR="#A020F0">if</FONT></B>(numInRootGrp &lt; 1) {
+    printf(<B><FONT COLOR="#BC8F8F">&quot;As the file contains NO objects, I have nothing left to do...\n&quot;</FONT></B>);
+    exit(1);
+  } <I><FONT COLOR="#B22222">/* end if */</FONT></I>
+
+  <I><FONT COLOR="#B22222">/*  Find the first dataset in the root group. */</FONT></I>
+  <B><FONT COLOR="#A020F0">for</FONT></B>(foundFirstDataSet=0,firstDataSetIdx=0; (!foundFirstDataSet)&amp;&amp;(firstDataSetIdx&lt;numInRootGrp); firstDataSetIdx++) {
+    <I><FONT COLOR="#B22222">/* Get object name from the index. */</FONT></I>
+    objectNameSize = H5Gget_objname_by_idx(rootGroupID, firstDataSetIdx, firstDataSetName, 1024);
+    mjrHDF5_chkError(objectNameSize);
+    <B><FONT COLOR="#A020F0">if</FONT></B>(objectNameSize == 0) { <I><FONT COLOR="#B22222">/* Need to check for zero return too */</FONT></I>
+      printf(<B><FONT COLOR="#BC8F8F">&quot;ERROR: Object with index %lu doesn't exist in root group!\n&quot;</FONT></B>, (<B><FONT COLOR="#228B22">unsigned</FONT></B> <B><FONT COLOR="#228B22">long</FONT></B>)firstDataSetIdx);
+      exit(1);
+    } <I><FONT COLOR="#B22222">/* end if */</FONT></I>
+    <I><FONT COLOR="#B22222">/*  Now use the object name to get info about the object... */</FONT></I>
+    hErrVal = H5Gget_objinfo(rootGroupID, firstDataSetName, 0, &amp;objectStatInfo);
+    mjrHDF5_chkError(hErrVal);
+    <I><FONT COLOR="#B22222">/* If the object is a dataset, then print out some info. */</FONT></I>
+    <B><FONT COLOR="#A020F0">if</FONT></B>(objectStatInfo.type == H5G_DATASET) {
+      printf(<B><FONT COLOR="#BC8F8F">&quot;Object %luth (%s) is a dataset!\n&quot;</FONT></B>, (<B><FONT COLOR="#228B22">unsigned</FONT></B> <B><FONT COLOR="#228B22">long</FONT></B>)firstDataSetIdx, firstDataSetName);
+      printf(<B><FONT COLOR="#BC8F8F">&quot;The name of the %luth object of the root group is: %s\n&quot;</FONT></B>, (<B><FONT COLOR="#228B22">unsigned</FONT></B> <B><FONT COLOR="#228B22">long</FONT></B>)firstDataSetIdx, firstDataSetName);
+      foundFirstDataSet = 1;
+      printf(<B><FONT COLOR="#BC8F8F">&quot;Info for the %s dataset:\n&quot;</FONT></B>, firstDataSetName);
+      printf(<B><FONT COLOR="#BC8F8F">&quot;  Modify time: %lu\n&quot;</FONT></B>, (<B><FONT COLOR="#228B22">unsigned</FONT></B> <B><FONT COLOR="#228B22">long</FONT></B>)objectStatInfo.mtime);
+      printf(<B><FONT COLOR="#BC8F8F">&quot;  Type: %lu\n&quot;</FONT></B>, (<B><FONT COLOR="#228B22">unsigned</FONT></B> <B><FONT COLOR="#228B22">long</FONT></B>)objectStatInfo.type);
+      printf(<B><FONT COLOR="#BC8F8F">&quot;  Link count: %lu\n&quot;</FONT></B>, (<B><FONT COLOR="#228B22">unsigned</FONT></B> <B><FONT COLOR="#228B22">long</FONT></B>)objectStatInfo.nlink);
+    } <I><FONT COLOR="#B22222">/* end if */</FONT></I>
+  } <I><FONT COLOR="#B22222">/* end for */</FONT></I>
+  <I><FONT COLOR="#B22222">/* Note: At this point index of the dataset will be: firstDataSetIdx-- */</FONT></I>
+  <B><FONT COLOR="#A020F0">if</FONT></B>(!foundFirstDataSet) {
+    printf(<B><FONT COLOR="#BC8F8F">&quot;ERROR: Could not find a dataset in the root group\n&quot;</FONT></B>);
+    exit(1);
+  } <I><FONT COLOR="#B22222">/* end if */</FONT></I>
+
+  <I><FONT COLOR="#B22222">/* Open the dataset we found -- we know it exists. */</FONT></I>
+  dataSetID = H5Dopen(rootGroupID, firstDataSetName, H5P_DEFAULT);
+  mjrHDF5_chkError(dataSetID);
+
+  <I><FONT COLOR="#B22222">/* ****************************************************************************************************************************** */</FONT></I>
+  <I><FONT COLOR="#B22222">/* Get some info regarding the TYPE of the dataset. */</FONT></I>
+  dataTypeID  = H5Dget_type(dataSetID);
+  mjrHDF5_chkError(dataTypeID);
+  <I><FONT COLOR="#B22222">/*  Get the class of the data */</FONT></I>
+  class = H5Tget_class(dataTypeID);
+  mjrHDF5_Tclass2str(class, classStr);
+  printf(<B><FONT COLOR="#BC8F8F">&quot;  Object class: %s\n&quot;</FONT></B>, classStr);
+  <I><FONT COLOR="#B22222">/*  Get the size of the type */</FONT></I>
+  dataSize = H5Tget_size(dataTypeID);
+  <B><FONT COLOR="#A020F0">if</FONT></B>(dataSize == 0) {
+    printf(<B><FONT COLOR="#BC8F8F">&quot;ERROR: Failure in H5Tget_size().\n&quot;</FONT></B>);
+    exit(1);
+  } <I><FONT COLOR="#B22222">/* end if */</FONT></I>
+  printf(<B><FONT COLOR="#BC8F8F">&quot;  Size of data type: %lu\n&quot;</FONT></B>, (<B><FONT COLOR="#228B22">unsigned</FONT></B> <B><FONT COLOR="#228B22">long</FONT></B>)dataSize);
+  <I><FONT COLOR="#B22222">/*  Get the byte order */</FONT></I>
+  order = H5Tget_order(dataTypeID);
+  printf(<B><FONT COLOR="#BC8F8F">&quot;  Byte Order: &quot;</FONT></B>);
+  <B><FONT COLOR="#A020F0">switch</FONT></B>(order) {
+    <B><FONT COLOR="#A020F0">case</FONT></B> <B><FONT COLOR="#5F9EA0">H5T_ORDER_ERROR</FONT></B>  : printf(<B><FONT COLOR="#BC8F8F">&quot;ERROR\n&quot;</FONT></B>);            <B><FONT COLOR="#A020F0">break</FONT></B>;
+    <B><FONT COLOR="#A020F0">case</FONT></B> <B><FONT COLOR="#5F9EA0">H5T_ORDER_LE</FONT></B>     : printf(<B><FONT COLOR="#BC8F8F">&quot;Little Endian\n&quot;</FONT></B>);    <B><FONT COLOR="#A020F0">break</FONT></B>;
+    <B><FONT COLOR="#A020F0">case</FONT></B> <B><FONT COLOR="#5F9EA0">H5T_ORDER_BE</FONT></B>     : printf(<B><FONT COLOR="#BC8F8F">&quot;Big Endian\n&quot;</FONT></B>);       <B><FONT COLOR="#A020F0">break</FONT></B>;
+    <B><FONT COLOR="#A020F0">case</FONT></B> <B><FONT COLOR="#5F9EA0">H5T_ORDER_VAX</FONT></B>    : printf(<B><FONT COLOR="#BC8F8F">&quot;VAX mixed endian\n&quot;</FONT></B>); <B><FONT COLOR="#A020F0">break</FONT></B>;
+    <B><FONT COLOR="#A020F0">case</FONT></B> <B><FONT COLOR="#5F9EA0">H5T_ORDER_MIXED</FONT></B>  : printf(<B><FONT COLOR="#BC8F8F">&quot;Mixed endian\n&quot;</FONT></B>); <B><FONT COLOR="#A020F0">break</FONT></B>;
+    <B><FONT COLOR="#A020F0">case</FONT></B> <B><FONT COLOR="#5F9EA0">H5T_ORDER_NONE</FONT></B>   : printf(<B><FONT COLOR="#BC8F8F">&quot;particular order\n&quot;</FONT></B>); <B><FONT COLOR="#A020F0">break</FONT></B>;
+  } <I><FONT COLOR="#B22222">/* end switch */</FONT></I>
+  <I><FONT COLOR="#B22222">/*  We are done with the datatype. */</FONT></I>
+  hErrVal = H5Tclose(dataTypeID);
+  mjrHDF5_chkError(hErrVal);
+
+  <I><FONT COLOR="#B22222">/* ****************************************************************************************************************************** */</FONT></I>
+  <I><FONT COLOR="#B22222">/* Figure out the size of the dataset. */</FONT></I>
+  dataSpaceID = H5Dget_space(dataSetID);
+  mjrHDF5_chkError(dataSpaceID);
+  <I><FONT COLOR="#B22222">/*  Get the number of dims. */</FONT></I>
+  rank = H5Sget_simple_extent_ndims(dataSpaceID);
+  mjrHDF5_chkError(rank);
+  <B><FONT COLOR="#A020F0">if</FONT></B>(rank &gt; 1024) {
+    <I><FONT COLOR="#B22222">/*  This can't really happen (limit is 32) */</FONT></I>
+    printf(<B><FONT COLOR="#BC8F8F">&quot;ERROR: rank too large.\n&quot;</FONT></B>);
+    exit(1);
+  } <I><FONT COLOR="#B22222">/* end if */</FONT></I>
+  <I><FONT COLOR="#B22222">/* Get the size of each dim. */</FONT></I>
+  intVal = H5Sget_simple_extent_dims(dataSpaceID, dims, maxDims);
+  mjrHDF5_chkError(intVal);
+  printf(<B><FONT COLOR="#BC8F8F">&quot;  Dataspace Rank %lu\n&quot;</FONT></B>, (<B><FONT COLOR="#228B22">unsigned</FONT></B> <B><FONT COLOR="#228B22">long</FONT></B>)rank);
+  printf(<B><FONT COLOR="#BC8F8F">&quot;  Dim Lengths: &quot;</FONT></B>);
+  <B><FONT COLOR="#A020F0">for</FONT></B>(i=0; i&lt;rank; i++)
+    <B><FONT COLOR="#A020F0">if</FONT></B>(dims[i] == H5S_UNLIMITED) {
+      printf(<B><FONT COLOR="#BC8F8F">&quot;%s &quot;</FONT></B>, <B><FONT COLOR="#BC8F8F">&quot;UNLIMITED&quot;</FONT></B>);
+    } <B><FONT COLOR="#A020F0">else</FONT></B> {
+      printf(<B><FONT COLOR="#BC8F8F">&quot;%ld &quot;</FONT></B>, (<B><FONT COLOR="#228B22">long</FONT></B>)(dims[i]));
+    } <I><FONT COLOR="#B22222">/* end if/else */</FONT></I>
+  printf(<B><FONT COLOR="#BC8F8F">&quot;\n&quot;</FONT></B>);
+  printf(<B><FONT COLOR="#BC8F8F">&quot;  Max Dim Lengths: &quot;</FONT></B>);
+  <B><FONT COLOR="#A020F0">for</FONT></B>(i=0; i&lt;rank; i++)
+    <B><FONT COLOR="#A020F0">if</FONT></B>(maxDims[i] == H5S_UNLIMITED) {
+      printf(<B><FONT COLOR="#BC8F8F">&quot;%s &quot;</FONT></B>, <B><FONT COLOR="#BC8F8F">&quot;UNLIMITED&quot;</FONT></B>);
+    } <B><FONT COLOR="#A020F0">else</FONT></B> {
+      printf(<B><FONT COLOR="#BC8F8F">&quot;%ld &quot;</FONT></B>, (<B><FONT COLOR="#228B22">long</FONT></B>)(maxDims[i]));
+    } <I><FONT COLOR="#B22222">/* end if/else */</FONT></I>
+  printf(<B><FONT COLOR="#BC8F8F">&quot;\n&quot;</FONT></B>);
+  numDataPoints = H5Sget_simple_extent_npoints(dataSpaceID);
+  <B><FONT COLOR="#A020F0">if</FONT></B>(numDataPoints == 0) {
+    printf(<B><FONT COLOR="#BC8F8F">&quot;ERROR: Call to H5Sget_simple_extent_npoints failed.\n&quot;</FONT></B>);
+    exit(1);
+  } <I><FONT COLOR="#B22222">/* end if */</FONT></I>
+  printf(<B><FONT COLOR="#BC8F8F">&quot;Number of data points: %lu\n&quot;</FONT></B>, (<B><FONT COLOR="#228B22">unsigned</FONT></B> <B><FONT COLOR="#228B22">long</FONT></B>)numDataPoints);
+
+  <I><FONT COLOR="#B22222">/* We are done with the dataSpaceID */</FONT></I>
+  hErrVal = H5Sclose(dataSpaceID);
+  mjrHDF5_chkError(hErrVal);
+
+  <I><FONT COLOR="#B22222">/* Get the number of attributes for the dataSet. */</FONT></I>
+  numAttrs = H5Aget_num_attrs(dataSetID);
+  mjrHDF5_chkError(numAttrs);
+
+  printf(<B><FONT COLOR="#BC8F8F">&quot;  Number of attrs: %lu\n&quot;</FONT></B>, (<B><FONT COLOR="#228B22">unsigned</FONT></B> <B><FONT COLOR="#228B22">long</FONT></B>)numAttrs);
+
+  <I><FONT COLOR="#B22222">/* If we have any attributes, we get info for them */</FONT></I>
+  <B><FONT COLOR="#A020F0">if</FONT></B>(numAttrs &gt; 0) {
+    printf(<B><FONT COLOR="#BC8F8F">&quot;  Attribute info:\n&quot;</FONT></B>);
+
+    <B><FONT COLOR="#A020F0">for</FONT></B>(curAttrIdx=0; curAttrIdx&lt;numAttrs; curAttrIdx++) {
+      attrID = H5Aopen_idx(dataSetID, curAttrIdx);
+      mjrHDF5_chkError(attrID);
+
+      attrNameSize = H5Aget_name(attrID, 1024, attrName);
+      mjrHDF5_chkError(attrNameSize);
+
+      printf(<B><FONT COLOR="#BC8F8F">&quot;    Number %3lu:  &quot;</FONT></B>, (<B><FONT COLOR="#228B22">unsigned</FONT></B> <B><FONT COLOR="#228B22">long</FONT></B>)curAttrIdx);
+
+	  dataTypeID  = H5Aget_type(attrID);
+	  mjrHDF5_chkError(dataTypeID);
+	  <I><FONT COLOR="#B22222">/* Get the class for the type. */</FONT></I>
+	  class = H5Tget_class(dataTypeID);
+	  mjrHDF5_Tclass2str(class, classStr);
+	  printf(<B><FONT COLOR="#BC8F8F">&quot; Class: %-16s&quot;</FONT></B>, classStr);
+	  <I><FONT COLOR="#B22222">/*  Get the size of the type */</FONT></I>
+	  dataSize = H5Tget_size(dataTypeID);
+	  <B><FONT COLOR="#A020F0">if</FONT></B>(dataSize == 0) {
+		printf(<B><FONT COLOR="#BC8F8F">&quot;ERROR: Failure in H5Tget_size().\n&quot;</FONT></B>);
+		exit(1);
+	  } <I><FONT COLOR="#B22222">/* end if */</FONT></I>
+	  printf(<B><FONT COLOR="#BC8F8F">&quot; Size: %3lu &quot;</FONT></B>, (<B><FONT COLOR="#228B22">unsigned</FONT></B> <B><FONT COLOR="#228B22">long</FONT></B>)dataSize);
+	  hErrVal = H5Tclose(dataTypeID);
+	  mjrHDF5_chkError(hErrVal);
+
+      printf(<B><FONT COLOR="#BC8F8F">&quot; Name: %s \n&quot;</FONT></B>, attrName);
+
+      hErrVal = H5Aclose(attrID);
+	  mjrHDF5_chkError(hErrVal);
+    } <I><FONT COLOR="#B22222">/* end for */</FONT></I>
+  } <I><FONT COLOR="#B22222">/* end if */</FONT></I>
+
+  <I><FONT COLOR="#B22222">/* Close the dataset. */</FONT></I>
+  hErrVal = H5Dclose(dataSetID);
+
+  <I><FONT COLOR="#B22222">/* Close the file. */</FONT></I>
+  hErrVal = H5Fclose(fileID);
+
+  <I><FONT COLOR="#B22222">/* Unload the library and free any remaining resources. */</FONT></I>
+  hErrVal = H5close();
+  mjrHDF5_chkError(hErrVal);
+
+  <B><FONT COLOR="#A020F0">return</FONT></B> 0;
+
+} <I><FONT COLOR="#B22222">/* end func main */</FONT></I>
+</PRE>
+<HR \/>
+<ADDRESS>Generated by <A HREF="http://www.iki.fi/~mtr/genscript/">GNU Enscript 1.6.5.90</A>.</ADDRESS>
+</BODY>
+</HTML>

@@ -1,0 +1,121 @@
+<!DOCTYPE html PUBLIC "-//IETF//DTD HTML 2.0//EN">
+<HTML>
+<HEAD>
+<TITLE>NetCDF/ncHeaderDump.c</TITLE>
+</HEAD>
+<BODY BGCOLOR="#FFFFFF" TEXT="#000000" LINK="#1F00FF" ALINK="#FF0000" VLINK="#9900DD">
+<A NAME="top"> </A>
+<A NAME="file1"> </A>
+<H1><a href="ncHeaderDump.c">ncHeaderDump.c</a></H1>
+
+<PRE>
+<I><FONT COLOR="#B22222">/**
+   @file      ncHeaderDump.c
+   @author    Mitch Richling &lt;http://www.mitchr.me/&gt;
+   @Copyright Copyright 1999 by Mitch Richling.  All rights reserved.
+   @brief     How to discover what is in a NetCDF file@EOL
+   @Keywords  NetCDF
+   @Std       C89
+
+              This example program demonstrates how to use the various
+              NetCDF query functions to discover what is in a NetCDF
+              file.  Functionally speaking, this program is very
+              similar to the operation of `ncdump -h`, except that
+              this program doesn't extract the values of attributes or
+              print in the canonical ASCII CDF format.  For a more
+              comprehensive example, see the ncdump source code that
+              comes with the NetCDF distribution.
+*/</FONT></I>
+
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;netcdf.h&gt;</FONT></B>             <I><FONT COLOR="#B22222">/* NetCDF Files          */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;stdio.h&gt;</FONT></B>              <I><FONT COLOR="#B22222">/* I/O lib         ISOC  */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;string.h&gt;</FONT></B>             <I><FONT COLOR="#B22222">/* Strings         ISOC  */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;stdlib.h&gt;</FONT></B>             <I><FONT COLOR="#B22222">/* Standard Lib    ISOC  */</FONT></I>
+
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&quot;mjrNetCDF.h&quot;</FONT></B>
+
+#<B><FONT COLOR="#5F9EA0">define</FONT></B> <FONT COLOR="#B8860B">TST_FILE_NAME</FONT> <B><FONT COLOR="#BC8F8F">&quot;a3DtestFile.nc&quot;</FONT></B>
+
+<B><FONT COLOR="#228B22">int</FONT></B> <B><FONT COLOR="#0000FF">main</FONT></B>(<B><FONT COLOR="#228B22">int</FONT></B> argc, <B><FONT COLOR="#228B22">char</FONT></B> *argv[]);
+
+<B><FONT COLOR="#228B22">int</FONT></B> <B><FONT COLOR="#0000FF">main</FONT></B>(<B><FONT COLOR="#228B22">int</FONT></B> argc, <B><FONT COLOR="#228B22">char</FONT></B> *argv[]) {
+  <B><FONT COLOR="#228B22">int</FONT></B> status, ncID, numDims, numVars, numGblAttrs, unlimDimID;
+  size_t dimLength, attrContentLength;
+  <B><FONT COLOR="#228B22">char</FONT></B> nameBuf[NC_MAX_NAME+1];
+  nc_type ncXType;
+  <B><FONT COLOR="#228B22">int</FONT></B> numVarAttrs, numVarDims;
+  <B><FONT COLOR="#228B22">int</FONT></B> varDimIDs[NC_MAX_VAR_DIMS];
+  <B><FONT COLOR="#228B22">int</FONT></B> varID, attNum, dimID;
+  <B><FONT COLOR="#228B22">char</FONT></B> ncXTypeStr[16];
+
+  <I><FONT COLOR="#B22222">/*  Open the NetCDF file */</FONT></I>
+  status = nc_open(TST_FILE_NAME, NC_NOWRITE, &amp;ncID); 
+  mjrNC_chkError(status);
+
+  <I><FONT COLOR="#B22222">/*  Collect object counts within the file */</FONT></I>
+  status = nc_inq(ncID, &amp;numDims, &amp;numVars, &amp;numGblAttrs, &amp;unlimDimID); 
+  <I><FONT COLOR="#B22222">/*  See Also: nc_inq_ndims, nc_inq_nvars, nc_inq_natts, nc_inq_unlimdim */</FONT></I>
+  mjrNC_chkError(status);
+
+  printf(<B><FONT COLOR="#BC8F8F">&quot;General Info:\n&quot;</FONT></B>);
+  printf(<B><FONT COLOR="#BC8F8F">&quot;  #dimensions(%03d) #variables(%03d) #globalAttributes(%03d)\n&quot;</FONT></B>,
+         numDims, numVars, numGblAttrs);
+  <B><FONT COLOR="#A020F0">if</FONT></B>(unlimDimID&lt;0) 
+    printf(<B><FONT COLOR="#BC8F8F">&quot;  No dimensions are unlimited\n&quot;</FONT></B>);
+  <B><FONT COLOR="#A020F0">else</FONT></B>
+    printf(<B><FONT COLOR="#BC8F8F">&quot;  One dimension is unlimited (%d)\n&quot;</FONT></B>, unlimDimID);
+
+  printf(<B><FONT COLOR="#BC8F8F">&quot;Dimensions:\n&quot;</FONT></B>);
+  <B><FONT COLOR="#A020F0">for</FONT></B>(dimID=0; dimID&lt;numDims; dimID++) {
+    status = nc_inq_dim(ncID, dimID, nameBuf, &amp;dimLength);
+    <I><FONT COLOR="#B22222">/*  See Also: nc_inq_dimlen, nc_inq_dimname */</FONT></I>
+    mjrNC_chkError(status);
+    printf(<B><FONT COLOR="#BC8F8F">&quot;  dim(%03d): Length: %3d Name: %s\n&quot;</FONT></B>, dimID, (<B><FONT COLOR="#228B22">int</FONT></B>)dimLength, nameBuf);
+  } <I><FONT COLOR="#B22222">/* end for */</FONT></I>
+
+  printf(<B><FONT COLOR="#BC8F8F">&quot;Variables:\n&quot;</FONT></B>);
+  <B><FONT COLOR="#A020F0">for</FONT></B>(varID=0; varID&lt;numVars; varID++) {
+    status =  nc_inq_var(ncID, varID, nameBuf, &amp;ncXType, &amp;numVarDims, varDimIDs, &amp;numVarAttrs);
+    <I><FONT COLOR="#B22222">/*  See Also: nc_inq_varname, nc_inq_vartype, nc_inq_varndims, nc_inq_vardimid, nc_inq_varnatts */</FONT></I>
+    mjrNC_chkError(status);
+    mjrNC_type2str(ncXType, ncXTypeStr);
+    printf(<B><FONT COLOR="#BC8F8F">&quot;  var(%03d) type(%s) #dim(%03d) dimIDs(&quot;</FONT></B>, varID, ncXTypeStr, numVarDims);
+    <B><FONT COLOR="#A020F0">for</FONT></B>(dimID=0; dimID&lt;numVarDims; dimID++)
+      printf(<B><FONT COLOR="#BC8F8F">&quot;%03d &quot;</FONT></B>, varDimIDs[dimID]);
+    printf(<B><FONT COLOR="#BC8F8F">&quot;) #attrs: %03d name: %s\n&quot;</FONT></B>, numVarAttrs, nameBuf);
+    <B><FONT COLOR="#A020F0">if</FONT></B>(numVarAttrs&gt;0) {
+      printf(<B><FONT COLOR="#BC8F8F">&quot;    Variable Attributes:\n&quot;</FONT></B>);
+      <B><FONT COLOR="#A020F0">for</FONT></B>(attNum=0; attNum&lt;numVarAttrs; attNum++) {
+        status = nc_inq_attname(ncID, varID, attNum, nameBuf);
+        <I><FONT COLOR="#B22222">/*  See Also (to get the id from the name): nc_inq_attid */</FONT></I>
+        mjrNC_chkError(status);
+        nc_inq_att(ncID, varID, nameBuf, &amp;ncXType, &amp;attrContentLength);
+        <I><FONT COLOR="#B22222">/*  See Also: nc_inq_atttype, nc_inq_attlen */</FONT></I>
+        mjrNC_chkError(status);
+        mjrNC_type2str(ncXType, ncXTypeStr);
+        printf(<B><FONT COLOR="#BC8F8F">&quot;    attr(%03d) type: %s size: %3d name: %s\n&quot;</FONT></B>,
+               attNum, ncXTypeStr, (<B><FONT COLOR="#228B22">int</FONT></B>)attrContentLength, nameBuf);
+      } <I><FONT COLOR="#B22222">/* end for */</FONT></I>
+    } <I><FONT COLOR="#B22222">/* end if */</FONT></I>
+  } <I><FONT COLOR="#B22222">/* end for */</FONT></I>
+
+  printf(<B><FONT COLOR="#BC8F8F">&quot;Global Attributes:\n&quot;</FONT></B>);
+  <B><FONT COLOR="#A020F0">for</FONT></B>(attNum=0; attNum&lt;numGblAttrs; attNum++) {
+    status = nc_inq_attname(ncID, NC_GLOBAL, attNum, nameBuf);
+    <I><FONT COLOR="#B22222">/*  See Also (to get the id from the name): nc_inq_attid */</FONT></I>
+    mjrNC_chkError(status);
+    status = nc_inq_att(ncID, NC_GLOBAL, nameBuf, &amp;ncXType, &amp;attrContentLength);
+    <I><FONT COLOR="#B22222">/*  See Also: nc_inq_atttype, nc_inq_attlen */</FONT></I>
+    mjrNC_chkError(status);
+    mjrNC_type2str(ncXType, ncXTypeStr);
+    printf(<B><FONT COLOR="#BC8F8F">&quot;  attr(%03d) type(%s) size(%3d) name(%s)\n&quot;</FONT></B>,
+           attNum, ncXTypeStr, (<B><FONT COLOR="#228B22">int</FONT></B>)attrContentLength, nameBuf);
+  } <I><FONT COLOR="#B22222">/* end for */</FONT></I>
+
+  <B><FONT COLOR="#A020F0">return</FONT></B> 0;
+} <I><FONT COLOR="#B22222">/* end func main */</FONT></I>
+</PRE>
+<HR \/>
+<ADDRESS>Generated by <A HREF="http://www.iki.fi/~mtr/genscript/">GNU Enscript 1.6.5.2</A>.</ADDRESS>
+</BODY>
+</HTML>

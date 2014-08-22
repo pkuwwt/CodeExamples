@@ -1,0 +1,217 @@
+<?xml version="1.0"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head id="tmplKeepHead">
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <meta id="tmplMetaContent" name="Description" content="Example UNIX Source Code" />
+    
+    <link href="../CSS/main4.css" rel="stylesheet" type="text/css" />
+    
+    <title id="tmplPageTitle">Mitch Richling: Example UNIX Programs</title>
+  </head>
+  <body id="tmplKeepBody">
+    <div class="snippet" id="topLink"><body><div class="snippet" id="topLink">
+     <a id="topHomeLink" href="http://www.mitchr.me/" title="Jump to my homepage"><img alt="Link: Mitch Richling's Home Page" src="../pics/mr_blue.gif" /></a>
+</div></body></div>
+    <div class="snippet" id="topCopy"><body><div class="snippet" id="topCopy">
+  <p id="topCopyRight">&#xA9;&#xA0;2009&#xA0;Mitch&#xA0;Richling</p>
+</div></body></div>
+    <h1 id="tmplDocTitle">Example UNIX Programs</h1>
+    <div class="snippet" id="BrowserGrump"><body><div class="snippet" id="BrowserGrump">
+      <!--[if lt IE 7]><br><br><br><br>
+      <p>WARNING: Your copy of Internet  Explorer is very old - from before
+      2001!!!  It is by far too old to properly work with this site, and
+      many others all across the internet.  For a dramatically better
+      browsing experience you should
+      <a href="../browser.html">upgrade to a more modern browser</a>.
+      </p><br><br><![endif]-->
+      
+      <!--[if IE 7]><br /><br /><br /><br />
+      <p>WARNING: Your copy of Internet Explorer (version 7 from 2006)
+      is not compatible with the many web standards in common
+      use today. While you will be able to read much of the content on 
+      this site, it may be very strangely formatted.  For a better
+      browsing experience you should
+      <a href="../browser.html">upgrade to a more modern browser</a>.
+      </p><br /><br /><![endif]-->
+    </div></body></div>
+    <div class="minMar">
+      <div class="threeBearWidthAndCenter">
+        <div id="tmplDocContent">
+      <div class="exCodeList">
+        <p>Here you will find several examples of source code intended to illustrate
+          concepts related to UNIX system programming -- in C, Perl, and Ruby. The makefile is 
+          <a href="AUPG/makefile.html">here</a>.
+        </p>
+        <h2>Security</h2>
+        <dl>
+          <dt><a href="AUPG/suid0tmp.c.html">suid0tmp.c</a></dt>                <dd>This is a little snippet of code I start with when making SUID0 programs</dd>
+          <dt><a href="AUPG/mjrrsh.pl.html">mjrrsh.pl</a></dt>                  <dd>This little <tt>perl</tt> script demonstrates how to make <tt>perl</tt> do TCP/IP, how to make Perl timeout, and how <tt>rsh</tt> really works.</dd>
+          <dt><a href="AUPG/rssu.c.html">rssu.c</a></dt>                        <dd>Demonstrates a very bad way to replace su.</dd>
+        </dl>
+        <h2>Process Creation and Information</h2>
+        <dl>
+          <dt><a href="AUPG/forknwait.c.html">forknwait.c</a></dt>              <dd>How to fork and, more importantly, how to wait.</dd>
+          <dt><a href="AUPG/forkbunny.c.html">forkbunny.c</a></dt>              <dd>This tiny program demonstrates how some UNIX systems allow a process to have an unlimited number of children.</dd>
+        </dl>
+        <h2>User and Password Information</h2>
+        <dl>
+          <dt><a href="AUPG/passwd.c.html">passwd.c</a>
+              <a href="AUPG/passwd.pl.html">passwd.pl</a>
+              <a href="AUPG/passwd.rb.html">passwd.rb</a></dt>                  <dd>Demonstrates how to traverse the password database in a portable way.</dd>
+          <dt><a href="AUPG/group.c.html">group.c</a>
+              <a href="AUPG/group.pl.html">group.pl</a>
+              <a href="AUPG/group.rb.html">group.rb</a></dt>                    <dd>Demonstrates how to traverse the entire UNIX group database.</dd>
+          <dt><a href="AUPG/uideuid.c.html">uideuid.c</a>
+              <a href="AUPG/uideuid.pl.html">uideuid.pl</a>
+              <a href="AUPG/uideuid.rb.html">uideuid.rb</a></dt>                <dd>Demonstrates how to query the current user ID.</dd>
+          <dt><a href="AUPG/gidegid.c.html">gidegid.c</a>
+              <a href="AUPG/gidegid.pl.html">gidegid.pl</a>
+              <a href="AUPG/gidegid.rb.html">gidegid.rb</a></dt>                <dd>Demonstrates how to query the current group ID.</dd>
+          <dt><a href="AUPG/getgrXXX.c.html">getgrXXX.c</a></dt>                <dd>Demonstrates how to look up group information by GID and/or <tt>gname</tt> (group name)</dd>
+          <dt><a href="AUPG/getpwXXX.c.html">getpwXXX.c</a></dt>                <dd>Demonstrates how to look up password information by UID and/or <tt>uname</tt> (user name)</dd>
+          <dt><a href="AUPG/getgroups.c.html">getgroups.c</a></dt>              <dd>Demonstrates how to find out what secondary groups the current user is in.</dd>
+          <dt><a href="AUPG/passwdshadow.c.html">passwdshadow.c</a></dt>        <dd>Demonstrates how to obtain shadow password database information in a portable way.</dd>
+        </dl>
+        <h2>Process Environment</h2>
+        <dl>
+          <dt><a href="AUPG/env.c.html">env.c</a>
+              <a href="AUPG/env.pl.html">env.pl</a>
+              <a href="AUPG/env.rb.html">env.rb</a></dt>                        <dd>This bit of code shows how to query and change environment variables.</dd>
+          <dt><a href="AUPG/environ.c.html">environ.c</a></dt>                  <dd>How to use the environ variable defined by ISO C</dd>
+          <dt><a href="AUPG/arguments.c.html">arguments.c</a>
+              <a href="AUPG/arguments.pl.html">arguments.pl</a>
+              <a href="AUPG/arguments.rb.html">arguments.rb</a></dt>            <dd>Demonstrates how to access the arguments given to a program.</dd>
+        </dl>
+        <h2>Signals and Related Concepts</h2>
+        <dl>
+          <dt><a href="AUPG/kill.c.html">kill.c</a>
+              <a href="AUPG/kill.pl.html">kill.pl</a>
+              <a href="AUPG/kill.rb.html">kill.rb</a></dt>                      <dd>Demonstrates how to send signals.</dd>
+          <dt><a href="AUPG/signal.c.html">signal.c</a></dt>                    <dd>Demonstrates several signal concepts using the BSD signal(3) API.</dd>
+          <dt><a href="AUPG/sleep.c.html">sleep.c</a>
+              <a href="AUPG/sleep.pl.html">sleep.pl</a></dt>                    <dd>Demonstrates the correct way to get <tt>sleep</tt> to make your program suspend for a given amount of time.</dd>
+          <dt><a href="AUPG/sigaction.c.html">sigaction.c</a></dt>              <dd>Demonstrate the <tt>sigaction</tt> system call.</dd>
+        </dl>
+        <h2>Files and File I/O</h2>
+        <dl>
+          <dt><a href="AUPG/IOerrors.c.html">IOerrors.c</a></dt>                <dd>Demonstrates the correct way to deal with errors from UNIX I/O functions.</dd>
+          <dt><a href="AUPG/fileIO.c.html">fileIO.c</a></dt>                    <dd>Demonstrates how to use the UNIX API to do file I/O.</dd>
+          <dt><a href="AUPG/sparse.c.html">sparse.c</a></dt>                    <dd>This program demonstrates how to create a sparse file. Also called a "file with holes".</dd>
+          <dt><a href="AUPG/fileStuff.c.html">fileStuff.c</a></dt>              <dd>Several file operations are demonstrated</dd>
+          <dt><a href="AUPG/utime.c.html">utime.c</a>
+            <a href="AUPG/utime.pl.html">utime.pl</a>
+            <a href="AUPG/utime.rb.html">utime.rb</a></dt>                      <dd>Simple demo of the utime function (the API equivalent of the <tt>touch</tt> command)</dd>
+          <dt><a href="AUPG/fileData.c.html">fileData.c</a></dt>                <dd>Demonstrates the <tt>stat</tt> call to discover various bits of info about files.</dd>
+          <dt><a href="AUPG/select_poll.c.html">select_poll.c</a></dt>          <dd>Demonstrates the <tt>select</tt> system call.</dd>
+          <dt><a href="AUPG/flock_ex.c.html">flock_ex.c</a></dt>                <dd>Demonstrate file locking with the <tt>flock</tt> system call.</dd>
+          <dt><a href="AUPG/mmap.c.html">mmap.c</a></dt>                        <dd>How to use the <tt>mmap</tt> function (SysV &amp; POSIX) on a file.</dd>
+        </dl>
+        <h2><a name="dirs" id="dirs"> </a>Directories and directory traversal</h2>
+        <dl>
+          <dt><a href="AUPG/readdir.c.html">readdir.c</a>
+              <a href="AUPG/readdir.pl.html">readdir.pl</a>
+              <a href="AUPG/readdir.rb.html">readdir.rb</a></dt>                <dd>Demonstrates how read a UNIX directory(the file names in a subdirectory).</dd>
+          <dt><a href="AUPG/glob.pl.html">glob.pl</a>
+              <a href="AUPG/glob.rb.html">glob.rb</a></dt>                      <dd>Typical way to do a <tt>readdir</tt>-type operation in <tt>perl</tt> and <tt>ruby</tt>.</dd>
+          <dt><a href="AUPG/dirRec.c.html">dirRec.c</a></dt>                    <dd>Demonstrates the classical recursive algorithm to traverse a directory tree (lots of open file descriptors)</dd>
+          <dt><a href="AUPG/dirDepth.c.html">dirDepth.c</a>
+              <a href="AUPG/dirDepthC.cpp.html">dirDepthC.cpp</a></dt>          <dd>Demonstrates a method to do a depth first directory tree traversal (one open file descriptor and a linked list).</dd>
+          <dt><a href="AUPG/dirFastC.cpp.html">dirFastC.cpp</a></dt>            <dd>Like <a href="AUPG/dirDepthC.cpp.html">dirDepthC.cpp</a>, but modified for a single ended container (no linked list) for performance</dd>
+          <dt><a href="AUPG/dirThreadCPP98.cpp.html">dirThreadCPP98.cpp</a></dt><dd>Demonstrates a threaded method (<tt>pthreads</tt>) for tree traversal</dd>
+          <dt><a href="AUPG/dirThreadCPP11.cpp.html">dirThreadCPP11.cpp</a></dt><dd>Demonstrates a threaded method (<span style="color: #f00;">C++11</span> threads) for tree traversal</dd>
+        </dl>
+        <h2>Sockets</h2>
+        <dl>
+          <dt><a href="AUPG/unixSocC.c.html">unixSocC.c</a></dt>                <dd>Demonstrates how to write a UNIX domain socket client.</dd>
+          <dt><a href="AUPG/unixSocS.c.html">unixSocS.c</a></dt>                <dd>Demonstrates how to write a UNIX domain socket server.</dd>
+          <dt><a href="AUPG/inetSocC.c.html">inetSocC.c</a></dt>                <dd>Demonstrates how to write a Internet domain socket client.</dd>
+          <dt><a href="AUPG/inetSocS.c.html">inetSocS.c</a></dt>                <dd>Demonstrates how to write a Internet domain socket server.</dd>
+        </dl>
+        <h2>POSIX Threads</h2>
+        <dl>
+          <dt><a href="AUPG/ptCond.c.html">ptCond.c</a></dt>                    <dd>How to use condition variables</dd>
+          <dt><a href="AUPG/ptJoin.c.html">ptJoin.c</a></dt>                    <dd>Demonstrates the <tt>pthread_join</tt> system call</dd>
+          <dt><a href="AUPG/ptMutex.c.html">ptMutex.c</a></dt>                  <dd>How to use mutexes</dd>
+          <dt><a href="AUPG/mtUtils/mtUtils.c.html">mtUtils.c</a>
+              <a href="AUPG/mtUtils/mtUtils.h.html">mtUtils.h</a></dt>          <dd>C, and C++, utilities for multi-threaded programs</dd>
+        </dl>
+        <h2>Networking (IP)</h2>
+        <dl>
+          <dt><a href="AUPG/hosts.c.html">hosts.c</a></dt>                      <dd>Demonstrates how to query the current host name and how to look hosts up with the system's resolver.</dd>
+          <dt><a href="AUPG/fqdns.c.html">fqdns.c</a>
+              <a href="AUPG/fqdns.pl.html">fqdns.pl</a>
+              <a href="AUPG/fqdns.rb.html">fqdns.rb</a>
+              <a href="AUPG/fqdns.sh.html">fqdns.sh</a></dt>                    <dd>How to get the FQDNS of a host -- this is tricky!  The shell version is just silly, but it will give you some ideas regarding how to make this work.</dd>
+        </dl>
+        <h2>Solaris</h2>
+        <dl>
+          <dt><a href="AUPG/solaris_ps.c.html">solaris_ps.c</a></dt>            <dd>Demonstrates how to use the Solaris <tt>procfs</tt> to access process information</dd>
+          <dt><a href="AUPG/rpacct.pl.html">rpacct.pl</a></dt>                  <dd>Demonstrates how to parse Solaris process accounting records in <tt>perl</tt>.</dd>
+        </dl>
+        <h2>Shared Memory (System V / POSIX XSI IPC)</h2>
+        <dl>
+          <dt><a href="AUPG/shmMake.c.html">shmMake.c</a></dt>                  <dd>How to create a shared memory segment.</dd>
+          <dt><a href="AUPG/shmUse.c.html">shmUse.c</a></dt>                    <dd>How to attach to an existing memory segment, map it, and read data out of it.</dd>
+          <dt><a href="AUPG/shmRemove.c.html">shmRemove.c</a></dt>              <dd>How to remove a shared memory segment.</dd>
+        </dl>
+        <h2>Shared Memory (POSIX real-time IPC)</h2>
+        <dl>
+          <dt><a href="AUPG/shmMakeAndUseRT.c.html">shmMakeAndUseRT.c</a></dt>  <dd>How to create a new shared memory segment, and how to use an existing one.</dd>
+          <dt><a href="AUPG/shmRemoveRT.c.html">shmRemoveRT.c</a></dt>          <dd>How to remove a shared memory segment.</dd>
+        </dl>
+        <h2>Terminal Stuff</h2>
+        <dl>
+          <dt><a href="AUPG/termSizeWatch.c.html">termSizeWatch.c</a></dt>      <dd>How to detect the current <tt>TTY</tt>'s window size and monitor size changes</dd>
+        </dl>
+        <h2>ncurses</h2>
+        <dl>
+          <dt><a href="AUPG/curHello.c.html">curHello.c</a>
+              <a href="AUPG/curHelloMV.c.html">curHelloMV.c</a> 
+              <a href="AUPG/curHelloW.c.html">curHelloW.c</a>
+              <a href="AUPG/curHelloMVW.c.html">curHelloMVW.c</a></dt>          <dd>Simple examples of minimal, "hello, world!" programs for <tt>curses</tt></dd>
+          <dt><a href="AUPG/curColor.c.html">curColor.c</a></dt>                <dd>How to use color.</dd>
+          <dt><a href="AUPG/curDraw.c.html">curDraw.c</a></dt>                  <dd>Demonstrates several <tt>ncurses</tt> functions via an ASCII art drawing program</dd>
+          <dt><a href="AUPG/curInput.c.html">curInput.c</a></dt>                <dd>How to do non-line buffered input and identify input keys.</dd>
+        </dl>
+        <h2>System Information</h2>
+        <dl>
+          <dt><a href="AUPG/paths.c.html">paths.c</a></dt>                      <dd>How to use the <tt>paths.h</tt> include file available on many UNIX systems.</dd>
+          <dt><a href="AUPG/param.c.html">param.c</a></dt>                      <dd>How to use the <tt>param.h</tt> include file available some UNIX systems.</dd>
+          <dt><a href="AUPG/sysconf.c.html">sysconf.c</a></dt>                  <dd>How to use the <tt>sysconf</tt> function.</dd>
+          <dt><a href="AUPG/isocLimits.c.html">isocLimits.c</a></dt>            <dd>How to discover various properties of C types.</dd>
+          <dt><a href="AUPG/posixLimits.c.html">posixLimits.c</a></dt>          <dd>Demonstrates several <tt>limits.h</tt> constants provided by POSIX</dd>
+          <dt><a href="AUPG/uname.c.html">uname.c</a> 
+              <a href="AUPG/uname.sh.html">uname.sh</a></dt>                    <dd>How to use the POSIX <tt>uname</tt> system call, and the <tt>/usr/bin/uname</tt> command.</dd>
+        </dl>
+        <h2>Regular Expressions &amp; String Token Extraction</h2>
+        <dl>
+          <dt><a href="AUPG/regex_example.c.html">regex_example.c</a></dt>      <dd>Simple example of standard UNIX regular expressions.</dd>
+          <dt><a href="AUPG/pcre_example.c.html">pcre_example.c</a></dt>        <dd>Simple example of the PCRE (Perl Compatible Regular Expressions) library</dd>
+          <dt><a href="boost/regexExample1.cpp.html">regexExample1.cpp</a></dt> <dd>Trivial example of the <a href="boost.html">boost</a> regular expression library.  The make file is <a href="boost/makefile.html">here</a>.</dd>
+          <dt><a href="AUPG/isocTokEx.c.html">isoTokEx.c</a></dt>               <dd>An example of how to use strtok() and strtok_r().</dd>
+          <dt><a href="boost/tokenExample.cpp.html">tokenExample.cpp</a></dt>   <dd>Demonstrates how to make use of the <a href="boost.html">boost</a> string tokenizer. The make file is <a href="boost/makefile.html">here</a>.</dd>
+        </dl>
+        <h2>Misc</h2>
+        <dl>
+          <dt><a href="DB.html">NDBM/GDBM/etc</a></dt>                          <dd>Example of basic use of the NDBM, GDBM, and Berkeley DB</dd>
+          <dt><a href="AUPG/popenDemo.c.html">popenDemo.c</a></dt>              <dd>An example of how to use the <tt>popen</tt> function.</dd>
+          <dt><a href="AUPG/getoptP.c.html">getoptP.c</a></dt>                  <dd>Minimal example of the <tt>getopt</tt> function call.</dd>
+          <dt><a href="AUPG/rlimit.c.html">rlimit.c</a></dt>                    <dd>Example of <tt>getrlimit</tt> -- of <tt>ulimit</tt> and <tt>limit</tt> fame.</dd>
+        </dl>
+        <h2>Readline (GNU and others)</h2>
+        <dl>
+          <dt><a href="AUPG/rlEX.c.html">rlEX.c</a></dt>                        <dd>Minimal example of <tt>readline</tt> use.</dd>
+          <dt><a href="AUPG/rlEXH.c.html">rlEXH.c</a>
+              <a href="AUPG/rlEXC.c.html">rlEXC.c</a></dt>                      <dd>Extends the minimal example with custom completions (GNU Readline).</dd>
+        </dl>
+      </div>
+    </div>
+      </div>
+    <div class="snippet" id="botCopy"><body><div class="snippet" id="botCopy">
+    <div id="botPadAndCopyRight">
+      &#xA9;&#xA0;2009&#xA0;Mitch&#xA0;Richling
+    </div>
+</div></body></div>
+  </body>
+</html>

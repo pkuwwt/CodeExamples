@@ -1,0 +1,103 @@
+<?xml version="1.0"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head id="tmplKeepHead">
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <meta id="tmplMetaContent" name="Description" content="Mitch Richling: Example MPI Programs" />
+    
+    <link href="../CSS/main4.css" rel="stylesheet" type="text/css" />
+    
+    <title id="tmplPageTitle">Mitch Richling: Example MPI Programs</title>
+  </head>
+  <body id="tmplKeepBody">
+    <div class="snippet" id="topLink"><body><div class="snippet" id="topLink">
+     <a id="topHomeLink" href="http://www.mitchr.me/" title="Jump to my homepage"><img alt="Link: Mitch Richling's Home Page" src="../pics/mr_blue.gif" /></a>
+</div></body></div>
+    <div class="snippet" id="topCopy"><body><div class="snippet" id="topCopy">
+  <p id="topCopyRight">&#xA9;&#xA0;2009&#xA0;Mitch&#xA0;Richling</p>
+</div></body></div>
+    <h1 id="tmplDocTitle">Example MPI Programs</h1>
+    <div class="snippet" id="BrowserGrump"><body><div class="snippet" id="BrowserGrump">
+      <!--[if lt IE 7]><br><br><br><br>
+      <p>WARNING: Your copy of Internet  Explorer is very old - from before
+      2001!!!  It is by far too old to properly work with this site, and
+      many others all across the internet.  For a dramatically better
+      browsing experience you should
+      <a href="../browser.html">upgrade to a more modern browser</a>.
+      </p><br><br><![endif]-->
+      
+      <!--[if IE 7]><br /><br /><br /><br />
+      <p>WARNING: Your copy of Internet Explorer (version 7 from 2006)
+      is not compatible with the many web standards in common
+      use today. While you will be able to read much of the content on 
+      this site, it may be very strangely formatted.  For a better
+      browsing experience you should
+      <a href="../browser.html">upgrade to a more modern browser</a>.
+      </p><br /><br /><![endif]-->
+    </div></body></div>
+    <div class="minMar">
+      <div class="threeBearWidthAndCenter">
+        <div id="tmplDocContent">
+      <div class="exCodeList">
+        <p>Simple example programs to get you started with the 
+
+           <a href="http://www.mitchr.me../../SS/softwareDevelopment/index.html#mpi">MPI</a> 
+
+          (Message Passing Interface) API commonly used for massively
+          parallel, high performance compute tasks. The makefile is
+          <a href="mpi/makefile.html">here</a>.
+        </p>
+        <h2>Hello World!</h2>
+        <dl>
+          <dt><a href="mpi/helloC.c.html">helloC.c</a>
+            <a href="mpi/helloCPP.cpp.html">helloCPP.cpp</a>
+            <a href="mpi/helloF77.f.html">helloF77.f77</a>
+            <a href="mpi/helloF90.f90.html">helloF90.f90</a>
+            <a href="mpi/helloF77.f.html"></a>
+          </dt>
+          <dd>In the best K&amp;R tradition, this is the "Hello World" program for MPI! I have provided C, C++,
+          Fortran 90, and FORTRAN 77 versions just to give you an idea what the three language interfaces to MPI look like.</dd>
+          <dt><a href="mpi/initStuffC.c.html">intStuffC.c</a></dt>
+          <dd>Illustrates how to check for MPI errors (stuff left out of the "Hello World" programs for reasons of
+          clarity).</dd>
+        </dl>
+        <h2>Simple Blocking Point to Point Communication</h2>
+        <dl>
+          <dt><a href="mpi/sendRecvC.c.html">sendRecvC.c</a></dt>
+          <dd>Simple example of send/recv as typically used with no error checking.</dd>
+          <dt><a href="mpi/sendRecvErrC.c.html">sendRecvErrC.c</a></dt>
+          <dd>Illustrates a simple way to avoid deadlock in the face of slave failure while using point to point blocking I/O.</dd>
+        </dl>
+        <h2>Collective Communication</h2>
+        <dl>
+          <dt><a href="mpi/reduceC.c.html">reduceC.c</a></dt>
+          <dd>Illustrates the <code>MPI_Gather</code>, <code>MPI_Bcast</code>, and <code>MPI_Reduce</code> functions.</dd>
+        </dl>
+        <h2>Communication Groups</h2>
+        <dl>
+          <dt><a href="mpi/groupsC.c.html">groupsC.c</a></dt>
+          <dd>Illustrates a typical use of MPI groups and communicators.</dd>
+        </dl>
+        <h2>Miscellaneous Topics</h2>
+        <dl>
+          <dt><a href="mpi/barrierC.c.html">barrierC.c</a></dt>
+          <dd>Simple synchronization with the <code>MPI_Barrier</code> function.</dd>
+        </dl>
+        <h2>MPI Implementation Specific</h2>
+        <dl>
+          <dt><a href="mpi/runOpenMPIjob.sh.html">runOpenMPIjob.sh</a></dt>
+          <dd>Simple little script that creates a host file and runs an MPI job with Open MPI. Note that
+          the <code>runLAMjob.sh</code> and <code>runMPICHjob.sh</code> scripts are no longer here as I no longer use LAM or
+          MPICH.</dd>
+        </dl>
+      </div>
+    </div>
+      </div>
+    </div>
+    <div class="snippet" id="botCopy"><body><div class="snippet" id="botCopy">
+    <div id="botPadAndCopyRight">
+      &#xA9;&#xA0;2009&#xA0;Mitch&#xA0;Richling
+    </div>
+</div></body></div>
+  </body>
+</html>

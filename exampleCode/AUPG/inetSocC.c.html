@@ -1,0 +1,100 @@
+<!DOCTYPE html PUBLIC "-//IETF//DTD HTML 2.0//EN">
+<HTML>
+<HEAD>
+<TITLE>AUPG/inetSocC.c</TITLE>
+</HEAD>
+<BODY BGCOLOR="#FFFFFF" TEXT="#000000" LINK="#1F00FF" ALINK="#FF0000" VLINK="#9900DD">
+<A NAME="top"> </A>
+<A NAME="file1"> </A>
+<H1><a href="inetSocC.c">inetSocC.c</a></H1>
+
+<PRE>
+<I><FONT COLOR="#B22222">/* -*- Mode:C; Coding:us-ascii-unix; fill-column:132 -*- */</FONT></I>
+<I><FONT COLOR="#B22222">/**********************************************************************************************************************************/</FONT></I>
+<I><FONT COLOR="#B22222">/**
+   @file      inetSocC.c
+   @author    Mitch Richling &lt;http://www.mitchr.me/&gt;
+   @Copyright Copyright 1996 by Mitch Richling.  All rights reserved.
+   @brief     UNIX internet domain sockets (client side)@EOL
+   @Keywords  UNIX Internet domain sockets client
+   @Std       ISOC POSIX SYSV4 BSD4.3
+   @Tested
+              - Solaris 2.8
+              - MacOS X.2
+              - Linux (RH 7.3)
+
+   This is an example program intended to illustrate how to write a very simple Internet domain sockets client.
+***********************************************************************************************************************************/</FONT></I>
+
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;sys/types.h&gt;</FONT></B>          <I><FONT COLOR="#B22222">/* UNIX types      POSIX */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;sys/socket.h&gt;</FONT></B>         <I><FONT COLOR="#B22222">/* UNIX sockets    POSIX */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;netinet/in.h&gt;</FONT></B>         <I><FONT COLOR="#B22222">/* Inet socket     POSIX */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;string.h&gt;</FONT></B>             <I><FONT COLOR="#B22222">/* Strings         C89   */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;netdb.h&gt;</FONT></B>              <I><FONT COLOR="#B22222">/* DNS lookup      ????  */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;stdio.h&gt;</FONT></B>              <I><FONT COLOR="#B22222">/* I/O lib         C89   */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;unistd.h&gt;</FONT></B>             <I><FONT COLOR="#B22222">/* UNIX std stf    POSIX */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;stdlib.h&gt;</FONT></B>             <I><FONT COLOR="#B22222">/* Standard Lib    C89   */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;stdio.h&gt;</FONT></B>              <I><FONT COLOR="#B22222">/* I/O lib         C89   */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;string.h&gt;</FONT></B>             <I><FONT COLOR="#B22222">/* Strings         C89   */</FONT></I>
+
+<I><FONT COLOR="#B22222">/**********************************************************************************************************************************/</FONT></I>
+<B><FONT COLOR="#228B22">int</FONT></B> <B><FONT COLOR="#0000FF">main</FONT></B>(<B><FONT COLOR="#228B22">int</FONT></B> argc, <B><FONT COLOR="#228B22">char</FONT></B> *argv[]) {
+  <B><FONT COLOR="#228B22">int</FONT></B> theSocket;
+  <B><FONT COLOR="#228B22">struct</FONT></B> sockaddr_in theSocketName;
+  <B><FONT COLOR="#228B22">int</FONT></B> theAddrLen;
+  <B><FONT COLOR="#228B22">char</FONT></B> sendData[1024];
+  <B><FONT COLOR="#228B22">int</FONT></B> numReadBytes, numSentBytes;
+  <B><FONT COLOR="#228B22">struct</FONT></B> hostent *theHostEnt;
+
+  <B><FONT COLOR="#A020F0">if</FONT></B>(argc &lt; 2) {
+    fprintf(stderr, <B><FONT COLOR="#BC8F8F">&quot;ERROR: inetDomSoc: Too few arguments.\n&quot;</FONT></B>);
+    fprintf(stderr, <B><FONT COLOR="#BC8F8F">&quot;  use: inetDomSocClnt &lt;hostname&gt;\n&quot;</FONT></B>);
+    exit(1);
+  } <I><FONT COLOR="#B22222">/* end if */</FONT></I>
+
+  theSocket = socket(AF_INET, SOCK_STREAM, 0);
+  <B><FONT COLOR="#A020F0">if</FONT></B>(theSocket &lt; 0) {
+    perror(<B><FONT COLOR="#BC8F8F">&quot;ERROR: inetDomSoc: Open error&quot;</FONT></B>);
+    exit(1);
+  } <I><FONT COLOR="#B22222">/* end if */</FONT></I>
+
+  <I><FONT COLOR="#B22222">/* We need to construct the address to connect to. */</FONT></I>
+  <B><FONT COLOR="#A020F0">if</FONT></B>((theHostEnt = gethostbyname(argv[1])) == NULL) {
+    perror(<B><FONT COLOR="#BC8F8F">&quot;ERROR: inetDomSoc: Host unknown&quot;</FONT></B>);
+    exit(1);
+  } <I><FONT COLOR="#B22222">/* end if */</FONT></I>
+
+  theSocketName.sin_family = AF_INET;
+  theSocketName.sin_port = htons(12345);
+  memcpy(&amp;theSocketName.sin_addr, theHostEnt-&gt;h_addr_list[0], theHostEnt-&gt;h_length);
+  theAddrLen = <B><FONT COLOR="#A020F0">sizeof</FONT></B>(theSocketName);
+
+  <I><FONT COLOR="#B22222">/* Note that this program from this point down is the same as the UNIX domain socket example program.  This is a nice feature of
+     the socket interface. */</FONT></I>
+
+  <B><FONT COLOR="#A020F0">if</FONT></B>(connect(theSocket, (<B><FONT COLOR="#228B22">struct</FONT></B> sockaddr *)&amp;theSocketName, theAddrLen) &lt; 0) {
+    perror(<B><FONT COLOR="#BC8F8F">&quot;ERROR: inetDomSoc: Connect error&quot;</FONT></B>);
+    exit(1);
+  } <I><FONT COLOR="#B22222">/* end if */</FONT></I>
+
+  <B><FONT COLOR="#A020F0">while</FONT></B>((numReadBytes = read(0, sendData, 100)) &gt; 0)
+    <B><FONT COLOR="#A020F0">if</FONT></B>((numSentBytes = send(theSocket, sendData, numReadBytes, 0)) &lt; 0) {
+      perror(<B><FONT COLOR="#BC8F8F">&quot;ERROR: inetDomSoc: Send Error&quot;</FONT></B>);
+      exit(1);
+    } <B><FONT COLOR="#A020F0">else</FONT></B> {
+      printf(<B><FONT COLOR="#BC8F8F">&quot;Sent %d of %d bytes\n&quot;</FONT></B>, numSentBytes, numReadBytes);
+      <I><FONT COLOR="#B22222">/* We should check to make sure we sent all the bytes we wanted to.  If we didn't, we should retry the send.  See the
+         IOerrors.c example for more detail. */</FONT></I>
+      <B><FONT COLOR="#A020F0">if</FONT></B>(numSentBytes &lt; numReadBytes)
+        printf(<B><FONT COLOR="#BC8F8F">&quot;We didn't send all the bytes we wanted to.  Should retry..\n&quot;</FONT></B>);
+    } <I><FONT COLOR="#B22222">/* end if/else */</FONT></I>
+
+  close(theSocket);
+
+  <B><FONT COLOR="#A020F0">return</FONT></B> 0;
+} <I><FONT COLOR="#B22222">/* end func main */</FONT></I>
+</PRE>
+<HR \/>
+<ADDRESS>Generated by <A HREF="http://www.iki.fi/~mtr/genscript/">GNU Enscript 1.6.5.90</A>.</ADDRESS>
+</BODY>
+</HTML>

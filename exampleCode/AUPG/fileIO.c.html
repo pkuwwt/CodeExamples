@@ -1,0 +1,170 @@
+<!DOCTYPE html PUBLIC "-//IETF//DTD HTML 2.0//EN">
+<HTML>
+<HEAD>
+<TITLE>AUPG/fileIO.c</TITLE>
+</HEAD>
+<BODY BGCOLOR="#FFFFFF" TEXT="#000000" LINK="#1F00FF" ALINK="#FF0000" VLINK="#9900DD">
+<A NAME="top"> </A>
+<A NAME="file1"> </A>
+<H1><a href="fileIO.c">fileIO.c</a></H1>
+
+<PRE>
+<I><FONT COLOR="#B22222">/* -*- Mode:C; Coding:us-ascii-unix; fill-column:132 -*- */</FONT></I>
+<I><FONT COLOR="#B22222">/**********************************************************************************************************************************/</FONT></I>
+<I><FONT COLOR="#B22222">/**
+   @file      fileIO.c
+   @author    Mitch Richling &lt;http://www.mitchr.me/&gt;
+   @Copyright Copyright 1995 by Mitch Richling.  All rights reserved.
+   @brief     UNIX I/O routines@EOL
+   @Keywords  UNIX file I/O
+   @Std       ISOC POSIX UNIX98
+   @Tested    
+              - Solaris 2.8
+              - MacOS X.2
+              - Linux (RH 7.3)
+
+   Two general approaches are taken for file I/O in C on a UNIX platform: UNIX I/O and ANSI/ISO C I/O.  This program demonstrates
+   the UNIX I/O routines.  It is important not to mix ANSI/ISO C I/O with UNIX I/O on the same file.  This will hopelessly confuse
+   your program.  Functions exist in the UNIX library to let you do this, but it is best to simply avoid the mess.  On a side note,
+   do not mix C++ I/O with UNIX or ANSI/ISO C I/O.  Again, methods exist to make this work, but it is best to simply pick an I/O
+   library and stick to it. :)
+  
+   Most UNIX I/O functions can error with an EINTR error.  In general if this error is seen, the function should be re-attempted.
+   This code doesn't demonstrate this.  Also this code doesn't demonstrate the complete behavior of of the write call with respect
+   to partial success.  Both of these interesting problems are tackled in the example program called IOerrors.c.  The approach taken
+   in this code is typical of file I/O found in many UNIX programs.  The more exotic error handling found in IOerrors.c is normally
+   only seen in network programs.
+***********************************************************************************************************************************/</FONT></I>
+
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;sys/stat.h&gt;</FONT></B>           <I><FONT COLOR="#B22222">/* UNIX stat       POSIX */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;sys/types.h&gt;</FONT></B>          <I><FONT COLOR="#B22222">/* UNIX types      POSIX */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;sys/uio.h&gt;</FONT></B>            <I><FONT COLOR="#B22222">/* BSD  I/O        BSD   */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;stdio.h&gt;</FONT></B>              <I><FONT COLOR="#B22222">/* I/O lib         C89   */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;string.h&gt;</FONT></B>             <I><FONT COLOR="#B22222">/* Strings         C89   */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;dirent.h&gt;</FONT></B>             <I><FONT COLOR="#B22222">/* UNIX dirs       POSIX */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;errno.h&gt;</FONT></B>              <I><FONT COLOR="#B22222">/* error stf       POSIX */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;stdlib.h&gt;</FONT></B>             <I><FONT COLOR="#B22222">/* Standard Lib    C89   */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;unistd.h&gt;</FONT></B>             <I><FONT COLOR="#B22222">/* UNIX std stf    POSIX */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;fcntl.h&gt;</FONT></B>              <I><FONT COLOR="#B22222">/* UNIX file ctrl  UNIX  */</FONT></I>
+
+<I><FONT COLOR="#B22222">/**********************************************************************************************************************************/</FONT></I>
+<B><FONT COLOR="#228B22">int</FONT></B> <B><FONT COLOR="#0000FF">main</FONT></B>(<B><FONT COLOR="#228B22">int</FONT></B> argc, <B><FONT COLOR="#228B22">char</FONT></B> *argv[]) {
+  <B><FONT COLOR="#228B22">char</FONT></B> buf[255];                <I><FONT COLOR="#B22222">/* A character buffer to use for I/O. */</FONT></I>
+  <B><FONT COLOR="#228B22">char</FONT></B> *fileName = <B><FONT COLOR="#BC8F8F">&quot;foo&quot;</FONT></B>;
+  <B><FONT COLOR="#228B22">int</FONT></B> returnValue;
+  <B><FONT COLOR="#228B22">int</FONT></B> readNum;
+  <B><FONT COLOR="#228B22">int</FONT></B> FD;
+
+  <I><FONT COLOR="#B22222">/* FD stands for File Descriptor.  In ANSI/ISO C I/O one uses a FP or File Pointer.  For UNIX a FD is simply an integer, while
+     ANSI/ISO C uses a struct.  ANSI/ISO C restricts a program to 254 open files because each file is uniquely identified by an
+     8-bit integer.  The number of open files possible with UNIX I/O varies, but is generally much higher than ANSI/ISO C. */</FONT></I>
+
+  <I><FONT COLOR="#B22222">/* ************************************************************************** */</FONT></I>
+  <I><FONT COLOR="#B22222">/* First we create/overwrite a file named foo. */</FONT></I>
+
+  <I><FONT COLOR="#B22222">/* Just as with ANSI/ISO C, we must open the file first.  This can fail.  If errno is EINTR, the open should be retried. */</FONT></I>
+  <B><FONT COLOR="#A020F0">if</FONT></B>((FD = open(fileName, O_WRONLY | O_CREAT | O_TRUNC, S_IRWXU | S_IRWXG | S_IRWXO)) &lt; 0) {
+    perror(<B><FONT COLOR="#BC8F8F">&quot;ERROR: File open&quot;</FONT></B>);
+    exit(10);
+  } <I><FONT COLOR="#B22222">/* end if */</FONT></I>
+
+  <I><FONT COLOR="#B22222">/* Report what file descriptor we got. */</FONT></I>
+  printf(<B><FONT COLOR="#BC8F8F">&quot;We opened the file '%s' and got file descriptor number %d\n&quot;</FONT></B>, fileName, FD);
+
+  strcpy(buf, <B><FONT COLOR="#BC8F8F">&quot;This is the first line of the file\n&quot;</FONT></B>);
+  returnValue = write(FD, buf, strlen(buf));    <I><FONT COLOR="#B22222">/* How to write a string. */</FONT></I>
+
+  <I><FONT COLOR="#B22222">/* The return of the write is the number of bytes written.  If it is less than the request, an attempt to write the rest of the
+     string should be made.  This function can error because of an interrupt (errno==EINTR).  If an EINTR is encountered, the write
+     should be re-attempted. */</FONT></I>
+
+  <B><FONT COLOR="#A020F0">if</FONT></B>(returnValue &lt; 0) {
+    perror(<B><FONT COLOR="#BC8F8F">&quot;ERROR: File write&quot;</FONT></B>);
+    exit(11);
+  } <I><FONT COLOR="#B22222">/* end if */</FONT></I>
+  printf(<B><FONT COLOR="#BC8F8F">&quot;The write returned %d\n&quot;</FONT></B>, returnValue);
+
+  <I><FONT COLOR="#B22222">/* Write the first 2 bytes of the integer stored in returnValue.  This won't work if the integer is not at least 2 bytes
+     long. :) */</FONT></I>
+  returnValue = write(FD, &amp;returnValue, 2);
+  <B><FONT COLOR="#A020F0">if</FONT></B>(returnValue &lt; 0) {
+    perror(<B><FONT COLOR="#BC8F8F">&quot;ERROR: File write&quot;</FONT></B>);
+    exit(12);
+  } <I><FONT COLOR="#B22222">/* end if */</FONT></I>
+  printf(<B><FONT COLOR="#BC8F8F">&quot;The write returned %d\n&quot;</FONT></B>, returnValue);
+
+  <I><FONT COLOR="#B22222">/* We must close the file to free up system resources.  If we forget to close the file, then it will be closed for us when our
+     program exits. */</FONT></I>
+  <B><FONT COLOR="#A020F0">if</FONT></B>(close(FD) &lt; 0) {           <I><FONT COLOR="#B22222">/* Yes, we check for errors. */</FONT></I>
+    perror(<B><FONT COLOR="#BC8F8F">&quot;ERROR: File open&quot;</FONT></B>);
+    exit(13);
+  } <I><FONT COLOR="#B22222">/* end if */</FONT></I>
+
+  <I><FONT COLOR="#B22222">/* ************************************************************************** */</FONT></I>
+  <I><FONT COLOR="#B22222">/* Now we read the file we just wrote. */</FONT></I>
+
+  <I><FONT COLOR="#B22222">/* First we open the file.  This can fail.  If errno is EINTR, the open should be retried. */</FONT></I>
+  <B><FONT COLOR="#A020F0">if</FONT></B>((FD = open(fileName, O_RDONLY)) &lt; 0) {
+    perror(<B><FONT COLOR="#BC8F8F">&quot;ERROR: File open&quot;</FONT></B>);
+    exit(10);
+  } <I><FONT COLOR="#B22222">/* end if */</FONT></I>
+
+  <I><FONT COLOR="#B22222">/* Report what file descriptor we got. */</FONT></I>
+  printf(<B><FONT COLOR="#BC8F8F">&quot;We opened the file '%s' and got file descriptor number %d\n&quot;</FONT></B>, fileName, FD);
+
+  <I><FONT COLOR="#B22222">/* We now read the data in 1 byte chunks.  Larger reads will be demonstrated later.  read can error with EINTR, and should be
+     re-attempted if this error occurs.  read returns 0 at EOF, and -1 upon error. */</FONT></I>
+  printf(<B><FONT COLOR="#BC8F8F">&quot;Data in file:\n&quot;</FONT></B>);
+  <B><FONT COLOR="#A020F0">while</FONT></B>((returnValue = read(FD, buf, 1)) &gt; 0) {
+    printf(<B><FONT COLOR="#BC8F8F">&quot;%c&quot;</FONT></B>, buf[0]);
+  } <I><FONT COLOR="#B22222">/* end while */</FONT></I>
+
+  <B><FONT COLOR="#A020F0">if</FONT></B>(returnValue == 0)
+    printf(<B><FONT COLOR="#BC8F8F">&quot;Finished reading all the data.\n&quot;</FONT></B>);
+
+  <B><FONT COLOR="#A020F0">if</FONT></B>(returnValue &lt; 0) {
+    perror(<B><FONT COLOR="#BC8F8F">&quot;ERROR: File read&quot;</FONT></B>);
+    exit(11);
+  } <I><FONT COLOR="#B22222">/* end if */</FONT></I>
+
+  <I><FONT COLOR="#B22222">/* Now that we have read the file one byte at a time, it is a good idea to see how to read the data more than one byte at a time.
+     We could close the file now and reopen it, but instead we demonstrate the seek function.  It is much like the ANSI/ISO C
+     function fseek.  We will use this function to &quot;rewind&quot; the filepointer so that we can reread the file from the start.  This
+     also demonstrates that reading the EOF marker is not special for UNIX I/O.  Unlike some I/O libraries, reading EOF won't
+     automatically close the file.  */</FONT></I>
+
+  <I><FONT COLOR="#B22222">/* Here it is.  Rewind the file to the start. */</FONT></I>
+  lseek(FD, 0, SEEK_SET);
+
+  <I><FONT COLOR="#B22222">/* We now read the data in 250 byte chunks.  Note that we read the WHOLE file in one step.  It is possible to query the size of
+     the file using stat(2), and then to read in most files in one big chunk. */</FONT></I>
+  readNum = 0;
+  printf(<B><FONT COLOR="#BC8F8F">&quot;Data in file(second read):\n&quot;</FONT></B>);
+  <B><FONT COLOR="#A020F0">while</FONT></B>((returnValue = read(FD, buf, 250)) &gt; 0) {
+    buf[returnValue] = <B><FONT COLOR="#BC8F8F">'\0'</FONT></B>;
+    readNum++;
+    printf(<B><FONT COLOR="#BC8F8F">&quot;Read #%d: %s&quot;</FONT></B>, readNum, buf);
+  } <I><FONT COLOR="#B22222">/* end while */</FONT></I>
+
+  <B><FONT COLOR="#A020F0">if</FONT></B>(returnValue == 0)
+    printf(<B><FONT COLOR="#BC8F8F">&quot;Finished reading all the data.\n&quot;</FONT></B>);
+
+  <B><FONT COLOR="#A020F0">if</FONT></B>(returnValue &lt; 0) {
+    perror(<B><FONT COLOR="#BC8F8F">&quot;ERROR: File read&quot;</FONT></B>);
+    exit(11);
+  } <I><FONT COLOR="#B22222">/* end if */</FONT></I>
+
+  <I><FONT COLOR="#B22222">/* Finally we close the file -- after having read it in twice. */</FONT></I>
+  <B><FONT COLOR="#A020F0">if</FONT></B>(close(FD) &lt; 0) {
+    perror(<B><FONT COLOR="#BC8F8F">&quot;ERROR: File close&quot;</FONT></B>);
+    exit(13);
+  } <I><FONT COLOR="#B22222">/* end if */</FONT></I>
+
+  printf(<B><FONT COLOR="#BC8F8F">&quot;Normal exit.\n&quot;</FONT></B>);
+  exit(0);
+} <I><FONT COLOR="#B22222">/* end func main */</FONT></I>
+</PRE>
+<HR \/>
+<ADDRESS>Generated by <A HREF="http://www.iki.fi/~mtr/genscript/">GNU Enscript 1.6.5.90</A>.</ADDRESS>
+</BODY>
+</HTML>

@@ -1,0 +1,91 @@
+<!DOCTYPE html PUBLIC "-//IETF//DTD HTML 2.0//EN">
+<HTML>
+<HEAD>
+<TITLE>AUPG/getgrXXX.c</TITLE>
+</HEAD>
+<BODY BGCOLOR="#FFFFFF" TEXT="#000000" LINK="#1F00FF" ALINK="#FF0000" VLINK="#9900DD">
+<A NAME="top"> </A>
+<A NAME="file1"> </A>
+<H1><a href="getgrXXX.c">getgrXXX.c</a></H1>
+
+<PRE>
+<I><FONT COLOR="#B22222">/* -*- Mode:C; Coding:us-ascii-unix; fill-column:132 -*- */</FONT></I>
+<I><FONT COLOR="#B22222">/**********************************************************************************************************************************/</FONT></I>
+<I><FONT COLOR="#B22222">/**
+   @file      getgrXXX.c
+   @author    Mitch Richling &lt;http://www.mitchr.me/&gt;
+   @Copyright Copyright 1996 by Mitch Richling.  All rights reserved.
+   @brief     UNIX group queries with getgrgid and getgrnam@EOL
+   @Keywords  UNIX group user gid getgrgid getgrnam
+   @Std       ISOC POSIX UNIX98 BSD4.3 SYSV3
+   @Tested    
+              - Solaris 2.8
+              - MacOS X.2
+              - Linux (RH 7.3)
+
+   This is an example program intended to illustrate how to use the getgrgid and getgrnam functions.  getgrnam queries user group
+   data by group GID.  A GID is a unique integer that UNIX uses to identify groups. It is actually this number that is used by most
+   system routines.  getgrnam queries user group data by group name.
+***********************************************************************************************************************************/</FONT></I>
+
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;sys/types.h&gt;</FONT></B>          <I><FONT COLOR="#B22222">/* UNIX types      POSIX */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;errno.h&gt;</FONT></B>              <I><FONT COLOR="#B22222">/* error stf       POSIX */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;grp.h&gt;</FONT></B>                <I><FONT COLOR="#B22222">/* UNIX groups     POSIX */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;signal.h&gt;</FONT></B>             <I><FONT COLOR="#B22222">/* UNIX signals    POSIX */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;stdio.h&gt;</FONT></B>              <I><FONT COLOR="#B22222">/* I/O lib         C89   */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;stdlib.h&gt;</FONT></B>             <I><FONT COLOR="#B22222">/* Standard Lib    C89   */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;string.h&gt;</FONT></B>             <I><FONT COLOR="#B22222">/* Strings         C89   */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;unistd.h&gt;</FONT></B>             <I><FONT COLOR="#B22222">/* UNIX std stf    POSIX */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;ctype.h&gt;</FONT></B>              <I><FONT COLOR="#B22222">/* Char classes    C89   */</FONT></I>
+
+<I><FONT COLOR="#B22222">/**********************************************************************************************************************************/</FONT></I>
+<B><FONT COLOR="#228B22">int</FONT></B> <B><FONT COLOR="#0000FF">main</FONT></B>(<B><FONT COLOR="#228B22">int</FONT></B> argc, <B><FONT COLOR="#228B22">char</FONT></B> *argv[]) {
+  <B><FONT COLOR="#228B22">struct</FONT></B> group *grEnt;
+  <B><FONT COLOR="#228B22">char</FONT></B> **cp, *c;
+  gid_t theGID;
+  <B><FONT COLOR="#228B22">int</FONT></B> ArgIsNotNumber;
+
+  <B><FONT COLOR="#A020F0">if</FONT></B>(argc != 2) {
+    printf(<B><FONT COLOR="#BC8F8F">&quot;ERROR: This program requires a group GID or name as the only argument.\n&quot;</FONT></B>);
+    exit(1);
+  } <I><FONT COLOR="#B22222">/* end if */</FONT></I>
+
+  <I><FONT COLOR="#B22222">/* Figure out if we got a group name or a GID */</FONT></I>
+  <B><FONT COLOR="#A020F0">for</FONT></B>(c=argv[1],ArgIsNotNumber=0;!((*c==<B><FONT COLOR="#BC8F8F">'\0'</FONT></B>)||ArgIsNotNumber);c++)
+    <B><FONT COLOR="#A020F0">if</FONT></B>(!isdigit(*c))
+      ArgIsNotNumber=1;
+
+  <I><FONT COLOR="#B22222">/* Do the lookup */</FONT></I>
+  <B><FONT COLOR="#A020F0">if</FONT></B>(ArgIsNotNumber) {
+    printf(<B><FONT COLOR="#BC8F8F">&quot;Looking up group with name: %s...\n\n&quot;</FONT></B>, argv[1]);
+    <B><FONT COLOR="#A020F0">if</FONT></B>((grEnt = getgrnam(argv[1])) == NULL) {
+      printf(<B><FONT COLOR="#BC8F8F">&quot;ERROR: Call to getgrnam failed\n&quot;</FONT></B>);
+      exit(2);
+    } <I><FONT COLOR="#B22222">/* end if */</FONT></I>
+  } <B><FONT COLOR="#A020F0">else</FONT></B> {
+    theGID = atol(argv[1]);
+    printf(<B><FONT COLOR="#BC8F8F">&quot;Looking up group with GID: %ld...\n\n&quot;</FONT></B>, (<B><FONT COLOR="#228B22">long</FONT></B>)theGID);
+    <B><FONT COLOR="#A020F0">if</FONT></B>((grEnt = getgrgid(theGID)) == NULL) {
+      printf(<B><FONT COLOR="#BC8F8F">&quot;ERROR: Call to getgrgid failed.\n&quot;</FONT></B>);
+      exit(2);
+    } <I><FONT COLOR="#B22222">/* end if */</FONT></I>
+  } <I><FONT COLOR="#B22222">/* end if/else */</FONT></I>
+
+  <I><FONT COLOR="#B22222">/* Print the results. */</FONT></I>
+  printf(<B><FONT COLOR="#BC8F8F">&quot;Group name:   %s\n&quot;</FONT></B>,  grEnt-&gt;gr_name);
+  printf(<B><FONT COLOR="#BC8F8F">&quot;Group passwd: %s\n&quot;</FONT></B>,  grEnt-&gt;gr_passwd);
+  printf(<B><FONT COLOR="#BC8F8F">&quot;Group GID:    %ld\n&quot;</FONT></B>, (<B><FONT COLOR="#228B22">long</FONT></B>)grEnt-&gt;gr_gid);
+
+  <I><FONT COLOR="#B22222">/* gr_mem is an array of pointers to chars(strings) terminated by a NULL pointer. */</FONT></I>
+  printf(<B><FONT COLOR="#BC8F8F">&quot;Members:\n&quot;</FONT></B>);
+  <B><FONT COLOR="#A020F0">for</FONT></B>(cp=grEnt-&gt;gr_mem; *cp != NULL; cp++)
+    printf(<B><FONT COLOR="#BC8F8F">&quot;   %s\n&quot;</FONT></B>, *cp);
+  printf(<B><FONT COLOR="#BC8F8F">&quot;\n&quot;</FONT></B>);
+
+  <B><FONT COLOR="#A020F0">return</FONT></B> 0;
+} <I><FONT COLOR="#B22222">/* end func main */</FONT></I>
+</PRE>
+<HR \/>
+<ADDRESS>Generated by <A HREF="http://www.iki.fi/~mtr/genscript/">GNU Enscript 1.6.5.90</A>.</ADDRESS>
+</BODY>
+</HTML>

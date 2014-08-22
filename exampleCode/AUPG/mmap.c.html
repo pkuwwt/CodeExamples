@@ -1,0 +1,152 @@
+<!DOCTYPE html PUBLIC "-//IETF//DTD HTML 2.0//EN">
+<HTML>
+<HEAD>
+<TITLE>AUPG/mmap.c</TITLE>
+</HEAD>
+<BODY BGCOLOR="#FFFFFF" TEXT="#000000" LINK="#1F00FF" ALINK="#FF0000" VLINK="#9900DD">
+<A NAME="top"> </A>
+<A NAME="file1"> </A>
+<H1><a href="mmap.c">mmap.c</a></H1>
+
+<PRE>
+<I><FONT COLOR="#B22222">/* -*- Mode:C; Coding:us-ascii-unix; fill-column:132 -*- */</FONT></I>
+<I><FONT COLOR="#B22222">/**********************************************************************************************************************************/</FONT></I>
+<I><FONT COLOR="#B22222">/**
+   @file      mmap.c
+   @author    Mitch Richling &lt;http://www.mitchr.me/&gt;
+   @Copyright Copyright 2002 by Mitch Richling.  All rights reserved.
+   @brief     How to map a file with mmap@EOL
+   @Keywords  mmap unix posix 
+   @Std       C99
+
+   mmap(), a long time component of SysV systems, is now part of POSIX.  While the SysV mmap() was intended for files, POSIX makes
+   it a much more general tool that can map files, shared memory segments, and various other things.  This program illustrates how
+   to mmap() use to manipulate files.
+***********************************************************************************************************************************/</FONT></I>
+
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;sys/types.h&gt;</FONT></B>          <I><FONT COLOR="#B22222">/* UNIX types      POSIX */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;sys/uio.h&gt;</FONT></B>            <I><FONT COLOR="#B22222">/* BSD  I/O        BSD   */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;stdio.h&gt;</FONT></B>              <I><FONT COLOR="#B22222">/* I/O lib         C89   */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;errno.h&gt;</FONT></B>              <I><FONT COLOR="#B22222">/* error stf       POSIX */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;stdlib.h&gt;</FONT></B>             <I><FONT COLOR="#B22222">/* Standard Lib    C89   */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;unistd.h&gt;</FONT></B>             <I><FONT COLOR="#B22222">/* UNIX std stf    POSIX */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;fcntl.h&gt;</FONT></B>              <I><FONT COLOR="#B22222">/* UNIX file ctrl  UNIX  */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;sys/mman.h&gt;</FONT></B>           <I><FONT COLOR="#B22222">/* mmap()          POSIX */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;sys/stat.h&gt;</FONT></B>           <I><FONT COLOR="#B22222">/* UNIX stat       POSIX */</FONT></I>
+
+<I><FONT COLOR="#B22222">/**********************************************************************************************************************************/</FONT></I>
+<B><FONT COLOR="#228B22">int</FONT></B> <B><FONT COLOR="#0000FF">main</FONT></B>(<B><FONT COLOR="#228B22">int</FONT></B> argc, <B><FONT COLOR="#228B22">char</FONT></B> *argv[]) {
+  <B><FONT COLOR="#228B22">int</FONT></B> FD;
+  <B><FONT COLOR="#228B22">char</FONT></B> *fileName = <B><FONT COLOR="#BC8F8F">&quot;/tmp/mmapFile.tmp&quot;</FONT></B>;
+  <B><FONT COLOR="#228B22">char</FONT></B> *fileData;
+
+  <I><FONT COLOR="#B22222">/* ------------------------------------------------------------------------------------------------------------------------------ */</FONT></I>
+  <I><FONT COLOR="#B22222">/* First we must make a file with some data in it...*/</FONT></I>
+
+  <I><FONT COLOR="#B22222">/* Open our test file (wack it if it already exists). */</FONT></I>
+  <B><FONT COLOR="#A020F0">if</FONT></B>((FD = open(fileName, O_WRONLY | O_CREAT | O_TRUNC, S_IRWXU | S_IRWXG | S_IRWXO)) &lt; 0) {
+    printf(<B><FONT COLOR="#BC8F8F">&quot;ERROR: Could not open file (for write only).\n&quot;</FONT></B>);
+    exit(1);
+  } <I><FONT COLOR="#B22222">/* end if */</FONT></I>
+
+  <I><FONT COLOR="#B22222">/* Note we write the \0 too. */</FONT></I>
+  <B><FONT COLOR="#A020F0">if</FONT></B>(write(FD, <B><FONT COLOR="#BC8F8F">&quot;0123456789abcdef&quot;</FONT></B>, 17) &lt; 0) {
+    printf(<B><FONT COLOR="#BC8F8F">&quot;ERROR: Could not write to file.\n&quot;</FONT></B>);
+    exit(1);
+  } <I><FONT COLOR="#B22222">/* end if */</FONT></I>
+
+  <I><FONT COLOR="#B22222">/* Close the test file. */</FONT></I>
+  <B><FONT COLOR="#A020F0">if</FONT></B>(close(FD) &lt; 0) {
+    printf(<B><FONT COLOR="#BC8F8F">&quot;ERROR: Could not close the file\n&quot;</FONT></B>);
+    exit(1);
+  } <I><FONT COLOR="#B22222">/* end if */</FONT></I>
+
+  <I><FONT COLOR="#B22222">/* ------------------------------------------------------------------------------------------------------------------------------ */</FONT></I>
+  <I><FONT COLOR="#B22222">/* Now we have a test file to play with (/tmp/mmapFile.tmp).  Let's
+     access it with mmap(). */</FONT></I>
+
+  <I><FONT COLOR="#B22222">/* First we have to open the file! */</FONT></I>
+  <B><FONT COLOR="#A020F0">if</FONT></B>((FD = open(fileName, O_RDWR)) &lt; 0) {
+    printf(<B><FONT COLOR="#BC8F8F">&quot;ERROR(%d): Could not open file (for read/write).\n&quot;</FONT></B>, errno);
+    exit(1);
+  } <I><FONT COLOR="#B22222">/* end if */</FONT></I>
+
+  <I><FONT COLOR="#B22222">/* Now we must map the thing into our memory space.  A size is required, so use stat() first to figure out how long a file is if
+     you don't already know.  Note: It is VERY important that the file length NOT change while it is mmap'ed.*/</FONT></I>
+  fileData = (<B><FONT COLOR="#228B22">char</FONT></B> *)mmap(NULL,                    <I><FONT COLOR="#B22222">// Almost always not used
+</FONT></I>                          17,                      <I><FONT COLOR="#B22222">// Length of the mapped space
+</FONT></I>                          PROT_READ | PROT_WRITE,  <I><FONT COLOR="#B22222">// Access type 
+</FONT></I>                          MAP_SHARED,              <I><FONT COLOR="#B22222">// Write changes to device (see: MAP_PRIVATE)
+</FONT></I>                          FD,                      <I><FONT COLOR="#B22222">// FD of the file to map
+</FONT></I>                          0);                      <I><FONT COLOR="#B22222">// Offset into file.
+</FONT></I>
+  <I><FONT COLOR="#B22222">/* Checking for an error with mmap is strange.  Instead of returning NULL, which any God fearing, pointer returning function
+     should do upon error, it returns MAP_FAILED.  On many platforms, this is 0 or -1, but on some it is an address that is simply
+     invalid for the current program... */</FONT></I>
+  <B><FONT COLOR="#A020F0">if</FONT></B>(fileData == MAP_FAILED) {
+    <I><FONT COLOR="#B22222">/* Some of the following are only listed for completeness as they can not happen in this case... */</FONT></I>
+    <B><FONT COLOR="#A020F0">switch</FONT></B>(errno) {
+      <B><FONT COLOR="#A020F0">case</FONT></B> <B><FONT COLOR="#5F9EA0">EACCES</FONT></B>:    printf(<B><FONT COLOR="#BC8F8F">&quot;mmap failed: The FD was not open for read, or for write with (PROT_WRITE or MAP_SHARED)\n&quot;</FONT></B>);
+        <B><FONT COLOR="#A020F0">break</FONT></B>;
+      <B><FONT COLOR="#A020F0">case</FONT></B> <B><FONT COLOR="#5F9EA0">EAGAIN</FONT></B>:    printf(<B><FONT COLOR="#BC8F8F">&quot;mmap failed: The mapping could not be locked in memory\n&quot;</FONT></B>);
+        <B><FONT COLOR="#A020F0">break</FONT></B>;
+      <B><FONT COLOR="#A020F0">case</FONT></B> <B><FONT COLOR="#5F9EA0">EBADF</FONT></B>:     printf(<B><FONT COLOR="#BC8F8F">&quot;mmap failed: The FD not a valid open file descriptor.\n&quot;</FONT></B>);
+        <B><FONT COLOR="#A020F0">break</FONT></B>;
+      <B><FONT COLOR="#A020F0">case</FONT></B> <B><FONT COLOR="#5F9EA0">EINVAL</FONT></B>:    printf(<B><FONT COLOR="#BC8F8F">&quot;mmap failed: The value of len is zero, addr is not valid, bad combination of args\n&quot;</FONT></B>);
+        <B><FONT COLOR="#A020F0">break</FONT></B>;
+      <B><FONT COLOR="#A020F0">case</FONT></B> <B><FONT COLOR="#5F9EA0">EMFILE</FONT></B>:    printf(<B><FONT COLOR="#BC8F8F">&quot;mmap failed: The too many regions mapped already\n&quot;</FONT></B>);
+        <B><FONT COLOR="#A020F0">break</FONT></B>;
+      <B><FONT COLOR="#A020F0">case</FONT></B> <B><FONT COLOR="#5F9EA0">ENODEV</FONT></B>:    printf(<B><FONT COLOR="#BC8F8F">&quot;mmap failed: The FD file type is not supported by mmap().\n&quot;</FONT></B>);
+        <B><FONT COLOR="#A020F0">break</FONT></B>;
+      <B><FONT COLOR="#A020F0">case</FONT></B> <B><FONT COLOR="#5F9EA0">ENOMEM</FONT></B>:    printf(<B><FONT COLOR="#BC8F8F">&quot;mmap failed: Not enough memory\n&quot;</FONT></B>);
+        <B><FONT COLOR="#A020F0">break</FONT></B>;
+      <B><FONT COLOR="#A020F0">case</FONT></B> <B><FONT COLOR="#5F9EA0">ENOTSUP</FONT></B>:   printf(<B><FONT COLOR="#BC8F8F">&quot;mmap failed: Options not supported on this platform\n&quot;</FONT></B>);
+        <B><FONT COLOR="#A020F0">break</FONT></B>;
+      <B><FONT COLOR="#A020F0">case</FONT></B> <B><FONT COLOR="#5F9EA0">ENXIO</FONT></B>:     printf(<B><FONT COLOR="#BC8F8F">&quot;mmap failed: Range [off,off+len) are invalid for the FD, MAP_FIXED &amp; invalid addresses, or FD not accessible\n&quot;</FONT></B>);
+        <B><FONT COLOR="#A020F0">break</FONT></B>;
+      <B><FONT COLOR="#A020F0">case</FONT></B> <B><FONT COLOR="#5F9EA0">EOVERFLOW</FONT></B>: printf(<B><FONT COLOR="#BC8F8F">&quot;mmap failed: File is too big!\n&quot;</FONT></B>);
+        <B><FONT COLOR="#A020F0">break</FONT></B>;
+      <B><FONT COLOR="#5F9EA0">default</FONT></B>:        printf(<B><FONT COLOR="#BC8F8F">&quot;mmap failed: Duno why! (errno: %d)\n&quot;</FONT></B>, errno);
+        <B><FONT COLOR="#A020F0">break</FONT></B>;
+    } <I><FONT COLOR="#B22222">/* end switch */</FONT></I>
+    exit(1);
+  } <I><FONT COLOR="#B22222">/* end if */</FONT></I>
+
+  <I><FONT COLOR="#B22222">/* ------------------------------------------------------------------------------------------------------------------------------ */</FONT></I>
+  <I><FONT COLOR="#B22222">/* Now we can use the fileData pointer just like any other pointer! */</FONT></I>
+
+  <I><FONT COLOR="#B22222">/* We put the \0 in the file, so we can use the file content as a string! */</FONT></I>
+  printf(<B><FONT COLOR="#BC8F8F">&quot;File content: '%s'\n&quot;</FONT></B>, fileData);
+
+  <I><FONT COLOR="#B22222">/* fileData is just a pointer.. */</FONT></I>
+  printf(<B><FONT COLOR="#BC8F8F">&quot;The 4th char of the file is: %c\n&quot;</FONT></B>, fileData[3]);
+
+  <I><FONT COLOR="#B22222">/* ------------------------------------------------------------------------------------------------------------------------------ */</FONT></I>
+  <I><FONT COLOR="#B22222">/* We are done with the map, so we can unmap it and close the file now. */</FONT></I>
+
+  <I><FONT COLOR="#B22222">/* Unmap the file now. */</FONT></I>
+  <B><FONT COLOR="#A020F0">if</FONT></B>(munmap(fileData, 17) &lt; 0) {
+    <B><FONT COLOR="#A020F0">switch</FONT></B>(errno) {
+      <B><FONT COLOR="#A020F0">case</FONT></B> <B><FONT COLOR="#5F9EA0">EINVAL</FONT></B>:  printf(<B><FONT COLOR="#BC8F8F">&quot;munmap failed: The address range [addr,addr+len) is invalid.\n&quot;</FONT></B>
+                           <B><FONT COLOR="#BC8F8F">&quot;               munmap failed: The len argument is 0.\n&quot;</FONT></B>
+                           <B><FONT COLOR="#BC8F8F">&quot;               munmap failed: The addr argument is not a multiple of page size.\n&quot;</FONT></B>);
+        <B><FONT COLOR="#A020F0">break</FONT></B>;
+      <B><FONT COLOR="#5F9EA0">default</FONT></B>:      printf(<B><FONT COLOR="#BC8F8F">&quot;munmap failed: Duno why!  (errno %d).\n&quot;</FONT></B>, errno);
+        <B><FONT COLOR="#A020F0">break</FONT></B>;
+    } <I><FONT COLOR="#B22222">/* end switch */</FONT></I>
+    exit(1);
+  } <I><FONT COLOR="#B22222">/* end if */</FONT></I>
+
+  <I><FONT COLOR="#B22222">/* Close the test file. */</FONT></I>
+  <B><FONT COLOR="#A020F0">if</FONT></B>(close(FD) &lt; 0) {
+    printf(<B><FONT COLOR="#BC8F8F">&quot;ERROR: Could not close the file\n&quot;</FONT></B>);
+    exit(1);
+  } <I><FONT COLOR="#B22222">/* end if */</FONT></I>
+
+  <B><FONT COLOR="#A020F0">return</FONT></B> 0;
+} <I><FONT COLOR="#B22222">/* end func main */</FONT></I>
+</PRE>
+<HR \/>
+<ADDRESS>Generated by <A HREF="http://www.iki.fi/~mtr/genscript/">GNU Enscript 1.6.5.90</A>.</ADDRESS>
+</BODY>
+</HTML>

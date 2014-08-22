@@ -1,0 +1,94 @@
+<!DOCTYPE html PUBLIC "-//IETF//DTD HTML 2.0//EN">
+<HTML>
+<HEAD>
+<TITLE>AUPG/dirRec.c</TITLE>
+</HEAD>
+<BODY BGCOLOR="#FFFFFF" TEXT="#000000" LINK="#1F00FF" ALINK="#FF0000" VLINK="#9900DD">
+<A NAME="top"> </A>
+<A NAME="file1"> </A>
+<H1><a href="dirRec.c">dirRec.c</a></H1>
+
+<PRE>
+<I><FONT COLOR="#B22222">/* -*- Mode:C; Coding:us-ascii-unix; fill-column:132 -*- */</FONT></I>
+<I><FONT COLOR="#B22222">/**********************************************************************************************************************************/</FONT></I>
+<I><FONT COLOR="#B22222">/**
+   @file      dirRec.c
+   @author    Mitch Richling &lt;http://www.mitchr.me/&gt;
+   @Copyright Copyright 1995 by Mitch Richling.  All rights reserved.
+   @brief     Recursive traversal of UNIX directories@EOL
+   @Keywords  UNIX directory file traversal
+   @Std       ISOC POSIX
+   @Tested    
+              - Solaris 2.8
+              - MacOS X.2
+              - Linux (RH 7.3)              
+
+   This C program is intended to illustrate how to traverse a directory tree recursively -- the traditional way.
+***********************************************************************************************************************************/</FONT></I>
+
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;stdio.h&gt;</FONT></B>              <I><FONT COLOR="#B22222">/* I/O lib         C89   */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;stdlib.h&gt;</FONT></B>             <I><FONT COLOR="#B22222">/* Standard Lib    C89   */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;string.h&gt;</FONT></B>             <I><FONT COLOR="#B22222">/* Strings         C89   */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;sys/types.h&gt;</FONT></B>          <I><FONT COLOR="#B22222">/* UNIX types      POSIX */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;dirent.h&gt;</FONT></B>             <I><FONT COLOR="#B22222">/* UNIX dirs       POSIX */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;errno.h&gt;</FONT></B>              <I><FONT COLOR="#B22222">/* error stf       POSIX */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;utime.h&gt;</FONT></B>              <I><FONT COLOR="#B22222">/* utime           POSIX */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;sys/stat.h&gt;</FONT></B>           <I><FONT COLOR="#B22222">/* UNIX stat       POSIX */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;time.h&gt;</FONT></B>               <I><FONT COLOR="#B22222">/* time            C89   */</FONT></I>
+
+<I><FONT COLOR="#B22222">/**********************************************************************************************************************************/</FONT></I>
+<B><FONT COLOR="#228B22">void</FONT></B> <B><FONT COLOR="#0000FF">travDir</FONT></B>(<B><FONT COLOR="#228B22">char</FONT></B> *dirName);
+
+<I><FONT COLOR="#B22222">/**********************************************************************************************************************************/</FONT></I>
+<B><FONT COLOR="#228B22">int</FONT></B> <B><FONT COLOR="#0000FF">main</FONT></B>(<B><FONT COLOR="#228B22">int</FONT></B> argc, <B><FONT COLOR="#228B22">char</FONT></B> *argv[]) {
+  <B><FONT COLOR="#A020F0">if</FONT></B>(argc != 2) {
+    printf(<B><FONT COLOR="#BC8F8F">&quot;ERROR: One argument required.\n&quot;</FONT></B>);
+    exit(1);
+  } <B><FONT COLOR="#A020F0">else</FONT></B> {
+    travDir(argv[1]);
+  } <I><FONT COLOR="#B22222">/* end if/else */</FONT></I>
+  <B><FONT COLOR="#A020F0">return</FONT></B> 0;
+} <I><FONT COLOR="#B22222">/* end func main */</FONT></I>
+
+<I><FONT COLOR="#B22222">/**********************************************************************************************************************************/</FONT></I>
+<B><FONT COLOR="#228B22">void</FONT></B> <B><FONT COLOR="#0000FF">travDir</FONT></B>(<B><FONT COLOR="#228B22">char</FONT></B> *dirName) {
+  DIR *dp;                 <I><FONT COLOR="#B22222">/* The directory pointer. */</FONT></I>
+  <B><FONT COLOR="#228B22">struct</FONT></B> dirent *dep;      <I><FONT COLOR="#B22222">/* The directory entry. */</FONT></I>
+  <B><FONT COLOR="#228B22">struct</FONT></B> stat s;           <I><FONT COLOR="#B22222">/* Used to stat each file. */</FONT></I>
+  <B><FONT COLOR="#228B22">char</FONT></B> *name;              <I><FONT COLOR="#B22222">/* The name files and dirs we find. */</FONT></I>
+  <B><FONT COLOR="#228B22">long</FONT></B> len_d_name;         <I><FONT COLOR="#B22222">/* holds the length of file names. */</FONT></I>
+  <B><FONT COLOR="#228B22">long</FONT></B> len_workingDirName; <I><FONT COLOR="#B22222">/* holds the length of the working dir. */</FONT></I>
+
+  <B><FONT COLOR="#A020F0">if</FONT></B>((dp = opendir(dirName)) == NULL) {
+    printf(<B><FONT COLOR="#BC8F8F">&quot;ERROR: dirRec: %s: %s\n&quot;</FONT></B>, dirName, strerror(errno));
+  } <B><FONT COLOR="#A020F0">else</FONT></B> {
+    len_workingDirName = strlen(dirName);
+    <B><FONT COLOR="#A020F0">while</FONT></B>((dep = readdir(dp)) != NULL) {
+      <B><FONT COLOR="#A020F0">if</FONT></B>((strcmp(dep-&gt;d_name, <B><FONT COLOR="#BC8F8F">&quot;..&quot;</FONT></B>) != 0) &amp;&amp; (strcmp(dep-&gt;d_name, <B><FONT COLOR="#BC8F8F">&quot;.&quot;</FONT></B>) != 0)) {
+        len_d_name = strlen(dep-&gt;d_name);
+        name = (<B><FONT COLOR="#228B22">char</FONT></B> *)malloc(len_d_name + len_workingDirName + 2);
+        strcpy(name, dirName);
+        strcat(name, <B><FONT COLOR="#BC8F8F">&quot;/&quot;</FONT></B>);
+        strcat(name, dep-&gt;d_name);
+        <B><FONT COLOR="#A020F0">if</FONT></B>(lstat(name, &amp;s) &lt; 0) {
+          printf(<B><FONT COLOR="#BC8F8F">&quot;ERROR: dirDepth: %s: %s\n&quot;</FONT></B>, name, strerror(errno));
+          free(name);
+        } <B><FONT COLOR="#A020F0">else</FONT></B> {
+          <B><FONT COLOR="#A020F0">if</FONT></B>(S_ISDIR(s.st_mode)) {      <I><FONT COLOR="#B22222">/* Process directories. */</FONT></I>
+            printf(<B><FONT COLOR="#BC8F8F">&quot; D: %s\n&quot;</FONT></B>, name);
+            travDir(name);
+          } <B><FONT COLOR="#A020F0">else</FONT></B> {              <I><FONT COLOR="#B22222">/* Process non-directories. */</FONT></I>
+            printf(<B><FONT COLOR="#BC8F8F">&quot;ND: %s\n&quot;</FONT></B>, name);
+            free(name);
+          } <I><FONT COLOR="#B22222">/* end if/else */</FONT></I>
+        } <I><FONT COLOR="#B22222">/* end if/else */</FONT></I>
+      } <I><FONT COLOR="#B22222">/* end if */</FONT></I>
+    } <I><FONT COLOR="#B22222">/* end while */</FONT></I>
+    closedir(dp);
+  } <I><FONT COLOR="#B22222">/* end if/else */</FONT></I>
+} <I><FONT COLOR="#B22222">/* end func travDir */</FONT></I>
+</PRE>
+<HR \/>
+<ADDRESS>Generated by <A HREF="http://www.iki.fi/~mtr/genscript/">GNU Enscript 1.6.5.90</A>.</ADDRESS>
+</BODY>
+</HTML>

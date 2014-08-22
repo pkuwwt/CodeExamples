@@ -1,0 +1,137 @@
+<!DOCTYPE html PUBLIC "-//IETF//DTD HTML 2.0//EN">
+<HTML>
+<HEAD>
+<TITLE>AUPG/IOerrors.c</TITLE>
+</HEAD>
+<BODY BGCOLOR="#FFFFFF" TEXT="#000000" LINK="#1F00FF" ALINK="#FF0000" VLINK="#9900DD">
+<A NAME="top"> </A>
+<A NAME="file1"> </A>
+<H1><a href="IOerrors.c">IOerrors.c</a></H1>
+
+<PRE>
+<I><FONT COLOR="#B22222">/* -*- Mode:C; Coding:us-ascii-unix; fill-column:132 -*- */</FONT></I>
+<I><FONT COLOR="#B22222">/**********************************************************************************************************************************/</FONT></I>
+<I><FONT COLOR="#B22222">/**
+   @file      IOerrors.c
+   @author    Mitch Richling@Mee
+   @Copyright Copyright 1994 by Mitch Richling.  All rights reserved.
+   @brief     Example program for UNIX I/O and EINTR handling@EOL
+   @Keywords  UNIX example file I/O EINTR
+   @Std       C89
+   @Tested    
+              - Solaris 2.8
+              - MacOS X.2
+              - Linux (RH 7.3)
+
+   This C program is intended to illustrate how to handle the interrupt error (EINTR) returns possible with many I/O functions.  In
+   general an EINTR error is not an error to exit over, and the I/O operation should be retried.  This code also demonstrates how to
+   handle write calls that are only partly successful.  This kind of code is not generally required for file I/O, but is the norm
+   for network programs.
+
+   If one is determined to take care of EINTR errors correctly, then it is best to wrap the I/O functions inside of user defined
+   functions that take care of the error conditions in order to reduce the code size and complexity.  I have chosen to take care of
+   the EINTR errors in-line with no added functions because this program only calls each I/O function one time!
+***********************************************************************************************************************************/</FONT></I>
+
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;sys/stat.h&gt;</FONT></B>           <I><FONT COLOR="#B22222">/* UNIX stat       POSIX */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;sys/types.h&gt;</FONT></B>          <I><FONT COLOR="#B22222">/* UNIX types      POSIX */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;sys/uio.h&gt;</FONT></B>            <I><FONT COLOR="#B22222">/* BSD  I/O        BSD   */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;stdio.h&gt;</FONT></B>              <I><FONT COLOR="#B22222">/* I/O lib         C89   */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;string.h&gt;</FONT></B>             <I><FONT COLOR="#B22222">/* Strings         C89   */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;dirent.h&gt;</FONT></B>             <I><FONT COLOR="#B22222">/* UNIX dirs       POSIX */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;errno.h&gt;</FONT></B>              <I><FONT COLOR="#B22222">/* error stf       POSIX */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;stdlib.h&gt;</FONT></B>             <I><FONT COLOR="#B22222">/* Standard Lib    C89   */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;unistd.h&gt;</FONT></B>             <I><FONT COLOR="#B22222">/* UNIX std stf    POSIX */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;fcntl.h&gt;</FONT></B>              <I><FONT COLOR="#B22222">/* UNIX file ctrl  UNIX  */</FONT></I>
+
+<I><FONT COLOR="#B22222">/**********************************************************************************************************************************/</FONT></I>
+<B><FONT COLOR="#228B22">int</FONT></B> <B><FONT COLOR="#0000FF">main</FONT></B>(<B><FONT COLOR="#228B22">int</FONT></B> argc, <B><FONT COLOR="#228B22">char</FONT></B> *argv[]) {
+  <B><FONT COLOR="#228B22">int</FONT></B> FD;
+  <B><FONT COLOR="#228B22">char</FONT></B> *fileName = <B><FONT COLOR="#BC8F8F">&quot;foo&quot;</FONT></B>;       <I><FONT COLOR="#B22222">/* The filename we are going to work with. */</FONT></I>
+  <B><FONT COLOR="#228B22">int</FONT></B> returnValue;
+  <B><FONT COLOR="#228B22">const</FONT></B> <B><FONT COLOR="#228B22">int</FONT></B> maxEINTRers = 10;   <I><FONT COLOR="#B22222">/* Maximum number interrupt errors to tolerate */</FONT></I>
+  <B><FONT COLOR="#228B22">int</FONT></B> numEINTRers;              <I><FONT COLOR="#B22222">/* Counter for number of EINTR errors. */</FONT></I>
+  <B><FONT COLOR="#228B22">int</FONT></B> numTries;                 <I><FONT COLOR="#B22222">/* Counter for number of write */</FONT></I>
+  <B><FONT COLOR="#228B22">const</FONT></B> <B><FONT COLOR="#228B22">int</FONT></B> maxNumTries = 10;   <I><FONT COLOR="#B22222">/* maximum number of write attempts to finish. */</FONT></I>
+  <B><FONT COLOR="#228B22">int</FONT></B> numToWrite;               <I><FONT COLOR="#B22222">/* Number of chars left to write write. */</FONT></I>
+  <B><FONT COLOR="#228B22">char</FONT></B> buf[255];                <I><FONT COLOR="#B22222">/* Buffer to hold data for I/O operations. */</FONT></I>
+  <B><FONT COLOR="#228B22">char</FONT></B> *writeOffset;
+
+  <I><FONT COLOR="#B22222">/* First we open the file. */</FONT></I>
+  numEINTRers = 0;
+  <B><FONT COLOR="#A020F0">do</FONT></B> {
+    <B><FONT COLOR="#A020F0">if</FONT></B>((FD = open(fileName, O_WRONLY | O_CREAT | O_TRUNC, S_IRWXU | S_IRWXG | S_IRWXO)) &lt; 0) {
+      perror(<B><FONT COLOR="#BC8F8F">&quot;ERROR: File open&quot;</FONT></B>);
+      <B><FONT COLOR="#A020F0">if</FONT></B>(errno != EINTR)
+        exit(10);
+      numEINTRers++;
+    } <I><FONT COLOR="#B22222">/* end if */</FONT></I>
+  } <B><FONT COLOR="#A020F0">while</FONT></B>((FD &lt; 0) &amp;&amp; (numEINTRers &lt; maxEINTRers));
+
+  <B><FONT COLOR="#A020F0">if</FONT></B>(FD &lt; 0) {
+    errno = EINTR;
+    perror(<B><FONT COLOR="#BC8F8F">&quot;ERROR: Repeated errors&quot;</FONT></B>);
+    exit(11);
+  } <I><FONT COLOR="#B22222">/* end if */</FONT></I>
+
+  <I><FONT COLOR="#B22222">/* Next we write something to it.  Most UNIX systems will always write the entire request to disk or they will error, but this is
+     not required behavior so we check for partial writes.  In general this kind of code is only seen in network I/O programs
+     because it is common to have partial writes in such code. */</FONT></I>
+  numEINTRers = 0;
+  numTries = 0;
+  numToWrite = 6;
+  strcpy(buf, <B><FONT COLOR="#BC8F8F">&quot;Hello\n&quot;</FONT></B>);
+  writeOffset = buf;
+  <B><FONT COLOR="#A020F0">do</FONT></B> {
+    <B><FONT COLOR="#A020F0">if</FONT></B>((returnValue = write(FD, writeOffset, numToWrite - 2)) &lt; 0) {
+      perror(<B><FONT COLOR="#BC8F8F">&quot;ERROR: Write error&quot;</FONT></B>);
+      <B><FONT COLOR="#A020F0">if</FONT></B>(errno != EINTR)
+        exit(10);
+      numEINTRers++;
+    } <B><FONT COLOR="#A020F0">else</FONT></B> {
+      printf(<B><FONT COLOR="#BC8F8F">&quot;Wrote %d of %d bytes&quot;</FONT></B>, returnValue, numToWrite);
+      numToWrite = numToWrite - returnValue;
+      printf(<B><FONT COLOR="#BC8F8F">&quot;, have %d bytes to go.\n&quot;</FONT></B>, numToWrite);
+      <B><FONT COLOR="#A020F0">if</FONT></B>(numToWrite &gt; 0)
+        writeOffset += returnValue;
+      numTries++;
+      numEINTRers = 0;          <I><FONT COLOR="#B22222">/* Reset so we only exit on maxEINTRers REPEATED errors. */</FONT></I>
+    } <I><FONT COLOR="#B22222">/* end else */</FONT></I>
+  } <B><FONT COLOR="#A020F0">while</FONT></B>((numToWrite &gt; 0) &amp;&amp; (numTries &lt; maxNumTries) &amp;&amp; (numEINTRers &lt; maxEINTRers));
+
+  <I><FONT COLOR="#B22222">/* Figure out if it worked, and if not print out why. */</FONT></I>
+  <B><FONT COLOR="#A020F0">if</FONT></B>(numToWrite &gt; 0) {
+    printf(<B><FONT COLOR="#BC8F8F">&quot;Write failure.  Have %d bytes left to write.\n&quot;</FONT></B>, numToWrite);
+    <B><FONT COLOR="#A020F0">if</FONT></B>(numTries &gt;= maxNumTries)
+      printf(<B><FONT COLOR="#BC8F8F">&quot;Exit because we had too many successful, but incomplete, write attempts.\n&quot;</FONT></B>);
+    <B><FONT COLOR="#A020F0">if</FONT></B>(numEINTRers &gt;= maxEINTRers)
+      printf(<B><FONT COLOR="#BC8F8F">&quot;Exit because we had too many repeated EINTR errors.\n&quot;</FONT></B>);
+    exit(12);
+  } <I><FONT COLOR="#B22222">/* end if */</FONT></I>
+
+  <I><FONT COLOR="#B22222">/* We must close the file to free up system resources.  We must check for errors on the close as well as the other I/O functions.
+     If the close fails we may not get the last few writes committed to disk.  If we forget to close the file, then it will be
+     closed for us when our program exits.  One should not let the OS close files because if a problem occurs, the program will
+     never know and can thus never take action. */</FONT></I>
+  numEINTRers = 0;
+  <B><FONT COLOR="#A020F0">do</FONT></B> {
+    <B><FONT COLOR="#A020F0">if</FONT></B>((returnValue = close(FD)) &lt; 0) {
+      perror(<B><FONT COLOR="#BC8F8F">&quot;ERROR: File close&quot;</FONT></B>);
+      <B><FONT COLOR="#A020F0">if</FONT></B>(errno != EINTR)
+        exit(13);
+      numEINTRers++;
+    } <I><FONT COLOR="#B22222">/* end if */</FONT></I>
+  } <B><FONT COLOR="#A020F0">while</FONT></B>((returnValue &lt; 0) &amp;&amp; (numEINTRers &lt; maxEINTRers));
+
+  <B><FONT COLOR="#A020F0">if</FONT></B>(returnValue &lt; 0) {
+    errno = EINTR;
+    perror(<B><FONT COLOR="#BC8F8F">&quot;ERROR: Repeated errors&quot;</FONT></B>);
+  } <I><FONT COLOR="#B22222">/* end if */</FONT></I>
+
+  exit(0);
+} <I><FONT COLOR="#B22222">/* end func main */</FONT></I>
+</PRE>
+<HR \/>
+<ADDRESS>Generated by <A HREF="http://www.iki.fi/~mtr/genscript/">GNU Enscript 1.6.5.90</A>.</ADDRESS>
+</BODY>
+</HTML>

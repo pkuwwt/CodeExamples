@@ -1,0 +1,91 @@
+<!DOCTYPE html PUBLIC "-//IETF//DTD HTML 2.0//EN">
+<HTML>
+<HEAD>
+<TITLE>AUPG/flock_ex.c</TITLE>
+</HEAD>
+<BODY BGCOLOR="#FFFFFF" TEXT="#000000" LINK="#1F00FF" ALINK="#FF0000" VLINK="#9900DD">
+<A NAME="top"> </A>
+<A NAME="file1"> </A>
+<H1><a href="flock_ex.c">flock_ex.c</a></H1>
+
+<PRE>
+<I><FONT COLOR="#B22222">/* -*- Mode:C; Coding:us-ascii-unix; fill-column:132 -*- */</FONT></I>
+<I><FONT COLOR="#B22222">/**********************************************************************************************************************************/</FONT></I>
+<I><FONT COLOR="#B22222">/**
+   @file      flock_ex.c
+   @author    Mitch Richling &lt;http://www.mitchr.me/&gt;
+   @Copyright Copyright 1998 by Mitch Richling.  All rights reserved.
+   @brief     How to use flock()
+   @Keywords  UNIX file lock flock
+   @Std       ISOC POSIX UNIX98 BSD4.3 SYSV3
+   @Tested    
+              - MacOS X.3
+
+   This C program is intended to illustrate how to use flock().  flock() provides an interface for advisory locking that is less
+   complex to use than other locking systems.  flock is widely available on across different UNIX systems.  Test this program by
+   running two copies at the same time, one started slightly after the first one.
+***********************************************************************************************************************************/</FONT></I>
+
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;stdio.h&gt;</FONT></B>              <I><FONT COLOR="#B22222">/* I/O lib         C89   */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;sys/types.h&gt;</FONT></B>          <I><FONT COLOR="#B22222">/* UNIX types      POSIX */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;errno.h&gt;</FONT></B>              <I><FONT COLOR="#B22222">/* error stf       POSIX */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;stdlib.h&gt;</FONT></B>             <I><FONT COLOR="#B22222">/* Standard Lib    C89   */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;sys/stat.h&gt;</FONT></B>           <I><FONT COLOR="#B22222">/* UNIX stat       POSIX */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;sys/file.h&gt;</FONT></B>           <I><FONT COLOR="#B22222">/* Locks           UNIX  */</FONT></I>
+
+<I><FONT COLOR="#B22222">/**********************************************************************************************************************************/</FONT></I>
+<B><FONT COLOR="#228B22">int</FONT></B> <B><FONT COLOR="#0000FF">main</FONT></B>(<B><FONT COLOR="#228B22">int</FONT></B> argc, <B><FONT COLOR="#228B22">char</FONT></B> *argv[]) {
+  <B><FONT COLOR="#228B22">int</FONT></B> FD;
+  <B><FONT COLOR="#228B22">char</FONT></B> buf[] = <B><FONT COLOR="#BC8F8F">&quot;hello\n&quot;</FONT></B>;
+  <B><FONT COLOR="#228B22">int</FONT></B> i;
+
+  <B><FONT COLOR="#A020F0">if</FONT></B>((FD = open(<B><FONT COLOR="#BC8F8F">&quot;foo&quot;</FONT></B>, O_WRONLY | O_CREAT | O_TRUNC, S_IRWXU|S_IRWXG|S_IRWXO)) &lt; 0) {
+    perror(<B><FONT COLOR="#BC8F8F">&quot;ERROR: File open&quot;</FONT></B>);
+    exit(10);
+  } <I><FONT COLOR="#B22222">/* end if */</FONT></I>
+
+<I><FONT COLOR="#B22222">/*
+  LOCK_SH shared lock 
+  LOCK_EX exclusive lock 
+  LOCK_NB don't block when locking 
+  LOCK_UN unlock 
+*/</FONT></I>
+
+  printf(<B><FONT COLOR="#BC8F8F">&quot;Attempting to get lock.\n&quot;</FONT></B>);
+  <I><FONT COLOR="#B22222">/* NOTE: Use LOCK_SH for shared lock.  The LOCK_NB part keeps the call from blocking, and gives us the chance to make intelligent
+     decisions in the face of a previously locked resource. */</FONT></I>
+  <B><FONT COLOR="#A020F0">while</FONT></B>(flock(FD, LOCK_EX | LOCK_NB) &lt; 0) {
+    <B><FONT COLOR="#A020F0">if</FONT></B>(errno == EWOULDBLOCK) {
+      printf(<B><FONT COLOR="#BC8F8F">&quot;Could not get lock.  Sleeping...\n&quot;</FONT></B>);
+      sleep(1);
+    } <B><FONT COLOR="#A020F0">else</FONT></B> <B><FONT COLOR="#A020F0">if</FONT></B>(errno == EBADF) {
+      printf(<B><FONT COLOR="#BC8F8F">&quot;ERROR: The descriptor was not valid.\n&quot;</FONT></B>);
+      exit(1);
+    } <B><FONT COLOR="#A020F0">else</FONT></B> <B><FONT COLOR="#A020F0">if</FONT></B>(errno == EINVAL) {
+      printf(<B><FONT COLOR="#BC8F8F">&quot;ERROR: The descriptor was not a file.\n&quot;</FONT></B>);
+      exit(1);
+    } <B><FONT COLOR="#A020F0">else</FONT></B> <B><FONT COLOR="#A020F0">if</FONT></B>(errno == EOPNOTSUPP) {
+      printf(<B><FONT COLOR="#BC8F8F">&quot;ERROR: The referenced descriptor is not of the correct type.\n&quot;</FONT></B>);
+      exit(1);
+    } <I><FONT COLOR="#B22222">/* end else/if */</FONT></I>
+  } <I><FONT COLOR="#B22222">/* end while */</FONT></I>
+  printf(<B><FONT COLOR="#BC8F8F">&quot;Got the lock.\n&quot;</FONT></B>);
+
+  <I><FONT COLOR="#B22222">/* We ignore possible I/O errors as our goal here is to demo locking, not how to do I/O in a safe way... */</FONT></I>
+  <B><FONT COLOR="#A020F0">for</FONT></B>(i=0; i&lt;10; i++) {
+    printf(<B><FONT COLOR="#BC8F8F">&quot;Write..&quot;</FONT></B>);
+    write(FD, buf, strlen(buf));
+    printf(<B><FONT COLOR="#BC8F8F">&quot;Sleep..\n&quot;</FONT></B>);
+    sleep(1);
+  } <I><FONT COLOR="#B22222">/* end for */</FONT></I>
+    
+  close(FD);
+
+  printf(<B><FONT COLOR="#BC8F8F">&quot;Free up lock.\n&quot;</FONT></B>);
+  flock(FD, LOCK_UN);
+} <I><FONT COLOR="#B22222">/* end func main */</FONT></I>
+</PRE>
+<HR \/>
+<ADDRESS>Generated by <A HREF="http://www.iki.fi/~mtr/genscript/">GNU Enscript 1.6.5.90</A>.</ADDRESS>
+</BODY>
+</HTML>

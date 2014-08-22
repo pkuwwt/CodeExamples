@@ -1,0 +1,118 @@
+<!DOCTYPE html PUBLIC "-//IETF//DTD HTML 2.0//EN">
+<HTML>
+<HEAD>
+<TITLE>HDF5/hdf5Hyperslab.c</TITLE>
+</HEAD>
+<BODY BGCOLOR="#FFFFFF" TEXT="#000000" LINK="#1F00FF" ALINK="#FF0000" VLINK="#9900DD">
+<A NAME="top"> </A>
+<A NAME="file1"> </A>
+<H1><a href="hdf5Hyperslab.c">hdf5Hyperslab.c</a></H1>
+
+<PRE>
+<I><FONT COLOR="#B22222">/* -*- Mode:C; Coding:us-ascii-unix; fill-column:132 -*- */</FONT></I>
+<I><FONT COLOR="#B22222">/* ****************************************************************************************************************************** */</FONT></I>
+<I><FONT COLOR="#B22222">/**
+   @file      hdf5Hyperslab.c
+   @author    Mitch Richling &lt;http://www.mitchr.me/&gt;
+   @Copyright Copyright 1998 by Mitch Richling.  All rights reserved.
+   @brief     How to select, read, and write HDF5 hyperslabs.@EOL
+   @Keywords  HDF5 hyperslab
+   @Std       C89
+
+   How to read a subset of an HDF5 dataset into a subset of an in-RAM array -- via the use of hyperslabs.  The ability to select
+   hyperslabs within a dataset is one of HDF5's most useful features.
+              
+*/</FONT></I>
+<I><FONT COLOR="#B22222">/* ------------------------------------------------------------------------------------------------------------------------------ */</FONT></I>
+
+<I><FONT COLOR="#B22222">/* ****************************************************************************************************************************** */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;hdf5.h&gt;</FONT></B>               <I><FONT COLOR="#B22222">/* HDF5 files            */</FONT></I>
+
+<I><FONT COLOR="#B22222">/* ****************************************************************************************************************************** */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&quot;mjrHDF5.h&quot;</FONT></B>
+
+<I><FONT COLOR="#B22222">/* ****************************************************************************************************************************** */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">define</FONT></B> <FONT COLOR="#B8860B">MAX_X</FONT> 10
+#<B><FONT COLOR="#5F9EA0">define</FONT></B> <FONT COLOR="#B8860B">MAX_Y</FONT> 20
+#<B><FONT COLOR="#5F9EA0">define</FONT></B> <FONT COLOR="#B8860B">MAX_T</FONT> 24
+
+#<B><FONT COLOR="#5F9EA0">define</FONT></B> <FONT COLOR="#B8860B">TST_FILE_NAME</FONT> <B><FONT COLOR="#BC8F8F">&quot;a3DtestFile.h5&quot;</FONT></B>
+
+<I><FONT COLOR="#B22222">/* ****************************************************************************************************************************** */</FONT></I>
+<B><FONT COLOR="#228B22">int</FONT></B> <B><FONT COLOR="#0000FF">main</FONT></B>(<B><FONT COLOR="#228B22">int</FONT></B> argc, <B><FONT COLOR="#228B22">char</FONT></B> *argv[]) {
+  hid_t   fileID, datasetID, dataspaceID;
+  herr_t  hErrVal;
+  <B><FONT COLOR="#228B22">int</FONT></B>     i, j;
+  <B><FONT COLOR="#228B22">float</FONT></B>   ramData[MAX_X+2][MAX_Y+2];
+  hsize_t fileSlabCount[3] = {MAX_X, MAX_Y, 1};    <I><FONT COLOR="#B22222">/* Get whole slice, one unit thick. */</FONT></I>
+  hsize_t fileSlabOffset[3] = {0, 0, 3};           <I><FONT COLOR="#B22222">/* Get 3rd time stamp.              */</FONT></I>
+  hsize_t ramSlabCount[2]  = {MAX_X, MAX_Y};       <I><FONT COLOR="#B22222">/* Get whole slice                  */</FONT></I>
+  hsize_t ramSlabOffset[2] = {1, 1};               <I><FONT COLOR="#B22222">/* Offset 1 (zero is origin)        */</FONT></I>
+  hsize_t ramDims[2] = {MAX_X+2, MAX_Y+2};
+  hid_t   ramDataspaceID;
+
+  <I><FONT COLOR="#B22222">/* Initialize our in-RAM array to -1's. */</FONT></I>
+  <B><FONT COLOR="#A020F0">for</FONT></B>(i=0;i&lt;(MAX_X+2);i++)
+    <B><FONT COLOR="#A020F0">for</FONT></B>(j=0;j&lt;(MAX_Y+2);j++)
+      ramData[i][j] = -1.0;
+
+  <I><FONT COLOR="#B22222">/* Load the library -- not required on most platforms. */</FONT></I>
+  hErrVal = H5open();
+  mjrHDF5_chkError(hErrVal);
+
+  <I><FONT COLOR="#B22222">/* Open an existing file. */</FONT></I>
+  fileID = H5Fopen(TST_FILE_NAME, H5F_ACC_RDWR, H5P_DEFAULT);
+  mjrHDF5_chkError(fileID);
+
+  <I><FONT COLOR="#B22222">/* Open an existing dataset. */</FONT></I>
+  datasetID = H5Dopen(fileID, <B><FONT COLOR="#BC8F8F">&quot;/dset&quot;</FONT></B>, H5P_DEFAULT);
+  mjrHDF5_chkError(datasetID);
+
+  <I><FONT COLOR="#B22222">/* Get the dataspace for the dataset -- we select hyperslabs from the dataset via the dataspace. */</FONT></I>
+  dataspaceID = H5Dget_space(datasetID);
+  mjrHDF5_chkError(dataspaceID);
+
+  <I><FONT COLOR="#B22222">/* Define a hyperslab in the dataset. */</FONT></I>
+  hErrVal = H5Sselect_hyperslab(dataspaceID, H5S_SELECT_SET, fileSlabOffset, NULL, fileSlabCount, NULL);
+  mjrHDF5_chkError(hErrVal);
+
+  <I><FONT COLOR="#B22222">/* Create a dataspace for our array, and select a hyperslab within it. */</FONT></I>
+  ramDataspaceID = H5Screate_simple(2, ramDims, NULL);
+  mjrHDF5_chkError(ramDataspaceID);
+  hErrVal = H5Sselect_hyperslab(ramDataspaceID, H5S_SELECT_SET, ramSlabOffset, NULL, ramSlabCount, NULL);
+  mjrHDF5_chkError(hErrVal);
+
+  <I><FONT COLOR="#B22222">/* Read our selection from the file, and place it into the array. */</FONT></I>
+  hErrVal = H5Dread(datasetID, H5T_NATIVE_FLOAT, ramDataspaceID, dataspaceID, H5P_DEFAULT, ramData);
+
+  <I><FONT COLOR="#B22222">/* Print out our in-RAM array. */</FONT></I>
+  printf(<B><FONT COLOR="#BC8F8F">&quot;Our in-RAM array now: \n&quot;</FONT></B>);
+  <B><FONT COLOR="#A020F0">for</FONT></B>(i=0;i&lt;(MAX_X+2);i++) {
+    <B><FONT COLOR="#A020F0">for</FONT></B>(j=0;j&lt;(MAX_Y+2);j++)
+      printf(<B><FONT COLOR="#BC8F8F">&quot;%7.2f &quot;</FONT></B>, ramData[i][j]);
+    printf(<B><FONT COLOR="#BC8F8F">&quot;\n&quot;</FONT></B>);
+  } <I><FONT COLOR="#B22222">/* end for */</FONT></I>
+
+  <I><FONT COLOR="#B22222">/* Close the dataspace */</FONT></I>
+  hErrVal = H5Sclose(ramDataspaceID);
+  mjrHDF5_chkError(hErrVal);
+
+  <I><FONT COLOR="#B22222">/* Close the dataset. */</FONT></I>
+  hErrVal = H5Dclose(datasetID);
+  mjrHDF5_chkError(hErrVal);
+
+  <I><FONT COLOR="#B22222">/* Close the file. */</FONT></I>
+  hErrVal = H5Fclose(fileID);
+  mjrHDF5_chkError(hErrVal);
+
+  <I><FONT COLOR="#B22222">/* Unload the library and free any remaining resources. */</FONT></I>
+  hErrVal = H5close();
+  mjrHDF5_chkError(hErrVal);
+
+  <B><FONT COLOR="#A020F0">return</FONT></B> 0;
+} <I><FONT COLOR="#B22222">/* end func main */</FONT></I>
+</PRE>
+<HR \/>
+<ADDRESS>Generated by <A HREF="http://www.iki.fi/~mtr/genscript/">GNU Enscript 1.6.5.90</A>.</ADDRESS>
+</BODY>
+</HTML>

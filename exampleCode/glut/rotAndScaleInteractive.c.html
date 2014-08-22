@@ -1,0 +1,208 @@
+<!DOCTYPE html PUBLIC "-//IETF//DTD HTML 2.0//EN">
+<HTML>
+<HEAD>
+<TITLE>glut/rotAndScaleInteractive.c</TITLE>
+</HEAD>
+<BODY BGCOLOR="#FFFFFF" TEXT="#000000" LINK="#1F00FF" ALINK="#FF0000" VLINK="#9900DD">
+<A NAME="top"> </A>
+<A NAME="file1"> </A>
+<H1><a href="rotAndScaleInteractive.c">rotAndScaleInteractive.c</a></H1>
+
+<PRE>
+<I><FONT COLOR="#B22222">/* -*- Mode:C; Coding:us-ascii-unix; fill-column:132 -*- */</FONT></I>
+<I><FONT COLOR="#B22222">/**********************************************************************************************************************************/</FONT></I>
+<I><FONT COLOR="#B22222">/**
+   @file      rotAndScaleInteractive.c
+   @author    Mitch Richling &lt;http://www.mitchr.me/&gt;
+   @Copyright Copyright 1998 by Mitch Richling.  All rights reserved.
+   @brief     Rotate interactively in an intuitive way.@EOL
+   @Keywords  rotate interact mouse
+   @Std       C99
+
+   The act of allowing a user to interactively rotate an object is more complex than it first appears.  When a user moves a mouse
+   down they expect the object to rotate around an axis that is parallel to the bottom of the screen, and if they move to the right
+   they expect the object to rotate around an axis that is parallel to the side of the screen.  The difficulty is that it is
+   non-trivial for beginners to figure out how to figure out what the appropriate rotation vectors are.  This code demonstrates one
+   way to do that.  It is possible that roundoff error can throw off this method.  A more robust method is to use quaternion
+   rotation interpolation.  A good example is displayed by the SGI GLUT example trackball.c
+***********************************************************************************************************************************/</FONT></I>
+
+<I><FONT COLOR="#B22222">/**********************************************************************************************************************************/</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;math.h&gt;</FONT></B>               <I><FONT COLOR="#B22222">/* Math stuff      ISOC  */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;stdlib.h&gt;</FONT></B>             <I><FONT COLOR="#B22222">/* Standard Lib    ISOC  */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;stdio.h&gt;</FONT></B>              <I><FONT COLOR="#B22222">/* I/O lib         ISOC  */</FONT></I>
+
+<I><FONT COLOR="#B22222">/**********************************************************************************************************************************/</FONT></I>
+<I><FONT COLOR="#B22222">/* Apple puts GLUT into a framework named GLUT, while the rest of the world just sticks GLUT into the GL include directory... */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">ifdef</FONT></B> <FONT COLOR="#B8860B">__APPLE__</FONT>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;GLUT/glut.h&gt;</FONT></B>          <I><FONT COLOR="#B22222">/* Open GL Util    APPLE */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">else</FONT></B>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;GL/glut.h&gt;</FONT></B>            <I><FONT COLOR="#B22222">/* Open GL Util    OpenGL*/</FONT></I>
+#<B><FONT COLOR="#5F9EA0">endif</FONT></B>
+
+<I><FONT COLOR="#B22222">/**********************************************************************************************************************************/</FONT></I>
+<I><FONT COLOR="#B22222">/* MODL 1 ==&gt; a box with axis
+        2 ==&gt; a Lorenz strange attractor
+        3 ==&gt; a Lighted Surface with shading
+*/</FONT></I>
+#<B><FONT COLOR="#5F9EA0">ifndef</FONT></B> <FONT COLOR="#B8860B">MODL</FONT>
+#<B><FONT COLOR="#5F9EA0">define</FONT></B> <FONT COLOR="#B8860B">MODL</FONT> 1
+#<B><FONT COLOR="#5F9EA0">endif</FONT></B>
+
+#<B><FONT COLOR="#5F9EA0">if</FONT></B> <FONT COLOR="#B8860B">MODL</FONT> == 1
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&quot;boxNaxis.h&quot;</FONT></B>
+#<B><FONT COLOR="#5F9EA0">endif</FONT></B>
+
+#<B><FONT COLOR="#5F9EA0">if</FONT></B> <FONT COLOR="#B8860B">MODL</FONT> == 2
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&quot;lorenzC.h&quot;</FONT></B>
+#<B><FONT COLOR="#5F9EA0">endif</FONT></B>
+
+#<B><FONT COLOR="#5F9EA0">if</FONT></B> <FONT COLOR="#B8860B">MODL</FONT> == 3
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&quot;surf.h&quot;</FONT></B>
+#<B><FONT COLOR="#5F9EA0">endif</FONT></B>
+
+<I><FONT COLOR="#B22222">/**********************************************************************************************************************************/</FONT></I>
+<I><FONT COLOR="#B22222">/* Define to 1 for anti-aliasing, 0 for none */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">ifndef</FONT></B> <FONT COLOR="#B8860B">ANTIA</FONT>
+#<B><FONT COLOR="#5F9EA0">if</FONT></B>  <FONT COLOR="#B8860B">MODL</FONT> != 3
+#<B><FONT COLOR="#5F9EA0">define</FONT></B> <FONT COLOR="#B8860B">ANTIA</FONT> 1
+#<B><FONT COLOR="#5F9EA0">endif</FONT></B>
+#<B><FONT COLOR="#5F9EA0">endif</FONT></B>
+
+#<B><FONT COLOR="#5F9EA0">if</FONT></B> <FONT COLOR="#B8860B">MODL</FONT> == 3
+#<B><FONT COLOR="#5F9EA0">define</FONT></B> <FONT COLOR="#B8860B">ANTIA</FONT> 0
+#<B><FONT COLOR="#5F9EA0">endif</FONT></B>
+
+<I><FONT COLOR="#B22222">/**********************************************************************************************************************************/</FONT></I>
+<I><FONT COLOR="#B22222">/* Global state variables. */</FONT></I>
+<B><FONT COLOR="#228B22">enum</FONT></B> interactionModeEnum {IMODE_SCALE, IMODE_ROTATE};
+<B><FONT COLOR="#228B22">int</FONT></B> xMS, yMS;
+interactionModeEnum interactMode = IMODE_ROTATE;
+
+<I><FONT COLOR="#B22222">/**********************************************************************************************************************************/</FONT></I>
+<I><FONT COLOR="#B22222">/* Upon a mouse click we store the coordinates into the global &quot;last mouse&quot; location.  We do this to help the motion call back know
+   what the direction of motion is upon a first call.  This also helps to keep the mouse pointer from getting confused by reseting
+   it upon a click.  We also set the interactMode flag so the mouse motion callback can know if it is to rotate or scale. */</FONT></I>
+<B><FONT COLOR="#228B22">void</FONT></B> <B><FONT COLOR="#0000FF">mouseCall</FONT></B>(<B><FONT COLOR="#228B22">int</FONT></B> button, <B><FONT COLOR="#228B22">int</FONT></B> state, <B><FONT COLOR="#228B22">int</FONT></B> x, <B><FONT COLOR="#228B22">int</FONT></B> y) {
+  <B><FONT COLOR="#A020F0">if</FONT></B>(button == GLUT_LEFT_BUTTON) {
+    <B><FONT COLOR="#A020F0">if</FONT></B>(state == GLUT_DOWN) {
+      xMS = x;
+      yMS = y;
+    } <I><FONT COLOR="#B22222">/* end if */</FONT></I>
+  } <I><FONT COLOR="#B22222">/* end if */</FONT></I>
+} <I><FONT COLOR="#B22222">/* end func mouseCall */</FONT></I>
+
+<I><FONT COLOR="#B22222">/**********************************************************************************************************************************/</FONT></I>
+<I><FONT COLOR="#B22222">/* Quit if we get a 'q' or an escape key. */</FONT></I>
+<B><FONT COLOR="#228B22">void</FONT></B> <B><FONT COLOR="#0000FF">keyboardCall</FONT></B>(<B><FONT COLOR="#228B22">unsigned</FONT></B> <B><FONT COLOR="#228B22">char</FONT></B> key, <B><FONT COLOR="#228B22">int</FONT></B> x, <B><FONT COLOR="#228B22">int</FONT></B> y) {
+  <B><FONT COLOR="#A020F0">if</FONT></B>((key==<B><FONT COLOR="#BC8F8F">'q'</FONT></B>) || (key==<B><FONT COLOR="#BC8F8F">'\e'</FONT></B>)) 
+    exit(0);
+} <I><FONT COLOR="#B22222">/* end func keyboardCall */</FONT></I>
+
+<I><FONT COLOR="#B22222">/**********************************************************************************************************************************/</FONT></I>
+<I><FONT COLOR="#B22222">/* On a mouse drag we rotate or scale (shift click).  We compute the direction of mouse motion, find a vector 90 degrees off of
+   that, unproject it back into 3D space, and use that vector as the rotation vector.  We use the delta in mouse motion to determine
+   the angle of rotation.  If we are in scale mode, then we use the y-delta to determine the scale factor. */</FONT></I>
+<B><FONT COLOR="#228B22">void</FONT></B> <B><FONT COLOR="#0000FF">motionCall</FONT></B>(<B><FONT COLOR="#228B22">int</FONT></B> x, <B><FONT COLOR="#228B22">int</FONT></B> y) {
+  <B><FONT COLOR="#228B22">float</FONT></B> rz;
+  <B><FONT COLOR="#228B22">double</FONT></B> x3d, y3d, z3d;
+  <B><FONT COLOR="#228B22">double</FONT></B> x3d2, y3d2, z3d2;
+  <B><FONT COLOR="#228B22">int</FONT></B> tx1, ty1, tx2, ty2;
+  GLint viewport[4];    
+  GLdouble mvmatrix[16], projmatrix[16];
+  GLint yFlip;
+  <B><FONT COLOR="#228B22">int</FONT></B> xdelta, ydelta;
+  glGetIntegerv (GL_VIEWPORT, viewport);
+  <I><FONT COLOR="#B22222">// Set the x/y delta, and pay attention to axis lock modifiers
+</FONT></I>  xdelta = xMS-x;
+  ydelta = yMS-y;
+  <I><FONT COLOR="#B22222">/* Note that you simply use a z-depth to rotate along a vector orthogonal to the screen. If the delta is too big, or too small,
+     then we bail... */</FONT></I>
+  <B><FONT COLOR="#A020F0">if</FONT></B>( (abs(xdelta)&lt;(viewport[2]/2-5) &amp;&amp; abs(ydelta)&lt;(viewport[3]/2-5)) &amp;&amp; 
+      (abs(xdelta)&gt;=1 || abs(ydelta)&gt;=1)) {
+    <I><FONT COLOR="#B22222">/* Magnitude of the angle (180 degrees per window width)... */</FONT></I>
+    rz = -180.0*sqrt((xdelta)*(xdelta)+(ydelta)*(ydelta))/sqrt(viewport[2]*viewport[2]+viewport[3]*viewport[2]);
+    <I><FONT COLOR="#B22222">/* Figure out what our direction of movement is (90 degrees off) */</FONT></I>
+    tx1 = viewport[2]/2;
+    ty1 = viewport[3]/2;
+    tx2 = tx1 + (ydelta);
+    ty2 = ty1 + (-xdelta);
+    <I><FONT COLOR="#B22222">/* Compute the world coordinate vectors corresponding to our rate of motion.. */</FONT></I>
+    glGetDoublev (GL_MODELVIEW_MATRIX, mvmatrix);
+    glGetDoublev (GL_PROJECTION_MATRIX, projmatrix);
+    yFlip = viewport[3] - (GLint) ty1 - 1;
+    gluUnProject ((GLdouble) tx1, (GLdouble) yFlip, 0.5, mvmatrix, projmatrix, viewport, &amp;x3d2, &amp;y3d2, &amp;z3d2);
+    yFlip = viewport[3] - (GLint) ty2 - 1;
+    gluUnProject ((GLdouble) tx2, (GLdouble) yFlip, 0.5, mvmatrix, projmatrix, viewport, &amp;x3d, &amp;y3d, &amp;z3d);
+    <I><FONT COLOR="#B22222">/* Subtract to compute the rotation vector */</FONT></I>
+    x3d = x3d-x3d2;
+    y3d = y3d-y3d2;
+    z3d = z3d-z3d2; <I><FONT COLOR="#B22222">// Always zero!
+</FONT></I>    <I><FONT COLOR="#B22222">/* Update the MODELVIEW matrix */</FONT></I>
+    glMatrixMode(GL_MODELVIEW);
+    glRotatef(rz, x3d, y3d, z3d);
+    <I><FONT COLOR="#B22222">/* At this point we have a new MODELVIEW matrix, so we update the display */</FONT></I>
+    glutPostRedisplay();
+    <I><FONT COLOR="#B22222">/* The global position must be updated even if we don't change anything.. */</FONT></I>
+    xMS = x;
+    yMS = y;
+  }
+} <I><FONT COLOR="#B22222">/* end func motionCall */</FONT></I>
+
+<I><FONT COLOR="#B22222">/**********************************************************************************************************************************/</FONT></I>
+<I><FONT COLOR="#B22222">/* How boring can a display update function be?  This is just about it! */</FONT></I>
+<B><FONT COLOR="#228B22">void</FONT></B> <B><FONT COLOR="#0000FF">displayCall</FONT></B>() {
+  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+  glCallList(1);
+  glutSwapBuffers();
+} <I><FONT COLOR="#B22222">/* end func displayCall */</FONT></I>
+
+<I><FONT COLOR="#B22222">/**********************************************************************************************************************************/</FONT></I>
+<I><FONT COLOR="#B22222">/* Kick it off.  Note we generate the geometry in main -- bad form, but this example is intended to illustrate how to interactively
+   rotate in an intuitive way...
+ */</FONT></I>
+<B><FONT COLOR="#228B22">int</FONT></B> <B><FONT COLOR="#0000FF">main</FONT></B>(<B><FONT COLOR="#228B22">int</FONT></B> argc, <B><FONT COLOR="#228B22">char</FONT></B> *argv[]) {
+  glutInit(&amp;argc, argv);
+  glutInitDisplayMode(GLUT_RGB | GLUT_DOUBLE | GLUT_DEPTH);
+  glutInitWindowSize(800, 800);
+  glutInitWindowPosition(10, 10);
+  glutCreateWindow(<B><FONT COLOR="#BC8F8F">&quot;Interactive Rotate And Scale Demo Program&quot;</FONT></B>);
+  glutDisplayFunc(displayCall);
+  glutMotionFunc(motionCall);
+  glutMouseFunc(mouseCall);
+
+  glutKeyboardFunc(keyboardCall);
+  glEnable(GL_DEPTH_TEST);
+  glMatrixMode(GL_PROJECTION);
+  glLoadIdentity();
+
+  gluPerspective(40, 1, 2*RADIUS, 10*RADIUS);
+
+#<B><FONT COLOR="#5F9EA0">if</FONT></B> <FONT COLOR="#B8860B">ANTIA</FONT>
+  glEnable(GL_POINT_SMOOTH);
+  glEnable(GL_LINE_SMOOTH);
+  glEnable(GL_POLYGON_SMOOTH);
+  glEnable(GL_BLEND);
+
+  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+  glHint(GL_LINE_SMOOTH_HINT, GL_NICEST);
+  glHint(GL_POLYGON_SMOOTH_HINT, GL_NICEST);
+#<B><FONT COLOR="#5F9EA0">endif</FONT></B>
+
+  glMatrixMode(GL_MODELVIEW);
+  glLoadIdentity();
+  gluLookAt(0.0, 0.0, 6.0*RADIUS,  <I><FONT COLOR="#B22222">// Eye
+</FONT></I>            0.0, 0.0, 0.0,         <I><FONT COLOR="#B22222">// Look at
+</FONT></I>            0.0, 1.0, 0.0);        <I><FONT COLOR="#B22222">// Up
+</FONT></I>
+  computeGeometry();
+
+  <I><FONT COLOR="#B22222">/* Start it up */</FONT></I>
+  glutMainLoop();
+  <B><FONT COLOR="#A020F0">return</FONT></B> 0;
+} <I><FONT COLOR="#B22222">/* end func main */</FONT></I>
+</PRE>
+<HR \/>
+<ADDRESS>Generated by <A HREF="http://www.iki.fi/~mtr/genscript/">GNU Enscript 1.6.5.90</A>.</ADDRESS>
+</BODY>
+</HTML>

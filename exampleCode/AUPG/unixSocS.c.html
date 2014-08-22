@@ -1,0 +1,100 @@
+<!DOCTYPE html PUBLIC "-//IETF//DTD HTML 2.0//EN">
+<HTML>
+<HEAD>
+<TITLE>AUPG/unixSocS.c</TITLE>
+</HEAD>
+<BODY BGCOLOR="#FFFFFF" TEXT="#000000" LINK="#1F00FF" ALINK="#FF0000" VLINK="#9900DD">
+<A NAME="top"> </A>
+<A NAME="file1"> </A>
+<H1><a href="unixSocS.c">unixSocS.c</a></H1>
+
+<PRE>
+<I><FONT COLOR="#B22222">/* -*- Mode:C; Coding:us-ascii-unix; fill-column:132 -*- */</FONT></I>
+<I><FONT COLOR="#B22222">/**********************************************************************************************************************************/</FONT></I>
+<I><FONT COLOR="#B22222">/**
+   @file      unixSocS.c
+   @author    Mitch Richling &lt;http://www.mitchr.me/&gt;
+   @Copyright Copyright 1996 by Mitch Richling.  All rights reserved.
+   @brief     UNIX domain sockets (server application)@EOL
+   @Keywords  UNIX domain sockets
+   @Std       ISOC POSIX SYSV4 BSD4.3
+   @Tested    
+              - BROKEN: Solaris 2.8 (No paths.h)
+              - MacOS X.2
+              - Linux (RH 7.3)
+
+   This is an example program intended to illustrate how to write a very simple UNIX domain sockets server.  Std Comp:
+   Typical of SVID 4 and BSD 4.3.
+***********************************************************************************************************************************/</FONT></I>
+
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;sys/types.h&gt;</FONT></B>          <I><FONT COLOR="#B22222">/* UNIX types      POSIX */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;sys/socket.h&gt;</FONT></B>         <I><FONT COLOR="#B22222">/* UNIX sockets    POSIX */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;sys/un.h&gt;</FONT></B>             <I><FONT COLOR="#B22222">/* UNIX address    UNIX  */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;errno.h&gt;</FONT></B>              <I><FONT COLOR="#B22222">/* error stf       POSIX */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;string.h&gt;</FONT></B>             <I><FONT COLOR="#B22222">/* Strings         C89   */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;stdio.h&gt;</FONT></B>              <I><FONT COLOR="#B22222">/* I/O lib         C89   */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;unistd.h&gt;</FONT></B>             <I><FONT COLOR="#B22222">/* UNIX std stf    POSIX */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;stdlib.h&gt;</FONT></B>             <I><FONT COLOR="#B22222">/* Standard Lib    C89   */</FONT></I>
+
+<I><FONT COLOR="#B22222">/**********************************************************************************************************************************/</FONT></I>
+<B><FONT COLOR="#228B22">int</FONT></B> <B><FONT COLOR="#0000FF">main</FONT></B>() {
+  <B><FONT COLOR="#228B22">int</FONT></B> theSocket;
+  <B><FONT COLOR="#228B22">struct</FONT></B> sockaddr_un theSocketName;
+  <B><FONT COLOR="#228B22">int</FONT></B> aSocket;
+  <B><FONT COLOR="#228B22">char</FONT></B> rcvdData[1024];
+  <B><FONT COLOR="#228B22">int</FONT></B> numRcvdBytes;
+  socklen_t theAddrLen; <I><FONT COLOR="#B22222">/* Some platforms use an 'int' for this type. */</FONT></I>
+
+  theSocket = socket(AF_UNIX, SOCK_STREAM, 0);
+
+  <B><FONT COLOR="#A020F0">if</FONT></B>(theSocket &lt; 0) {
+    perror(<B><FONT COLOR="#BC8F8F">&quot;ERROR: unxDomSoc: Open error&quot;</FONT></B>);
+    exit(1);
+  } <I><FONT COLOR="#B22222">/* end if */</FONT></I>
+
+  theSocketName.sun_family = AF_UNIX;
+  strcpy(theSocketName.sun_path, <B><FONT COLOR="#BC8F8F">&quot;/tmp/theSocketFile&quot;</FONT></B>);
+  theAddrLen = <B><FONT COLOR="#A020F0">sizeof</FONT></B>(theSocketName) - <B><FONT COLOR="#A020F0">sizeof</FONT></B>(theSocketName.sun_path) + strlen(theSocketName.sun_path);
+  unlink(<B><FONT COLOR="#BC8F8F">&quot;/tmp/theSocketFile&quot;</FONT></B>);
+
+  <B><FONT COLOR="#A020F0">if</FONT></B>(bind(theSocket, (<B><FONT COLOR="#228B22">struct</FONT></B> sockaddr *)&amp;theSocketName, theAddrLen) &lt; 0) {
+    perror(<B><FONT COLOR="#BC8F8F">&quot;ERROR: unxDomSoc: Bind error&quot;</FONT></B>);
+    exit(1);
+  } <I><FONT COLOR="#B22222">/* end if */</FONT></I>
+
+  <B><FONT COLOR="#A020F0">if</FONT></B>(listen(theSocket, 2) &lt; 0) {
+    perror(<B><FONT COLOR="#BC8F8F">&quot;ERROR: unxDomSoc: Listen error&quot;</FONT></B>);
+    exit(1);
+  } <I><FONT COLOR="#B22222">/*end if */</FONT></I>
+
+  aSocket = accept(theSocket, (<B><FONT COLOR="#228B22">struct</FONT></B> sockaddr *)&amp;theSocketName, &amp;theAddrLen);
+  <B><FONT COLOR="#A020F0">if</FONT></B>(aSocket &lt; 0) {
+    perror(<B><FONT COLOR="#BC8F8F">&quot;ERROR: unxDomSoc: Accept error&quot;</FONT></B>);
+    exit(1);
+  } <I><FONT COLOR="#B22222">/* end if */</FONT></I>
+
+  printf(<B><FONT COLOR="#BC8F8F">&quot;Client Connected...\n&quot;</FONT></B>);
+  <B><FONT COLOR="#A020F0">while</FONT></B>((numRcvdBytes = recv(aSocket, rcvdData, 100, 0)) &gt; 0) {
+    printf(<B><FONT COLOR="#BC8F8F">&quot;Received %d bytes from client:\n&quot;</FONT></B>, numRcvdBytes);
+    write(1, rcvdData, numRcvdBytes);
+  } <I><FONT COLOR="#B22222">/* end while */</FONT></I>
+
+  <I><FONT COLOR="#B22222">/* Test to see if we had an error, or simply no more data. */</FONT></I>
+  <B><FONT COLOR="#A020F0">if</FONT></B>(numRcvdBytes &lt; 0) {
+    <I><FONT COLOR="#B22222">/* The error type should be checked.  Some errors are not a reason to quit (EINTER for example) */</FONT></I>
+    perror(<B><FONT COLOR="#BC8F8F">&quot;ERROR: unxDomSoc: Recv error&quot;</FONT></B>);
+    exit(1);
+  } <B><FONT COLOR="#A020F0">else</FONT></B> {
+    printf(<B><FONT COLOR="#BC8F8F">&quot;EOF\n&quot;</FONT></B>);
+  } <I><FONT COLOR="#B22222">/* end if/else */</FONT></I>
+
+  close(aSocket);
+  close(theSocket);
+
+  <B><FONT COLOR="#A020F0">return</FONT></B> 0;
+} <I><FONT COLOR="#B22222">/* end func main */</FONT></I>
+</PRE>
+<HR \/>
+<ADDRESS>Generated by <A HREF="http://www.iki.fi/~mtr/genscript/">GNU Enscript 1.6.5.90</A>.</ADDRESS>
+</BODY>
+</HTML>

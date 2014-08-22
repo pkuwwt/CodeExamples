@@ -1,0 +1,188 @@
+<!DOCTYPE html PUBLIC "-//IETF//DTD HTML 2.0//EN">
+<HTML>
+<HEAD>
+<TITLE>HDF5/hdf5Compound.c</TITLE>
+</HEAD>
+<BODY BGCOLOR="#FFFFFF" TEXT="#000000" LINK="#1F00FF" ALINK="#FF0000" VLINK="#9900DD">
+<A NAME="top"> </A>
+<A NAME="file1"> </A>
+<H1><a href="hdf5Compound.c">hdf5Compound.c</a></H1>
+
+<PRE>
+<I><FONT COLOR="#B22222">/* -*- Mode:C; Coding:us-ascii-unix; fill-column:132 -*- */</FONT></I>
+<I><FONT COLOR="#B22222">/* ****************************************************************************************************************************** */</FONT></I>
+<I><FONT COLOR="#B22222">/**
+   @file      hdf5Compound.c
+   @author    Mitch Richling &lt;http://www.mitchr.me/&gt;
+   @Copyright Copyright 1998 by Mitch Richling.  All rights reserved.
+   @brief     Use of HDF5 compound data types.@EOL
+   @Keywords  hdf5 compound types database db
+   @Std       C89 HDF5
+
+   This example program demonstrates the details of creating and using HDF5 compound types (think structs) that can be stored into
+   an HDF5 array on disk.
+
+   The C structs often have &quot;holes&quot; in them because of hardware word alignment requirements.  This example illustrates a struct that
+   has holes on most modern architectures, and how to use an H5T_COMPOUND type to &quot;mirror&quot; the in-RAM layout of this C struct.  In
+   addition, this program illustrates how to use H5T_COMPOUND types to represent such a structure on disk in a platform independent,
+   space efficient (no holes), manner -- this causes a performance hit because of the required layout conversion upon read/write.
+
+   Compound types may be used to simulate the record/field structure of a database table with HDF5; however, the HDF5 high level
+   table API is probably a more direct approach to this particular application.  For such an approach, see hdf5Table.c.
+              
+*/</FONT></I>
+<I><FONT COLOR="#B22222">/* ------------------------------------------------------------------------------------------------------------------------------ */</FONT></I>
+
+<I><FONT COLOR="#B22222">/* ****************************************************************************************************************************** */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;stdio.h&gt;</FONT></B>              <I><FONT COLOR="#B22222">/* I/O lib         ISOC  */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;string.h&gt;</FONT></B>             <I><FONT COLOR="#B22222">/* Strings         ISOC  */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;hdf5.h&gt;</FONT></B>               <I><FONT COLOR="#B22222">/* HDF5 files            */</FONT></I>
+
+<I><FONT COLOR="#B22222">/* ****************************************************************************************************************************** */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&quot;mjrHDF5.h&quot;</FONT></B>
+
+<I><FONT COLOR="#B22222">/* ****************************************************************************************************************************** */</FONT></I>
+<I><FONT COLOR="#B22222">/* This struct can be &quot;tuned&quot; to have &quot;holes&quot; on just about any hardware platform.  It is thus a good example of how to create HDF5
+   compound data types that describe things in memory vs. describing them on disk in a portable way.*/</FONT></I>
+#<B><FONT COLOR="#5F9EA0">define</FONT></B> <FONT COLOR="#B8860B">PR_NAME_LEN</FONT> 32
+<B><FONT COLOR="#228B22">typedef</FONT></B> <B><FONT COLOR="#228B22">struct</FONT></B> personRecordStr {
+  <B><FONT COLOR="#228B22">char</FONT></B>           name[PR_NAME_LEN];
+  <B><FONT COLOR="#228B22">unsigned</FONT></B> <B><FONT COLOR="#228B22">char</FONT></B>  age;
+  <B><FONT COLOR="#228B22">int</FONT></B>            weight;
+  <B><FONT COLOR="#228B22">float</FONT></B>          IQ;
+} personRecord_t;
+
+<I><FONT COLOR="#B22222">/* ****************************************************************************************************************************** */</FONT></I>
+#<B><FONT COLOR="#5F9EA0">define</FONT></B> <FONT COLOR="#B8860B">NUM_RECS</FONT> 10000
+#<B><FONT COLOR="#5F9EA0">define</FONT></B> <FONT COLOR="#B8860B">TST_FILE_NAME</FONT> <B><FONT COLOR="#BC8F8F">&quot;aCpndtestFile.h5&quot;</FONT></B>
+
+<I><FONT COLOR="#B22222">/* ****************************************************************************************************************************** */</FONT></I>
+<B><FONT COLOR="#228B22">int</FONT></B> <B><FONT COLOR="#0000FF">main</FONT></B>(<B><FONT COLOR="#228B22">int</FONT></B> argc, <B><FONT COLOR="#228B22">char</FONT></B> *argv[]) {
+  personRecord_t aPersonArr[NUM_RECS];
+  hid_t memoryPersonRecordTypeID, diskPersonRecordTypeID;
+  hid_t stringTypeID;
+  <B><FONT COLOR="#228B22">int</FONT></B> offset;
+  hsize_t numRecs = NUM_RECS;
+  <B><FONT COLOR="#228B22">int</FONT></B> i;
+  hid_t   fileID, datasetID, dataspaceID;
+  herr_t  hErrVal;
+  hsize_t chunkDims = NUM_RECS;
+  hid_t dataSetPList;
+  <B><FONT COLOR="#228B22">int</FONT></B> sizeOfParts, sizeOfWhole;
+
+  <I><FONT COLOR="#B22222">/* We can test for holes by comparing the struct size to the size of the components. */</FONT></I>
+  sizeOfParts = (<B><FONT COLOR="#228B22">int</FONT></B>)(<B><FONT COLOR="#A020F0">sizeof</FONT></B>(<B><FONT COLOR="#228B22">char</FONT></B>)*33+<B><FONT COLOR="#A020F0">sizeof</FONT></B>(<B><FONT COLOR="#228B22">int</FONT></B>)+<B><FONT COLOR="#A020F0">sizeof</FONT></B>(<B><FONT COLOR="#228B22">float</FONT></B>));
+  sizeOfWhole = (<B><FONT COLOR="#228B22">int</FONT></B>)(<B><FONT COLOR="#A020F0">sizeof</FONT></B>(personRecord_t));
+  printf(<B><FONT COLOR="#BC8F8F">&quot;sizeof(personRecord_t)=%d\n&quot;</FONT></B>, sizeOfWhole);
+  printf(<B><FONT COLOR="#BC8F8F">&quot;sizeof(char[PR_NAME_LEN]+char+int+float)=%d\n&quot;</FONT></B>, sizeOfParts);
+  <B><FONT COLOR="#A020F0">if</FONT></B>(sizeOfWhole &gt; sizeOfParts) 
+    printf(<B><FONT COLOR="#BC8F8F">&quot;A personRecord_t HAS holes!\n&quot;</FONT></B>);
+  <B><FONT COLOR="#A020F0">else</FONT></B>
+    printf(<B><FONT COLOR="#BC8F8F">&quot;A personRecord_t has NO holes!\n&quot;</FONT></B>);
+
+  <I><FONT COLOR="#B22222">/* Fill in some bogus data for the the array. */</FONT></I>
+  <B><FONT COLOR="#A020F0">for</FONT></B>(i=0;i&lt;NUM_RECS;i++) {
+    strcpy(aPersonArr[i].name, <B><FONT COLOR="#BC8F8F">&quot;Mitch Richling&quot;</FONT></B>);
+    aPersonArr[i].age    = i+23;
+    aPersonArr[i].weight = 123+i;
+    aPersonArr[i].IQ     = 200-(i*2.5+2)/(i+1);
+  }
+  
+  <I><FONT COLOR="#B22222">/* Load the library -- not required on most platforms. */</FONT></I>
+  hErrVal = H5open();
+  mjrHDF5_chkError(hErrVal);
+
+  <I><FONT COLOR="#B22222">/* Create the string type for the .name part of a personRecord_t */</FONT></I>
+  stringTypeID = H5Tcopy(H5T_C_S1);
+  mjrHDF5_chkError(stringTypeID);
+  hErrVal = H5Tset_size(stringTypeID, PR_NAME_LEN);
+  mjrHDF5_chkError(hErrVal);
+
+  <I><FONT COLOR="#B22222">/* Create the type for an in-RAM representation of a personRecord_t */</FONT></I>
+  memoryPersonRecordTypeID = H5Tcreate(H5T_COMPOUND, <B><FONT COLOR="#A020F0">sizeof</FONT></B>(personRecord_t));
+  mjrHDF5_chkError(memoryPersonRecordTypeID);
+  hErrVal = H5Tinsert(memoryPersonRecordTypeID, <B><FONT COLOR="#BC8F8F">&quot;name&quot;</FONT></B>,   HOFFSET(personRecord_t, name),   stringTypeID);
+  mjrHDF5_chkError(hErrVal);
+  hErrVal = H5Tinsert(memoryPersonRecordTypeID, <B><FONT COLOR="#BC8F8F">&quot;age&quot;</FONT></B>,    HOFFSET(personRecord_t, age),    H5T_NATIVE_CHAR);
+  mjrHDF5_chkError(hErrVal);
+  hErrVal = H5Tinsert(memoryPersonRecordTypeID, <B><FONT COLOR="#BC8F8F">&quot;weight&quot;</FONT></B>, HOFFSET(personRecord_t, weight), H5T_NATIVE_INT);
+  mjrHDF5_chkError(hErrVal);
+  hErrVal = H5Tinsert(memoryPersonRecordTypeID, <B><FONT COLOR="#BC8F8F">&quot;IQ&quot;</FONT></B>,     HOFFSET(personRecord_t, IQ),     H5T_NATIVE_FLOAT);
+  mjrHDF5_chkError(hErrVal);
+
+  <I><FONT COLOR="#B22222">/* Create the type for an on-disk representation of a personRecord_t */</FONT></I>
+  diskPersonRecordTypeID = H5Tcreate(H5T_COMPOUND, <B><FONT COLOR="#A020F0">sizeof</FONT></B>(personRecord_t));
+  mjrHDF5_chkError(diskPersonRecordTypeID);
+  offset=0;
+  hErrVal = H5Tinsert(diskPersonRecordTypeID, <B><FONT COLOR="#BC8F8F">&quot;name&quot;</FONT></B>,   offset, stringTypeID);
+  mjrHDF5_chkError(hErrVal);
+  offset += <B><FONT COLOR="#A020F0">sizeof</FONT></B>(<B><FONT COLOR="#228B22">char</FONT></B>)*PR_NAME_LEN;
+  hErrVal = H5Tinsert(diskPersonRecordTypeID, <B><FONT COLOR="#BC8F8F">&quot;age&quot;</FONT></B>,    offset, H5T_STD_U8LE);
+  mjrHDF5_chkError(hErrVal);
+  offset += <B><FONT COLOR="#A020F0">sizeof</FONT></B>(<B><FONT COLOR="#228B22">unsigned</FONT></B> <B><FONT COLOR="#228B22">char</FONT></B>);
+  hErrVal = H5Tinsert(diskPersonRecordTypeID, <B><FONT COLOR="#BC8F8F">&quot;weight&quot;</FONT></B>, offset, H5T_STD_I32LE);
+  mjrHDF5_chkError(hErrVal);
+  offset += <B><FONT COLOR="#A020F0">sizeof</FONT></B>(<B><FONT COLOR="#228B22">int</FONT></B>);
+  hErrVal = H5Tinsert(diskPersonRecordTypeID, <B><FONT COLOR="#BC8F8F">&quot;IQ&quot;</FONT></B>,     offset, H5T_IEEE_F32LE);
+  mjrHDF5_chkError(hErrVal);
+
+  <I><FONT COLOR="#B22222">/* Create the data space for the dataset. */</FONT></I>
+  dataspaceID = H5Screate_simple(1, &amp;numRecs, NULL);
+  mjrHDF5_chkError(dataspaceID);
+
+  <I><FONT COLOR="#B22222">/* Create a new file using default properties. */</FONT></I>
+  fileID = H5Fcreate(TST_FILE_NAME, H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT);
+  mjrHDF5_chkError(fileID);
+
+  <I><FONT COLOR="#B22222">/* Create a default dataset plist. */</FONT></I>
+  dataSetPList = H5Pcreate(H5P_DATASET_CREATE);
+  mjrHDF5_chkError(dataSetPList);
+  <I><FONT COLOR="#B22222">/* Set a chunk size (required for extension) */</FONT></I>
+  hErrVal = H5Pset_chunk(dataSetPList, 1, &amp;chunkDims);
+  mjrHDF5_chkError(hErrVal);
+  <I><FONT COLOR="#B22222">/* Set compression (GZIP) with compression effort set to 9.*/</FONT></I>
+  hErrVal = H5Pset_deflate(dataSetPList, 9);
+  mjrHDF5_chkError(hErrVal);
+  <I><FONT COLOR="#B22222">/* Set Shuffling for better compression. */</FONT></I>
+  hErrVal = H5Pset_shuffle(dataSetPList);
+  mjrHDF5_chkError(hErrVal);
+
+  <I><FONT COLOR="#B22222">/* Create the dataset. */</FONT></I>
+  datasetID = H5Dcreate(fileID, <B><FONT COLOR="#BC8F8F">&quot;/dset&quot;</FONT></B>, diskPersonRecordTypeID, dataspaceID, H5P_DEFAULT, dataSetPList, H5P_DEFAULT);
+  mjrHDF5_chkError(datasetID);
+
+  <I><FONT COLOR="#B22222">/* Write some data into our dataset. */</FONT></I>
+  hErrVal = H5Dwrite(datasetID, memoryPersonRecordTypeID, H5S_ALL, H5S_ALL, H5P_DEFAULT, aPersonArr);
+  mjrHDF5_chkError(hErrVal);
+
+  <I><FONT COLOR="#B22222">/* End access to the dataset and release resources used by it. */</FONT></I>
+  hErrVal = H5Dclose(datasetID);
+  mjrHDF5_chkError(hErrVal);
+
+  <I><FONT COLOR="#B22222">/* Terminate access to the data space. */</FONT></I> 
+  hErrVal = H5Sclose(dataspaceID);
+  mjrHDF5_chkError(hErrVal);
+
+  <I><FONT COLOR="#B22222">/* Terminate access to the data types. */</FONT></I> 
+  hErrVal = H5Tclose(stringTypeID);
+  mjrHDF5_chkError(hErrVal);
+  hErrVal = H5Tclose(memoryPersonRecordTypeID);
+  mjrHDF5_chkError(hErrVal);
+  hErrVal = H5Tclose(diskPersonRecordTypeID);
+  mjrHDF5_chkError(hErrVal);
+  
+  <I><FONT COLOR="#B22222">/* Close the file. */</FONT></I>
+  hErrVal = H5Fclose(fileID);
+  mjrHDF5_chkError(hErrVal);
+
+  <I><FONT COLOR="#B22222">/* Unload the library and free any remaining resources. */</FONT></I>
+  hErrVal = H5close();
+  mjrHDF5_chkError(hErrVal);
+
+  <B><FONT COLOR="#A020F0">return</FONT></B> 0;
+} <I><FONT COLOR="#B22222">/* end func main */</FONT></I>
+</PRE>
+<HR \/>
+<ADDRESS>Generated by <A HREF="http://www.iki.fi/~mtr/genscript/">GNU Enscript 1.6.5.90</A>.</ADDRESS>
+</BODY>
+</HTML>

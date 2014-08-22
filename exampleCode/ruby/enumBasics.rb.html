@@ -1,0 +1,136 @@
+<!DOCTYPE html PUBLIC "-//IETF//DTD HTML 2.0//EN">
+<HTML>
+<HEAD>
+<TITLE>ruby/enumBasics.rb</TITLE>
+</HEAD>
+<BODY BGCOLOR="#FFFFFF" TEXT="#000000" LINK="#1F00FF" ALINK="#FF0000" VLINK="#9900DD">
+<A NAME="top"> </A>
+<A NAME="file1"> </A>
+<H1><a href="enumBasics.rb">enumBasics.rb</a></H1>
+
+<PRE>
+<I><FONT COLOR="#B22222">#!/usr/local/bin/ruby
+</FONT></I>
+<I><FONT COLOR="#B22222">##
+</FONT></I><I><FONT COLOR="#B22222"># @file      enumBasics.rb
+</FONT></I><I><FONT COLOR="#B22222"># @author    Mitch Richling &lt;http://www.mitchr.me/&gt;
+</FONT></I><I><FONT COLOR="#B22222"># @Copyright Copyright 2007 by Mitch Richling.  All rights reserved.
+</FONT></I><I><FONT COLOR="#B22222"># @brief     Some of the Ruby's enumerable goodness.@EOL
+</FONT></I><I><FONT COLOR="#B22222"># @Keywords  ruby example enumerable hash array
+</FONT></I><I><FONT COLOR="#B22222"># @Std       Ruby 1.8
+</FONT></I><I><FONT COLOR="#B22222">#
+</FONT></I><I><FONT COLOR="#B22222">#            Ruby has the concept of &quot;enumerable types&quot;, and deals
+</FONT></I><I><FONT COLOR="#B22222">#            with them in a way similar to the way Lisp deals with
+</FONT></I><I><FONT COLOR="#B22222">#            sequences.  Array &amp; Hash are the most frequently
+</FONT></I><I><FONT COLOR="#B22222">#            encountered enumerable types.  Hashes mostly work like
+</FONT></I><I><FONT COLOR="#B22222">#            associative arrays when enum methods are used on them.
+</FONT></I><I><FONT COLOR="#B22222">#            It is also important to remember that with associative
+</FONT></I><I><FONT COLOR="#B22222">#            arrays and hashes, one can use parallel assignment in the
+</FONT></I><I><FONT COLOR="#B22222">#            block argument variable.
+</FONT></I><I><FONT COLOR="#B22222">#
+</FONT></I><I><FONT COLOR="#B22222">#            This example is still a bit of a work in progress.
+</FONT></I>
+arr1  = [ 1, 4, 2, 3, 6, 5, 3, 4 ]          <I><FONT COLOR="#B22222"># Typical array
+</FONT></I>arr2  = [ [1,4], [2,3], [6,5], [3,4] ]      <I><FONT COLOR="#B22222"># Classic lisp-like associative array structure
+</FONT></I>hsh1  = { 1 =&gt; 4, 2 =&gt; 3, 6 =&gt; 5, 3 =&gt; 4 }  <I><FONT COLOR="#B22222"># Typical hash
+</FONT></I>
+puts(<B><FONT COLOR="#BC8F8F">&quot;OUR TEST LISTS&quot;</FONT></B>)
+puts(<B><FONT COLOR="#BC8F8F">&quot;  arr1 = #{arr1.inspect}&quot;</FONT></B>)
+puts(<B><FONT COLOR="#BC8F8F">&quot;  arr2 = #{arr2.inspect}&quot;</FONT></B>)
+puts(<B><FONT COLOR="#BC8F8F">&quot;  hsh1 = #{hsh1.inspect}&quot;</FONT></B>)
+
+puts(<B><FONT COLOR="#BC8F8F">&quot;ELEMENT-WISE BOOLEAN OPERATIONS&quot;</FONT></B>)
+puts(<B><FONT COLOR="#BC8F8F">&quot;  arr1.all? {|x| x&lt;7}  = #{(arr1.all? {|x| x&lt;7}).inspect         }&quot;</FONT></B>)
+puts(<B><FONT COLOR="#BC8F8F">&quot;  arr1.all? {|x| x&lt;6}  = #{(arr1.all? {|x| x&lt;6}).inspect         }&quot;</FONT></B>)
+puts(<B><FONT COLOR="#BC8F8F">&quot;  arr2.all? {|x,y| x&gt;y}  = #{(arr2.all? {|x,y| x&gt;y}).inspect     }&quot;</FONT></B>)
+puts(<B><FONT COLOR="#BC8F8F">&quot;  arr2.all? {|x| x.max&lt;7}  = #{(arr2.all? {|x| x.max&lt;7}).inspect }&quot;</FONT></B>)
+puts(<B><FONT COLOR="#BC8F8F">&quot;  hsh1.all? {|k,v| k&lt;7}  = #{(hsh1.all? {|k,v| k&lt;7}).inspect     }&quot;</FONT></B>)
+puts(<B><FONT COLOR="#BC8F8F">&quot;  hsh1.all? {|k,v| k&lt;6}  = #{(hsh1.all? {|k,v| k&lt;6}).inspect     }&quot;</FONT></B>)
+
+puts(<B><FONT COLOR="#BC8F8F">&quot;MAX/MIN&quot;</FONT></B>)
+puts(<B><FONT COLOR="#BC8F8F">&quot;  arr1.max    = #{arr1.max.inspect       }&quot;</FONT></B>)
+puts(<B><FONT COLOR="#BC8F8F">&quot;  arr1.min    = #{arr1.min.inspect       }&quot;</FONT></B>)
+puts(<B><FONT COLOR="#BC8F8F">&quot;  arr2.max    = #{arr2.max.inspect       }&quot;</FONT></B>)
+puts(<B><FONT COLOR="#BC8F8F">&quot;  arr2.min    = #{arr2.min.inspect       }&quot;</FONT></B>)
+puts(<B><FONT COLOR="#BC8F8F">&quot;  hsh1.max    = #{hsh1.max.inspect       }&quot;</FONT></B>)
+puts(<B><FONT COLOR="#BC8F8F">&quot;  hsh1.min    = #{hsh1.min.inspect       }&quot;</FONT></B>)
+
+puts(<B><FONT COLOR="#BC8F8F">&quot;COERCION INTO AN ARRAY&quot;</FONT></B>) <I><FONT COLOR="#B22222"># Also See: to_a
+</FONT></I>puts(<B><FONT COLOR="#BC8F8F">&quot;  arr1.entries  = #{arr1.entries.inspect   }&quot;</FONT></B>)
+puts(<B><FONT COLOR="#BC8F8F">&quot;  arr2.entries  = #{arr2.entries.inspect   }&quot;</FONT></B>)
+puts(<B><FONT COLOR="#BC8F8F">&quot;  hsh1.entries  = #{hsh1.entries.inspect   }&quot;</FONT></B>)  <I><FONT COLOR="#B22222"># Note the order may not be as initialized!
+</FONT></I>
+puts(<B><FONT COLOR="#BC8F8F">&quot;INJECT -- VERY LISPY&quot;</FONT></B>)
+puts(<B><FONT COLOR="#BC8F8F">&quot;  arr1.inject {|sum, x| sum+x } = #{(arr1.inject {|sum, x| sum+x }).inspect    }&quot;</FONT></B>)
+puts(<B><FONT COLOR="#BC8F8F">&quot;  arr2.inject {|sum, x| sum+x } = #{(arr2.inject {|sum, x| sum+x }).inspect    }&quot;</FONT></B>)
+puts(<B><FONT COLOR="#BC8F8F">&quot;  hsh1.inject {|sum, x| sum+x } = #{(hsh1.inject {|sum, x| sum+x }).inspect    }&quot;</FONT></B>)
+
+puts(<B><FONT COLOR="#BC8F8F">&quot;MAP -- VERY LISPY&quot;</FONT></B>)  <I><FONT COLOR="#B22222"># Also See: collect
+</FONT></I>puts(<B><FONT COLOR="#BC8F8F">&quot;  arr1.map {|x| x*x } = #{(arr1.map {|x| x*x }).inspect       }&quot;</FONT></B>)
+puts(<B><FONT COLOR="#BC8F8F">&quot;  arr2.map {|x,y| x*y } = #{(arr2.map {|x,y| x*y }).inspect   }&quot;</FONT></B>)
+puts(<B><FONT COLOR="#BC8F8F">&quot;  arr2.map {|x| x.max } = #{(arr2.map {|x| x.max}).inspect    }&quot;</FONT></B>)
+
+puts(<B><FONT COLOR="#BC8F8F">&quot;CHECKING MEMBERSHIP&quot;</FONT></B>) <I><FONT COLOR="#B22222"># Also See: include?
+</FONT></I>puts(<B><FONT COLOR="#BC8F8F">&quot;  arr1.member?(2)     = #{arr1.member?(2).inspect     }&quot;</FONT></B>)
+puts(<B><FONT COLOR="#BC8F8F">&quot;  arr2.member?(2)     = #{arr2.member?(2).inspect     }&quot;</FONT></B>)  <I><FONT COLOR="#B22222"># NOTE: See .assoc &amp; .rassoc
+</FONT></I>puts(<B><FONT COLOR="#BC8F8F">&quot;  arr2.member?([2,3]) = #{arr2.member?([2,3]).inspect }&quot;</FONT></B>)  <I><FONT COLOR="#B22222"># NOTE: See .assoc &amp; .rassoc
+</FONT></I>puts(<B><FONT COLOR="#BC8F8F">&quot;  hsh1.member?(6)     = #{hsh1.member?(6).inspect     }&quot;</FONT></B>)  <I><FONT COLOR="#B22222"># NOTE: You get the Hash::member?
+</FONT></I>puts(<B><FONT COLOR="#BC8F8F">&quot;  hsh1.member?(5)     = #{hsh1.member?(5).inspect     }&quot;</FONT></B>)
+
+puts(<B><FONT COLOR="#BC8F8F">&quot;FINDING FIRST MATCH&quot;</FONT></B>) <I><FONT COLOR="#B22222"># Also See: detect
+</FONT></I>puts(<B><FONT COLOR="#BC8F8F">&quot;  arr1.find {|x| x&gt;2}    = #{(arr1.find {|x| x&gt;2}).inspect   }&quot;</FONT></B>)
+puts(<B><FONT COLOR="#BC8F8F">&quot;  arr2.find {|x,y| x&gt;2}  = #{(arr2.find {|x,y| x&gt;2}).inspect }&quot;</FONT></B>)
+puts(<B><FONT COLOR="#BC8F8F">&quot;  hsh1.find {|k,v| k&lt;5}  = #{(hsh1.find {|k,v| k&lt;5}).inspect }&quot;</FONT></B>)
+
+puts(<B><FONT COLOR="#BC8F8F">&quot;FINDING ALL MATCHES&quot;</FONT></B>) <I><FONT COLOR="#B22222"># Also See: select
+</FONT></I>puts(<B><FONT COLOR="#BC8F8F">&quot;  arr1.find_all {|x| x&gt;2}    = #{(arr1.find_all {|x| x&gt;2}).inspect   }&quot;</FONT></B>)
+puts(<B><FONT COLOR="#BC8F8F">&quot;  arr2.find_all {|x,y| x&gt;2}  = #{(arr2.find_all {|x,y| x&gt;2}).inspect }&quot;</FONT></B>)
+puts(<B><FONT COLOR="#BC8F8F">&quot;  hsh1.find_all {|k,v| k&lt;5}  = #{(hsh1.find_all {|k,v| k&lt;5}).inspect }&quot;</FONT></B>)
+puts(<B><FONT COLOR="#BC8F8F">&quot;  arr1.grep(2)               = #{arr1.grep(2).inspect                }&quot;</FONT></B>)
+
+puts(<B><FONT COLOR="#BC8F8F">&quot;SORT&quot;</FONT></B>)
+puts(<B><FONT COLOR="#BC8F8F">&quot;  arr1.sort  = #{(arr1.sort).inspect  }&quot;</FONT></B>)
+puts(<B><FONT COLOR="#BC8F8F">&quot;  arr2.sort  = #{(arr2.sort).inspect  }&quot;</FONT></B>)  <I><FONT COLOR="#B22222"># Note lexicographical ordering for vectors
+</FONT></I>
+puts(<B><FONT COLOR="#BC8F8F">&quot;  arr1.sort {|a,b| b&lt;=&gt;a} = #{(arr1.sort {|a,b| b&lt;=&gt;a}).inspect  }&quot;</FONT></B>)
+puts(<B><FONT COLOR="#BC8F8F">&quot;  arr2.sort {|a,b| b&lt;=&gt;a} = #{(arr2.sort {|a,b| b&lt;=&gt;a}).inspect  }&quot;</FONT></B>)  <I><FONT COLOR="#B22222"># Note lexicographical ordering for vectors
+</FONT></I>
+puts(<B><FONT COLOR="#BC8F8F">&quot;SORT BY&quot;</FONT></B>)
+puts(<B><FONT COLOR="#BC8F8F">&quot;  arr1.sort_by {|x| x.abs}  = #{(arr1.sort_by {|x| x.abs}).inspect  }&quot;</FONT></B>)
+puts(<B><FONT COLOR="#BC8F8F">&quot;  arr2.sort_by {|x| x.max}  = #{(arr2.sort_by {|x| x.max}).inspect  }&quot;</FONT></B>)
+
+puts(<B><FONT COLOR="#BC8F8F">&quot;PARTITION&quot;</FONT></B>)
+puts(<B><FONT COLOR="#BC8F8F">&quot;  arr1.partition {|x| x.abs&gt;3}  = #{(arr1.partition {|x| x.abs&gt;3}).inspect  }&quot;</FONT></B>)
+puts(<B><FONT COLOR="#BC8F8F">&quot;  arr2.partition {|x| x.max&lt;4}  = #{(arr2.partition {|x| x.max&lt;4}).inspect  }&quot;</FONT></B>)
+
+puts(<B><FONT COLOR="#BC8F8F">&quot;ZIP (RESHAPE IN R)&quot;</FONT></B>)
+puts(<B><FONT COLOR="#BC8F8F">&quot;  arr1.zip(arr1.reverse)  = #{arr1.zip(arr1.reverse).inspect  }&quot;</FONT></B>)
+
+puts(<B><FONT COLOR="#BC8F8F">&quot;GETTING RID of STUFF&quot;</FONT></B>)
+puts(<B><FONT COLOR="#BC8F8F">&quot;  arr1.reject {|x| x&gt;2}    = #{(arr1.reject {|x| x&gt;2}).inspect   }&quot;</FONT></B>)
+puts(<B><FONT COLOR="#BC8F8F">&quot;  arr2.reject {|x,y| x&gt;2}  = #{(arr2.reject {|x,y| x&gt;2}).inspect }&quot;</FONT></B>)
+puts(<B><FONT COLOR="#BC8F8F">&quot;  hsh1.reject {|k,v| k&lt;5}  = #{(hsh1.reject {|k,v| k&lt;5}).inspect }&quot;</FONT></B>)
+
+puts(<B><FONT COLOR="#BC8F8F">&quot;TRAVERSAL OVER INDEX AND VALUES&quot;</FONT></B>)
+print(<B><FONT COLOR="#BC8F8F">&quot;   arr1 = &quot;</FONT></B>)
+arr1.each_with_index { |x,i| print(<B><FONT COLOR="#BC8F8F">&quot;(#{i},#{x}) &quot;</FONT></B>) }
+print(<B><FONT COLOR="#BC8F8F">&quot;\n&quot;</FONT></B>)
+print(<B><FONT COLOR="#BC8F8F">&quot;   arr2 = &quot;</FONT></B>)
+arr2.each_with_index { |x,i| print(<B><FONT COLOR="#BC8F8F">&quot;(#{i},#{x.inspect}) &quot;</FONT></B>) }
+print(<B><FONT COLOR="#BC8F8F">&quot;\n&quot;</FONT></B>)
+print(<B><FONT COLOR="#BC8F8F">&quot;   hsh1 = &quot;</FONT></B>)
+hsh1.each_with_index { |x,i| print(<B><FONT COLOR="#BC8F8F">&quot;(#{i},#{x.inspect}) &quot;</FONT></B>) }
+print(<B><FONT COLOR="#BC8F8F">&quot;\n&quot;</FONT></B>)
+
+<I><FONT COLOR="#B22222">#puts(&quot;TRAVERSAL OVER SLICES AND CONS&quot;)
+</FONT></I><I><FONT COLOR="#B22222">#print(&quot;   arr1(cons)  -&gt; &quot;)
+</FONT></I><I><FONT COLOR="#B22222">#arr1.each_cons(2) { |x| print(&quot;(#{x.inspect}) &quot;) }
+</FONT></I><I><FONT COLOR="#B22222">#print(&quot;\n&quot;)
+</FONT></I><I><FONT COLOR="#B22222">#print(&quot;   arr1(slice) -&gt; &quot;)
+</FONT></I><I><FONT COLOR="#B22222">#arr1.each_slice(2) { |x| print(&quot;(#{x.inspect}) &quot;) }
+</FONT></I><I><FONT COLOR="#B22222">#print(&quot;\n&quot;)
+</FONT></I></PRE>
+<HR \/>
+<ADDRESS>Generated by <A HREF="http://www.iki.fi/~mtr/genscript/">GNU Enscript 1.6.5.2</A>.</ADDRESS>
+</BODY>
+</HTML>

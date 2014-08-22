@@ -1,0 +1,121 @@
+<!DOCTYPE html PUBLIC "-//IETF//DTD HTML 2.0//EN">
+<HTML>
+<HEAD>
+<TITLE>random/makefile</TITLE>
+</HEAD>
+<BODY BGCOLOR="#FFFFFF" TEXT="#000000" LINK="#1F00FF" ALINK="#FF0000" VLINK="#9900DD">
+<A NAME="top"> </A>
+<A NAME="file1"> </A>
+<H1><a href="makefile">makefile</a></H1>
+
+<PRE>
+<I><FONT COLOR="#B22222"># -*- Mode:Makefile; Coding:us-ascii-unix; fill-column:132 -*-
+</FONT></I><I><FONT COLOR="#B22222">####################################################################################################################################
+</FONT></I><I><FONT COLOR="#B22222">##
+</FONT></I><I><FONT COLOR="#B22222"># @file      makefile
+</FONT></I><I><FONT COLOR="#B22222"># @author    Mitch Richling &lt;http://www.mitchr.me/&gt;
+</FONT></I><I><FONT COLOR="#B22222"># @Copyright Copyright 2000 by Mitch Richling.  All rights reserved.
+</FONT></I><I><FONT COLOR="#B22222"># @brief     Build random number generator examples@EOL
+</FONT></I><I><FONT COLOR="#B22222"># @Keywords  make random number generator example
+</FONT></I><I><FONT COLOR="#B22222"># @Std       GenericMake
+</FONT></I><I><FONT COLOR="#B22222">#
+</FONT></I><I><FONT COLOR="#B22222"># This makefile requires platform specific modification  to work -- fix the variables!
+</FONT></I><I><FONT COLOR="#B22222">#            
+</FONT></I>
+<I><FONT COLOR="#B22222">#-----------------------------------------------------------------------------------------------------------------------------------
+</FONT></I>FC       = gfortran
+CC       = gcc
+CXX      = g++
+FFLAGS   = -Wall
+CFLAGS   = -Wall
+CXXFLAGS = -Wall
+
+<I><FONT COLOR="#B22222">#-----------------------------------------------------------------------------------------------------------------------------------
+</FONT></I>PRNGINC  = -I/usr/local/include
+PRNGLIBP = -L/usr/local/lib
+PRNGLIB  = -lprng
+
+<I><FONT COLOR="#B22222">#-----------------------------------------------------------------------------------------------------------------------------------
+</FONT></I>RANLIBFLIBP = -L/usr/local/lib
+RANLIBFLIB  = -lRANLIB_hpcFC
+
+<I><FONT COLOR="#B22222">#-----------------------------------------------------------------------------------------------------------------------------------
+</FONT></I>RANLIBCINCP = -I/usr/local/include
+RANLIBCLIBP = -L/usr/local/lib
+RANLIBCLIB  = -lRANLIBC
+
+<I><FONT COLOR="#B22222">#-----------------------------------------------------------------------------------------------------------------------------------
+</FONT></I>SSLLIBP = -L/usr/lib/
+SSLLIB  = -lcrypto -lssl
+SSLINCP = -I/usr/include
+
+<I><FONT COLOR="#B22222">#-----------------------------------------------------------------------------------------------------------------------------------
+</FONT></I><I><FONT COLOR="#B22222"># Uncomment to build all when make file changes
+</FONT></I>SPECDEP=makefile
+
+<I><FONT COLOR="#B22222">#-----------------------------------------------------------------------------------------------------------------------------------
+</FONT></I><I><FONT COLOR="#B22222"># Put targets here
+</FONT></I>TRG_MINS = minStdRandGenC minStdRandGenF lcgPermPowTwo
+TRG_STD  = isocRandEx f90Rand
+TRG_BSD  = bsdRandomEx
+TRG_SYSV = rand48Ex 
+TRG_SSL  = opensslPRandEx
+TRG_PRNG = prngEx
+TRG_RAN  = ranlibExF ranlibExC randFileEx ranlibExFC
+
+TARGETS  = $(<B><FONT COLOR="#5F9EA0">TRG_MINS</FONT></B>) $(<B><FONT COLOR="#5F9EA0">TRG_STD</FONT></B>) $(<B><FONT COLOR="#5F9EA0">TRG_SYSV</FONT></B>) $(<B><FONT COLOR="#5F9EA0">TRG_SSL</FONT></B>) $(<B><FONT COLOR="#5F9EA0">TRG_RAN</FONT></B>) $(<B><FONT COLOR="#5F9EA0">TRG_BSD</FONT></B>) $(<B><FONT COLOR="#5F9EA0">TRG_PRNG</FONT></B>) 
+
+<I><FONT COLOR="#B22222">#-----------------------------------------------------------------------------------------------------------------------------------
+</FONT></I>all : $(<B><FONT COLOR="#5F9EA0">TARGETS</FONT></B>)
+	@echo Make Complete
+
+clean :
+	rm -rf a.out *~ *.bak *.o $(<B><FONT COLOR="#5F9EA0">TARGETS</FONT></B>)
+	@echo Make Complete
+
+prngEx : prngEx.c $(<B><FONT COLOR="#5F9EA0">SPECDEP</FONT></B>)
+	$(<B><FONT COLOR="#5F9EA0">CC</FONT></B>) $(<B><FONT COLOR="#5F9EA0">CFLAGS</FONT></B>) $(<B><FONT COLOR="#5F9EA0">PRNGINC</FONT></B>) prngEx.c $(<B><FONT COLOR="#5F9EA0">PRNGLIBP</FONT></B>) $(<B><FONT COLOR="#5F9EA0">PRNGLIB</FONT></B>) -o prngEx
+
+minStdRandGenC : minStdRandGenC.c $(<B><FONT COLOR="#5F9EA0">SPECDEP</FONT></B>)
+	$(<B><FONT COLOR="#5F9EA0">CC</FONT></B>) $(<B><FONT COLOR="#5F9EA0">CFLAGS</FONT></B>) minStdRandGenC.c -o minStdRandGenC
+
+minStdRandGenF : minStdRandGenF.f $(<B><FONT COLOR="#5F9EA0">SPECDEP</FONT></B>)
+	$(<B><FONT COLOR="#5F9EA0">FC</FONT></B>) $(<B><FONT COLOR="#5F9EA0">FFLAGS</FONT></B>) minStdRandGenF.f -o minStdRandGenF
+
+lcgPermPowTwo : lcgPermPowTwo.cpp $(<B><FONT COLOR="#5F9EA0">SPECDEP</FONT></B>)
+	$(<B><FONT COLOR="#5F9EA0">CXX</FONT></B>) $(<B><FONT COLOR="#5F9EA0">CXXFLAGS</FONT></B>) lcgPermPowTwo.cpp -o lcgPermPowTwo
+
+ranlibm.mod : ranlibM.f90
+	$(<B><FONT COLOR="#5F9EA0">FC</FONT></B>) $(<B><FONT COLOR="#5F9EA0">FFLAGS</FONT></B>) -c ranlibM.f90
+
+ranlibExF : ranlibExF.f90 ranlibm.mod $(<B><FONT COLOR="#5F9EA0">SPECDEP</FONT></B>)
+	$(<B><FONT COLOR="#5F9EA0">FC</FONT></B>) $(<B><FONT COLOR="#5F9EA0">FFLAGS</FONT></B>) ranlibExF.f90 $(<B><FONT COLOR="#5F9EA0">RANLIBFLIBP</FONT></B>) $(<B><FONT COLOR="#5F9EA0">RANLIBFLIB</FONT></B>) -o ranlibExF
+
+ranlibExFC : ranlibExFC.c ranlibF.c $(<B><FONT COLOR="#5F9EA0">SPECDEP</FONT></B>)
+	$(<B><FONT COLOR="#5F9EA0">CC</FONT></B>) $(<B><FONT COLOR="#5F9EA0">CFLAGS</FONT></B>) ranlibExFC.c ranlibF.c $(<B><FONT COLOR="#5F9EA0">RANLIBFLIBP</FONT></B>) $(<B><FONT COLOR="#5F9EA0">RANLIBFLIB</FONT></B>) -lgfortran -o ranlibExFC
+
+isocRandEx : isocRandEx.c $(<B><FONT COLOR="#5F9EA0">SPECDEP</FONT></B>)
+	$(<B><FONT COLOR="#5F9EA0">CC</FONT></B>) $(<B><FONT COLOR="#5F9EA0">CFLAGS</FONT></B>) isocRandEx.c -o isocRandEx
+
+rand48Ex : rand48Ex.c $(<B><FONT COLOR="#5F9EA0">SPECDEP</FONT></B>)
+	$(<B><FONT COLOR="#5F9EA0">CC</FONT></B>) $(<B><FONT COLOR="#5F9EA0">CFLAGS</FONT></B>) rand48Ex.c -o rand48Ex
+
+bsdRandomEx : bsdRandomEx.c $(<B><FONT COLOR="#5F9EA0">SPECDEP</FONT></B>)
+	$(<B><FONT COLOR="#5F9EA0">CC</FONT></B>) $(<B><FONT COLOR="#5F9EA0">CFLAGS</FONT></B>) bsdRandomEx.c -o bsdRandomEx
+
+opensslPRandEx : opensslPRandEx.c $(<B><FONT COLOR="#5F9EA0">SPECDEP</FONT></B>)
+	$(<B><FONT COLOR="#5F9EA0">CC</FONT></B>) $(<B><FONT COLOR="#5F9EA0">CFLAGS</FONT></B>) $(<B><FONT COLOR="#5F9EA0">SSLINCP</FONT></B>) opensslPRandEx.c $(<B><FONT COLOR="#5F9EA0">SSLLIBP</FONT></B>) $(<B><FONT COLOR="#5F9EA0">SSLLIB</FONT></B>) -o opensslPRandEx
+
+ranlibExC : ranlibExC.c $(<B><FONT COLOR="#5F9EA0">SPECDEP</FONT></B>)
+	$(<B><FONT COLOR="#5F9EA0">CC</FONT></B>) $(<B><FONT COLOR="#5F9EA0">CFLAGS</FONT></B>)  $(<B><FONT COLOR="#5F9EA0">RANLIBCINCP</FONT></B>)  ranlibExC.c $(<B><FONT COLOR="#5F9EA0">RANLIBCLIBP</FONT></B>) $(<B><FONT COLOR="#5F9EA0">RANLIBCLIB</FONT></B>) -o ranlibExC
+
+randFileEx : randFileEx.c randFileC.h randFileC.c
+	$(<B><FONT COLOR="#5F9EA0">CC</FONT></B>) $(<B><FONT COLOR="#5F9EA0">CFLAGS</FONT></B>) randFileEx.c randFileC.c -o randFileEx
+
+f90Rand : f90Rand.f90 $(<B><FONT COLOR="#5F9EA0">SPECDEP</FONT></B>)
+	$(<B><FONT COLOR="#5F9EA0">FC</FONT></B>) $(<B><FONT COLOR="#5F9EA0">FFLAGS</FONT></B>) f90Rand.f90 -o f90Rand
+</PRE>
+<HR \/>
+<ADDRESS>Generated by <A HREF="http://www.iki.fi/~mtr/genscript/">GNU Enscript 1.6.5.90</A>.</ADDRESS>
+</BODY>
+</HTML>
