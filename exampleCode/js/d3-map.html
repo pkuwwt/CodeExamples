@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+<meta charset="utf-8">
 <html>
 <head>
   <style type="text/css">
@@ -8,6 +9,14 @@
       overflow: hidden;
       padding: 0px;
     }
+	.d3-tip {
+		line-height: 1;
+		font-weight: bold;
+		padding: 12px;
+		background: rgba(0, 0, 0, 0.4);
+		color: #fff;
+		border-radius: 2px;
+	}
   </style>
   <!--
   <script src="http://d3js.org/d3.v3.min.js" charset="utf-8"></script>
@@ -15,6 +24,7 @@
   <script type="text/javascript" src="http://underscorejs.org/underscore-min.js"></script>
   -->
   <script src="./d3.v3.min.js" charset="utf-8"></script>
+  <script src="./d3.tip.v0.6.3.js" charset="utf-8"></script>
   <script type="text/javascript" src="./jquery.min.js"></script>
   <script type="text/javascript" src="./underscore-min.js"></script>
 </head>
@@ -31,9 +41,16 @@
     var height = window.innerHeight;
     var width = window.innerWidth;
     var svg = d3.select('#container').append('svg');
+	var tooltip = d3.tip()
+		.attr('class', 'd3-tip')
+		.offset([0,0])
+		.html(function(d) {
+				return "<span style='color:red'>" + d + "</span>";
+		});
+	svg.call(tooltip);
 
-    d3.json("./world-countries.json", function(data) {
-      /* Antarctica will not shown on the map */
+d3.json("./world-countries.json", function(data) {
+		/* Antarctica will not shown on the map */
       var features = _.filter(data.features, function(value, key) {
         return value.properties.name != 'Antarctica';
       });
@@ -47,14 +64,17 @@
       
       path = d3.geo.path().projection(xy);
 
+
       svg.attr('width', width).attr('height', height);
       svg.selectAll('path').data(features).enter().append('svg:path')
         .attr('d', path)
         .on('mouseover', function(data) {
           d3.select(this).attr('fill', 'rgba(2,2,139,0.61)');
+		  tooltip.show(data.properties.name);
         })
         .on('mouseout', function(data) {
           d3.select(this).attr('fill', 'rgba(128,124,139,0.61');
+		  tooltip.hide(data);
         })
         .attr('fill', 'rgba(128,124,139,0.61)')
         .attr('stroke', 'rgba(255,255,255,1)')
