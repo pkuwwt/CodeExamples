@@ -1,0 +1,95 @@
+<html>
+<meta charset="utf-8">
+<head>
+<script src="./d3.v3.min.js" type="text/javascript"> </script>
+<style>
+div.tooltip {
+    visibility:hidden;
+    background: lightblue;
+    border:solid gray;
+    position: absolute;
+}
+g.tooltip {    
+    visibility:hidden;
+}
+g.tooltip rect {
+    fill: lightblue;
+    stroke: gray;
+}
+div.block {
+    height: 100px;
+    background:lightyellow;
+}
+svg {
+    margin:20px;
+    width:calc(100% - 40px);
+    height:500px;
+    max-height:100%;
+    border: solid 1px gray;
+}
+</style>
+</head>
+
+<body>
+<div class="block">This div just takes up space.</div>
+<svg viewBox="0 0 400 300">
+    <g transform="rotate(10) translate(20,-5)">
+        <circle r="25" cx="50" cy="50"/>
+        <circle r="25" cx="200" cy="50"/>
+        <circle r="25" cx="350" cy="50"/>
+        <circle r="25" cx="50" cy="200"/>
+        <circle r="25" cx="200" cy="200"/>
+        <circle r="25" cx="350" cy="200"/>
+        
+    </g>
+    <g transform="scale(1.2)">
+        <g class="tooltip">
+            <rect width="60" height="20"/>
+            <text dy="15" >SVG Tip</text>
+        </g>
+    </g>
+</svg>
+<div class="tooltip">HTML Tip</div>
+
+<script type="text/javascript"> 
+var tooltip = d3.selectAll(".tooltip");
+var HTMLtooltip = d3.select("div.tooltip");
+var SVGtooltip = d3.select("g.tooltip");
+
+
+d3.select("svg").select("g")
+    .selectAll("circle")
+    .on("mouseover", function () {
+        return tooltip.style("visibility", "visible");
+    })
+    .on("mousemove", function () {
+        
+       
+        var mouseCoords = d3.mouse(
+            SVGtooltip[0][0].parentElement);
+        //the d3.mouse() function calculates the mouse
+        //position relative to an SVG Element, in that 
+        //element's coordinate system 
+        //(after transform or viewBox attributes).
+        
+        //Because we're using the coordinates to position
+        //the SVG tooltip, we want the coordinates to be
+        //with respect to that element's parent.
+        //SVGtooltip[0][0] accesses the (first and only)
+        //selected element from the saved d3 selection object.
+        
+        SVGtooltip
+            .attr("transform", "translate(" + (mouseCoords[0]-30)
+                      + "," + (mouseCoords[1]-30) + ")");
+        
+        HTMLtooltip
+            .style("top", (d3.event.pageY + 16) + "px")
+            .style("left", (d3.event.pageX + 16) + "px");
+    })
+    .on("mouseout", function () {
+        return tooltip.style("visibility", "hidden");
+    });
+</script>
+</body>
+</html>
+
